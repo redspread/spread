@@ -1,0 +1,64 @@
+package component
+
+import (
+	"rsprd.com/spread/pkg/deploy"
+	"rsprd.com/spread/pkg/image"
+
+	"k8s.io/kubernetes/pkg/api"
+)
+
+// Pod represents api.Pod in the Redspread hierarchy.
+type Pod struct {
+	ComponentBase
+	pod        *api.Pod
+	containers []*Container
+}
+
+func NewPod(kubePod *api.Pod, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	base, err := newComponentBase(ComponentPod, source, objects)
+	if err != nil {
+		return nil, err
+	}
+
+	pod := Pod{ComponentBase: base}
+	for _, v := range kubePod.Spec.Containers {
+		container, err := NewContainer(&v, source)
+		if err != nil {
+			return nil, err
+		} else {
+			pod.containers = append(pod.containers, container)
+		}
+	}
+	kubePod.Spec.Containers = []api.Container{}
+
+	pod.pod = kubePod
+	return &pod, nil
+}
+
+func NewPodFromPodSpec(podSpec api.PodSpec, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	pod := api.Pod{
+		Spec: podSpec,
+	}
+	return NewPod(&pod, source, objects...)
+}
+
+func (c Pod) Deployment() deploy.Deployment {
+	return deploy.Deployment{}
+}
+
+func (c Pod) Images() (images []*image.Image) {
+	for _, v := range c.containers {
+		images = append(images, v.Images()...)
+	}
+	return
+}
+
+func (c Pod) kube() *api.Pod {
+	containers := []api.Container{}
+	for _, container := range c.containers {
+		containers = append(containers, *container.kube())
+	}
+
+	c.pod.Spec.Containers = containers
+	return c.pod
+}

@@ -7,3 +7,14 @@ type Image struct {
 	Registry string
 	Build    *Build
 }
+
+func (i Image) DockerName() string {
+	// TODO: implement
+	return i.Name
+}
+
+// FromString creates an Image using a string representation
+func FromString(str string) (*Image, error) {
+	// TODO: Implement
+	return nil, nil
+}
