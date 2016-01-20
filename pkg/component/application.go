@@ -7,17 +7,17 @@ import (
 
 // Application is the root of the Redspread hierarchy
 type Application struct {
-	ComponentBase
+	Base
 	components []Component
 }
 
 func NewApplication(source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
-	base, err := newComponentBase(ComponentApplication, source, objects)
+	base, err := newBase(ComponentApplication, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ReplicationController{ComponentBase: base}, nil
+	return &ReplicationController{Base: base}, nil
 }
 
 func (c Application) Deployment() deploy.Deployment {

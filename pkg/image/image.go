@@ -16,5 +16,5 @@ func (i Image) DockerName() string {
 // FromString creates an Image using a string representation
 func FromString(str string) (*Image, error) {
 	// TODO: Implement
-	return nil, nil
+	return &Image{Name: str}, nil
 }

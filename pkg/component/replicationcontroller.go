@@ -9,18 +9,18 @@ import (
 
 // ReplicationController represents api.ReplicationController in the Redspread hierarchy.
 type ReplicationController struct {
-	ComponentBase
+	Base
 	rc  *api.ReplicationController
 	pod *Pod
 }
 
 func NewReplicationController(kubeRC *api.ReplicationController, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
-	base, err := newComponentBase(ComponentReplicationController, source, objects)
+	base, err := newBase(ComponentReplicationController, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	rc := ReplicationController{ComponentBase: base}
+	rc := ReplicationController{Base: base}
 	if kubeRC.Spec.Template != nil {
 		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.Spec, source)
 		if err != nil {

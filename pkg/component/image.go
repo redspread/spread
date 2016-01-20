@@ -7,16 +7,16 @@ import (
 
 // Image represents a Docker image in the Redspread hierarchy. It wraps image.Image.
 type Image struct {
-	ComponentBase
+	Base
 	image *image.Image
 }
 
 func NewImage(image *image.Image, source string, objects ...deploy.KubeObject) (*Image, error) {
-	base, err := newComponentBase(ComponentImage, source, objects)
+	base, err := newBase(ComponentImage, source, objects)
 	if err != nil {
 		return nil, err
 	} else {
-		return &Image{ComponentBase: base, image: image}, nil
+		return &Image{Base: base, image: image}, nil
 	}
 }
 

@@ -9,18 +9,18 @@ import (
 
 // Pod represents api.Pod in the Redspread hierarchy.
 type Pod struct {
-	ComponentBase
+	Base
 	pod        *api.Pod
 	containers []*Container
 }
 
 func NewPod(kubePod *api.Pod, source string, objects ...deploy.KubeObject) (*Pod, error) {
-	base, err := newComponentBase(ComponentPod, source, objects)
+	base, err := newBase(ComponentPod, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	pod := Pod{ComponentBase: base}
+	pod := Pod{Base: base}
 	for _, v := range kubePod.Spec.Containers {
 		container, err := NewContainer(&v, source)
 		if err != nil {
