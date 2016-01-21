@@ -20,14 +20,14 @@ func TestNewBase(t *testing.T) {
 
 	fuzzer(t).Fuzz(&source)
 
-	base, err := newBase(componentType, source, objects)
+	base, err := newBase(componentType, api.ObjectMeta{}, source, objects)
 	assert.NoError(t, err, "valid component")
 
 	assert.Equal(t, componentType, base.Type(), "type cannot change")
 	assert.Equal(t, source, base.Source(), "source cannot change")
 
 	emptyDeploy := deploy.NewDeployment()
-	assert.Equal(t, emptyDeploy, base.objects)
+	assert.True(t, emptyDeploy.Equals(base.objects))
 }
 
 func TestBaseBadObject(t *testing.T) {
@@ -37,7 +37,7 @@ func TestBaseBadObject(t *testing.T) {
 		&api.Pod{}, // invalid object
 	}
 
-	_, err := newBase(componentType, source, objects)
+	_, err := newBase(componentType, api.ObjectMeta{}, source, objects)
 	assert.Error(t, err, "objects are invalid")
 }
 

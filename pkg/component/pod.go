@@ -14,15 +14,15 @@ type Pod struct {
 	containers []*Container
 }
 
-func NewPod(kubePod *api.Pod, source string, objects ...deploy.KubeObject) (*Pod, error) {
-	base, err := newBase(ComponentPod, source, objects)
+func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	base, err := newBase(ComponentPod, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
 	pod := Pod{Base: base}
 	for _, v := range kubePod.Spec.Containers {
-		container, err := NewContainer(v, source)
+		container, err := NewContainer(v, defaults, source)
 		if err != nil {
 			return nil, err
 		} else {
@@ -35,11 +35,11 @@ func NewPod(kubePod *api.Pod, source string, objects ...deploy.KubeObject) (*Pod
 	return &pod, nil
 }
 
-func NewPodFromPodSpec(podSpec api.PodSpec, source string, objects ...deploy.KubeObject) (*Pod, error) {
+func NewPodFromPodSpec(podSpec api.PodSpec, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	pod := api.Pod{
 		Spec: podSpec,
 	}
-	return NewPod(&pod, source, objects...)
+	return NewPod(&pod, defaults, source, objects...)
 }
 
 func (c Pod) Deployment() deploy.Deployment {

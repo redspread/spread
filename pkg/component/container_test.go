@@ -15,7 +15,7 @@ func TestContainerSimpleDeployment(t *testing.T) {
 		ImagePullPolicy: api.PullAlways,
 	}
 
-	_, err := NewContainer(kubeContainer, "simpleTest")
+	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "simpleTest")
 	assert.NoError(t, err, "should be able to create container")
 }
 

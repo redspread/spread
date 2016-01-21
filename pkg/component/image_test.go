@@ -14,7 +14,7 @@ func TestImageDeployment(t *testing.T) {
 	imageName := "arch"
 	simple := newImage(t, imageName)
 
-	image, err := NewImage(simple, "test")
+	image, err := NewImage(simple, api.ObjectMeta{}, "test")
 	assert.NoError(t, err, "valid image")
 
 	expectedPod := api.Pod{
@@ -48,7 +48,7 @@ func TestImageImages(t *testing.T) {
 	imageName := "gcr.io/google_containers/cassandra:v7"
 	simple := newImage(t, imageName)
 
-	image, err := NewImage(simple, "test")
+	image, err := NewImage(simple, api.ObjectMeta{}, "test")
 	if err != nil {
 		t.Fatalf("Could not create Image component: %v", err)
 	}
@@ -61,14 +61,14 @@ func TestImageImages(t *testing.T) {
 
 func TestNilImage(t *testing.T) {
 	var image *image.Image
-	_, err := NewImage(image, "")
+	_, err := NewImage(image, api.ObjectMeta{}, "")
 	assert.Error(t, err, "cannot be nil")
 }
 
 func TestImageType(t *testing.T) {
 	image := newImage(t, "ghost:latest")
 
-	component, err := NewImage(image, "")
+	component, err := NewImage(image, api.ObjectMeta{}, "")
 	if err != nil {
 		t.Fatalf("Could not create Image component: %v", err)
 	}
@@ -80,7 +80,7 @@ func TestImageKube(t *testing.T) {
 	imageName := "redis:latest"
 	image := newImage(t, imageName)
 
-	component, err := NewImage(image, "")
+	component, err := NewImage(image, api.ObjectMeta{}, "")
 	if err != nil {
 		t.Fatalf("Could not create Image component: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestImageBadObject(t *testing.T) {
 
 	service := api.Service{}
 
-	_, err := NewImage(image, "", &service)
+	_, err := NewImage(image, api.ObjectMeta{}, "", &service)
 	assert.Error(t, err, "invalid object, should return error")
 }
 

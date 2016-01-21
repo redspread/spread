@@ -3,6 +3,8 @@ package component
 import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
+
+	"k8s.io/kubernetes/pkg/api"
 )
 
 // Application is the root of the Redspread hierarchy
@@ -11,8 +13,8 @@ type Application struct {
 	components []Component
 }
 
-func NewApplication(source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
-	base, err := newBase(ComponentApplication, source, objects)
+func NewApplication(source string, defaults api.ObjectMeta, objects ...deploy.KubeObject) (*ReplicationController, error) {
+	base, err := newBase(ComponentApplication, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}

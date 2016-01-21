@@ -17,13 +17,13 @@ type Container struct {
 	image     *Image
 }
 
-func NewContainer(container api.Container, source string, objects ...deploy.KubeObject) (*Container, error) {
+func NewContainer(container api.Container, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Container, error) {
 	err := validateContainer(container)
 	if err != nil {
 		return nil, fmt.Errorf("could not create Container from `%s`: %v", source, err)
 	}
 
-	base, err := newBase(ComponentContainer, source, objects)
+	base, err := newBase(ComponentContainer, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func NewContainer(container api.Container, source string, objects ...deploy.Kube
 		if err != nil {
 			return nil, err
 		} else {
-			newContainer.image, err = NewImage(image, source)
+			newContainer.image, err = NewImage(image, defaults, source)
 			if err != nil {
 				return nil, err
 			}

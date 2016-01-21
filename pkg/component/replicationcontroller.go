@@ -14,15 +14,15 @@ type ReplicationController struct {
 	pod *Pod
 }
 
-func NewReplicationController(kubeRC *api.ReplicationController, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
-	base, err := newBase(ComponentReplicationController, source, objects)
+func NewReplicationController(kubeRC *api.ReplicationController, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
+	base, err := newBase(ComponentReplicationController, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
 	rc := ReplicationController{Base: base}
 	if kubeRC.Spec.Template != nil {
-		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.Spec, source)
+		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.Spec, defaults, source)
 		if err != nil {
 			return nil, err
 		}
