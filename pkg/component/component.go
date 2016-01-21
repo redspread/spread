@@ -28,7 +28,7 @@ type Base struct {
 func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.KubeObject) (base Base, err error) {
 	base.defaults = defaults
 
-	deployment := deploy.NewDeployment()
+	deployment := deploy.Deployment{}
 	for _, obj := range objects {
 		setMetaDefaults(obj, defaults)
 		err = deployment.Add(obj)

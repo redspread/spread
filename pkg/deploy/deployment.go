@@ -21,10 +21,6 @@ type Deployment struct {
 	namespaces   []*api.Namespace
 }
 
-func NewDeployment() Deployment {
-	return Deployment{}
-}
-
 func (d *Deployment) Add(obj KubeObject) error {
 	copy, err := deepCopy(obj)
 	if err != nil {

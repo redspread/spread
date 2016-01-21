@@ -9,7 +9,7 @@ import (
 )
 
 func TestDeploymentSimpleEquals1(t *testing.T) {
-	a, b := NewDeployment(), NewDeployment()
+	a, b := Deployment{}, Deployment{}
 
 	assert.True(t, a.Equals(a), "self")
 	assert.True(t, b.Equals(b), "self")
@@ -18,11 +18,14 @@ func TestDeploymentSimpleEquals1(t *testing.T) {
 	secret := createSecret("test", "a")
 	a.Add(secret)
 	assert.False(t, a.Equals(b), "a has secret")
+
+	b.Add(createSecret("secrete", "data"))
+	assert.False(t, a.Equals(b), "still bad")
 }
 
 func TestDeploymentSimpleEquals2(t *testing.T) {
 	a, b, c := createSecret("a", "1"), createSecret("b", "2"), createSecret("c", "3")
-	deployA, deployB := NewDeployment(), NewDeployment()
+	deployA, deployB := Deployment{}, Deployment{}
 
 	deployA.Add(a)
 	deployA.Add(b)
