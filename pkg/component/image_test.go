@@ -1,7 +1,6 @@
 package component
 
 import (
-	"reflect"
 	"testing"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -18,11 +17,9 @@ func TestImageDeployment(t *testing.T) {
 	image, err := NewImage(simple, "test")
 	assert.NoError(t, err, "valid image")
 
-	deployName := "image"
-
 	expectedPod := api.Pod{
 		ObjectMeta: api.ObjectMeta{
-			Name:      deployName,
+			Name:      imageName,
 			Namespace: "default",
 		},
 		Spec: api.PodSpec{
@@ -42,9 +39,7 @@ func TestImageDeployment(t *testing.T) {
 	assert.NoError(t, expected.Add(&expectedPod), "should be able to add pod")
 
 	actual := image.Deployment()
-	t.Logf("\n%+v\n%+v", actual, expected)
-
-	if !reflect.DeepEqual(expected, actual) {
+	if !expected.Equals(actual) {
 		t.Errorf("Expected: %#v, saw: %#v", expected, actual)
 	}
 }
