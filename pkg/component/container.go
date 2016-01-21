@@ -10,11 +10,11 @@ import (
 // Container represents api.Container in the Redspread hierarchy.
 type Container struct {
 	Base
-	container *api.Container
+	container api.Container
 	image     *Image
 }
 
-func NewContainer(container *api.Container, source string, objects ...deploy.KubeObject) (*Container, error) {
+func NewContainer(container api.Container, source string, objects ...deploy.KubeObject) (*Container, error) {
 	base, err := newBase(ComponentContainer, source, objects)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c Container) Images() []*image.Image {
 	return c.image.Images()
 }
 
-func (c Container) kube() *api.Container {
+func (c Container) kube() api.Container {
 	c.container.Image = c.image.kube()
 	return c.container
 }

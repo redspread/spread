@@ -22,7 +22,7 @@ func NewPod(kubePod *api.Pod, source string, objects ...deploy.KubeObject) (*Pod
 
 	pod := Pod{Base: base}
 	for _, v := range kubePod.Spec.Containers {
-		container, err := NewContainer(&v, source)
+		container, err := NewContainer(v, source)
 		if err != nil {
 			return nil, err
 		} else {
@@ -56,7 +56,7 @@ func (c Pod) Images() (images []*image.Image) {
 func (c Pod) kube() *api.Pod {
 	containers := []api.Container{}
 	for _, container := range c.containers {
-		containers = append(containers, *container.kube())
+		containers = append(containers, container.kube())
 	}
 
 	c.pod.Spec.Containers = containers

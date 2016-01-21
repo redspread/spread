@@ -11,29 +11,12 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-func TestImageImages(t *testing.T) {
-	imageName := "gcr.io/google_containers/cassandra:v7"
-	simple := newImage(t, imageName)
-
-	image, err := NewImage(simple, "test")
-	if err != nil {
-		t.Fatalf("Could not create Image component: %v", err)
-	}
-
-	// check images
-	images := image.Images()
-	assert.Len(t, images, 1, "supposed to be single image")
-	assert.EqualValues(t, simple, images[0], "should return image it was created with")
-}
-
 func TestImageDeployment(t *testing.T) {
 	imageName := "arch"
 	simple := newImage(t, imageName)
 
 	image, err := NewImage(simple, "test")
-	if err != nil {
-		t.Fatalf("Could not create Image component: %v", err)
-	}
+	assert.NoError(t, err, "valid image")
 
 	deployName := "image"
 
@@ -64,6 +47,21 @@ func TestImageDeployment(t *testing.T) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected: %#v, saw: %#v", expected, actual)
 	}
+}
+
+func TestImageImages(t *testing.T) {
+	imageName := "gcr.io/google_containers/cassandra:v7"
+	simple := newImage(t, imageName)
+
+	image, err := NewImage(simple, "test")
+	if err != nil {
+		t.Fatalf("Could not create Image component: %v", err)
+	}
+
+	// check images
+	images := image.Images()
+	assert.Len(t, images, 1, "supposed to be single image")
+	assert.EqualValues(t, simple, images[0], "should return image it was created with")
 }
 
 func TestNilImage(t *testing.T) {
