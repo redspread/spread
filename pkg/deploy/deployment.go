@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"errors"
+	"fmt"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
@@ -24,59 +25,104 @@ func NewDeployment() Deployment {
 }
 
 func (d *Deployment) Add(obj KubeObject) error {
-	// TODO: implement deep-copy
-	switch t := obj.(type) {
+	copy, err := deepCopy(obj)
+	if err != nil {
+		return err
+	}
+
+	switch t := copy.(type) {
 	case *api.ReplicationController:
 		errList := validation.ValidateReplicationController(t)
 		if len(errList) == 0 {
+			for _, v := range d.rcs {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.rcs = append(d.rcs, t)
 			return nil
 		} else {
 			return errList.ToAggregate()
 		}
+
 	case *api.Pod:
 		errList := validation.ValidatePod(t)
 		if len(errList) == 0 {
+			for _, v := range d.pods {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.pods = append(d.pods, t)
 			return nil
 		} else {
 			return errList.ToAggregate()
 		}
+
 	case *api.Service:
 		errList := validation.ValidateService(t)
 		if len(errList) == 0 {
+			for _, v := range d.services {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.services = append(d.services, t)
 			return nil
 		} else {
 			return errList.ToAggregate()
 		}
+
 	case *api.Secret:
 		errList := validation.ValidateSecret(t)
 		if len(errList) == 0 {
+			for _, v := range d.secrets {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.secrets = append(d.secrets, t)
 			return nil
 		} else {
 			return errList.ToAggregate()
 		}
+
 	case *api.PersistentVolume:
 		errList := validation.ValidatePersistentVolume(t)
 		if len(errList) == 0 {
+			for _, v := range d.volumes {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.volumes = append(d.volumes, t)
 			return nil
 		} else {
 			return errList.ToAggregate()
 		}
+
 	case *api.PersistentVolumeClaim:
 		errList := validation.ValidatePersistentVolumeClaim(t)
 		if len(errList) == 0 {
+			for _, v := range d.volumeClaims {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.volumeClaims = append(d.volumeClaims, t)
 			return nil
 		} else {
 			return errList.ToAggregate()
 		}
+
 	case *api.Namespace:
 		errList := validation.ValidateNamespace(t)
 		if len(errList) == 0 {
+			for _, v := range d.namespaces {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
 			d.namespaces = append(d.namespaces, t)
 			return nil
 		} else {
@@ -85,6 +131,26 @@ func (d *Deployment) Add(obj KubeObject) error {
 	default:
 		return ErrorObjectNotSupported
 	}
+}
+
+// assertUniqueName checks a slice of objects for naming collisions. It assumes that the slice is of a single type.
+func assertUniqueName(a, b KubeObject) error {
+	aMeta, bMeta := a.GetObjectMeta(), b.GetObjectMeta()
+
+	if aMeta.GetName() == bMeta.GetName() && aMeta.GetNamespace() == bMeta.GetNamespace() {
+		return fmt.Errorf("name/namespace combination (%s/%s) already exists for type", aMeta.GetName(), aMeta.GetNamespace())
+	}
+
+	return nil
+}
+
+// deepCopy creates a deep copy of the Kubernetes object given.
+func deepCopy(obj KubeObject) (KubeObject, error) {
+	copy, err := api.Scheme.DeepCopy(obj)
+	if err != nil {
+		return nil, err
+	}
+	return copy.(KubeObject), nil
 }
 
 var (

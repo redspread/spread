@@ -1,10 +1,13 @@
 package component
 
 import (
+	"fmt"
+
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/validation"
 )
 
 // Container represents api.Container in the Redspread hierarchy.
@@ -15,6 +18,11 @@ type Container struct {
 }
 
 func NewContainer(container api.Container, source string, objects ...deploy.KubeObject) (*Container, error) {
+	err := validateContainer(container)
+	if err != nil {
+		return nil, fmt.Errorf("could not create Container from `%s`: %v", source, err)
+	}
+
 	base, err := newBase(ComponentContainer, source, objects)
 	if err != nil {
 		return nil, err
@@ -49,4 +57,22 @@ func (c Container) Images() []*image.Image {
 func (c Container) kube() api.Container {
 	c.container.Image = c.image.kube()
 	return c.container
+}
+
+func validateContainer(c api.Container) error {
+	validMeta := api.ObjectMeta{
+		Name:      "valid",
+		Namespace: "object",
+	}
+
+	pod := api.Pod{
+		ObjectMeta: validMeta,
+		Spec: api.PodSpec{
+			Containers:    []api.Container{c},
+			RestartPolicy: api.RestartPolicyAlways,
+			DNSPolicy:     api.DNSClusterFirst,
+		},
+	}
+
+	return validation.ValidatePod(&pod).ToAggregate()
 }

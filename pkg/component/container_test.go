@@ -8,7 +8,12 @@ import (
 )
 
 func TestContainerSimpleDeployment(t *testing.T) {
-	kubeContainer := generateContainer(t)
+	kubeContainer := api.Container{
+		Name:            "simple-container",
+		Image:           "busybox:latest",
+		Command:         []string{"/bin/busybox", "ls"},
+		ImagePullPolicy: api.PullAlways,
+	}
 
 	_, err := NewContainer(kubeContainer, "simpleTest")
 	assert.NoError(t, err, "should be able to create container")
