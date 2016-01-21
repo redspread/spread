@@ -12,7 +12,7 @@ import (
 type Component interface {
 	deploy.Deployable
 	Type() Type
-	Objects() []*deploy.KubeObject
+	Objects() []deploy.KubeObject
 	Source() string
 	DefaultMeta() api.ObjectMeta
 }
@@ -45,9 +45,8 @@ func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.Ku
 }
 
 // Objects returns slice of objects attached to Component
-func (base Base) Objects() []*deploy.KubeObject {
-	// TODO: Implement
-	return []*deploy.KubeObject{}
+func (base Base) Objects() []deploy.KubeObject {
+	return base.objects.Objects()
 }
 
 // Source returns an import source specific identifier

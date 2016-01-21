@@ -165,6 +165,30 @@ func (d Deployment) Equals(other Deployment) bool {
 	return true
 }
 
+func (d Deployment) Objects() (obj []KubeObject) {
+	obj = appendObjects(obj, d.rcs)
+	obj = appendObjects(obj, d.pods)
+	obj = appendObjects(obj, d.services)
+	obj = appendObjects(obj, d.secrets)
+	obj = appendObjects(obj, d.volumes)
+	obj = appendObjects(obj, d.volumeClaims)
+	obj = appendObjects(obj, d.namespaces)
+	return
+
+}
+
+func appendObjects(obj []KubeObject, objectSlice interface{}) []KubeObject {
+	sliceVal := reflect.ValueOf(objectSlice)
+	for i := 0; i < sliceVal.Len(); i++ {
+		objCopy, err := api.Scheme.DeepCopy(sliceVal.Index(i).Interface())
+		if err != nil {
+			panic(err)
+		}
+		obj = append(obj, objCopy.(KubeObject))
+	}
+	return obj
+}
+
 // assertUniqueName checks a slice of objects for naming collisions. It assumes that the slice is of a single type.
 func assertUniqueName(a, b KubeObject) error {
 	aMeta, bMeta := a.GetObjectMeta(), b.GetObjectMeta()
