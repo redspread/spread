@@ -3,6 +3,7 @@ package deploy
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
@@ -133,6 +134,37 @@ func (d *Deployment) Add(obj KubeObject) error {
 	}
 }
 
+func (d Deployment) Equals(other Deployment) bool {
+	if !equivalent(d.rcs, other.rcs) {
+		return false
+	}
+
+	if !equivalent(d.pods, other.pods) {
+		return false
+	}
+
+	if !equivalent(d.services, other.services) {
+		return false
+	}
+
+	if !equivalent(d.secrets, other.secrets) {
+		return false
+	}
+
+	if !equivalent(d.volumes, other.volumes) {
+		return false
+	}
+
+	if !equivalent(d.volumeClaims, other.volumeClaims) {
+		return false
+	}
+
+	if !equivalent(d.namespaces, other.namespaces) {
+		return false
+	}
+	return true
+}
+
 // assertUniqueName checks a slice of objects for naming collisions. It assumes that the slice is of a single type.
 func assertUniqueName(a, b KubeObject) error {
 	aMeta, bMeta := a.GetObjectMeta(), b.GetObjectMeta()
@@ -142,6 +174,29 @@ func assertUniqueName(a, b KubeObject) error {
 	}
 
 	return nil
+}
+
+func equivalent(a, b interface{}) bool {
+	aSlice, bSlice := reflect.ValueOf(a), reflect.ValueOf(b)
+	if aSlice.Len() != bSlice.Len() {
+		return false
+	}
+
+	for i := 0; i < aSlice.Len(); i++ {
+		aPtr := aSlice.Index(i).Interface()
+		found := false
+		for j := 0; j < bSlice.Len(); j++ {
+			bPtr := bSlice.Index(j).Interface()
+			if api.Semantic.DeepEqual(aPtr, bPtr) {
+				found = true
+			}
+		}
+
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 // deepCopy creates a deep copy of the Kubernetes object given.
