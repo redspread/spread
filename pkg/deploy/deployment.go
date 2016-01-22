@@ -21,6 +21,8 @@ type Deployment struct {
 	namespaces   []*api.Namespace
 }
 
+// Add inserts an object into a deployment. The object must be a valid Kubernetes object or it will fail.
+// There can only be a single object of the same name, namespace, and type. Objects are deep-copied into the Deployment.
 func (d *Deployment) Add(obj KubeObject) error {
 	copy, err := deepCopy(obj)
 	if err != nil {
@@ -130,6 +132,22 @@ func (d *Deployment) Add(obj KubeObject) error {
 	}
 }
 
+// AddDeployment inserts the contents of one Deployment into another.
+func (d *Deployment) AddDeployment(deployment Deployment) (err error) {
+	// this is inefficient-it results in two deep copies being made, ones that's thrown out
+	// if this becomes frequently used it should be reimplemented
+
+	// TODO: perform check for collisions before mutation to prevent incomplete additions
+	for _, obj := range deployment.Objects() {
+		err = d.Add(obj)
+		if err != nil {
+			return fmt.Errorf("could not add `%s`: %v", obj.GetObjectMeta().GetName(), err)
+		}
+	}
+	return nil
+}
+
+// Equals performs a deep equality check between Deployments. Internal ordering is ignored.
 func (d Deployment) Equals(other Deployment) bool {
 	if !equivalent(d.rcs, other.rcs) {
 		return false
@@ -161,6 +179,7 @@ func (d Deployment) Equals(other Deployment) bool {
 	return true
 }
 
+// Objects returns the contents of a Deployment. No ordering guarantees are given.
 func (d Deployment) Objects() (obj []KubeObject) {
 	obj = appendObjects(obj, d.rcs)
 	obj = appendObjects(obj, d.pods)
@@ -190,7 +209,7 @@ func assertUniqueName(a, b KubeObject) error {
 	aMeta, bMeta := a.GetObjectMeta(), b.GetObjectMeta()
 
 	if aMeta.GetName() == bMeta.GetName() && aMeta.GetNamespace() == bMeta.GetNamespace() {
-		return fmt.Errorf("name/namespace combination (%s/%s) already exists for type", aMeta.GetName(), aMeta.GetNamespace())
+		return ErrorConflict
 	}
 
 	return nil
@@ -230,4 +249,5 @@ func deepCopy(obj KubeObject) (KubeObject, error) {
 
 var (
 	ErrorObjectNotSupported = errors.New("could not add to deployment, object not supported")
+	ErrorConflict           = errors.New("name/namespace combination already exists for type")
 )
