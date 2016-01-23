@@ -84,6 +84,8 @@ func TestDeploymentObjects(t *testing.T) {
 	deploy.Add(secret2)
 	deploy.Add(&pod)
 
+	assert.Equal(t, 3, deploy.Len(), "should have 3 items")
+
 	objects := deploy.Objects()
 
 	for i := 0; i < len(objects); i++ {

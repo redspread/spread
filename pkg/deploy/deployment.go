@@ -192,6 +192,18 @@ func (d Deployment) Objects() (obj []KubeObject) {
 
 }
 
+// Len returns the number of objects in a Deployment.
+func (d Deployment) Len() int {
+	sum := len(d.rcs)
+	sum += len(d.pods)
+	sum += len(d.services)
+	sum += len(d.secrets)
+	sum += len(d.volumes)
+	sum += len(d.volumeClaims)
+	sum += len(d.namespaces)
+	return sum
+}
+
 func appendObjects(obj []KubeObject, objectSlice interface{}) []KubeObject {
 	sliceVal := reflect.ValueOf(objectSlice)
 	for i := 0; i < sliceVal.Len(); i++ {
