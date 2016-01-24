@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"rsprd.com/spread/pkg/deploy"
@@ -9,18 +9,18 @@ import (
 
 // Pod represents api.Pod in the Redspread hierarchy.
 type Pod struct {
-	Base
+	base
 	pod        *api.Pod
 	containers []*Container
 }
 
 func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
-	base, err := newBase(ComponentPod, defaults, source, objects)
+	base, err := newBase(EntityPod, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	pod := Pod{Base: base}
+	pod := Pod{base: base}
 	for _, v := range kubePod.Spec.Containers {
 		container, err := NewContainer(v, defaults, source)
 		if err != nil {

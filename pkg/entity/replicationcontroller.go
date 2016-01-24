@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"rsprd.com/spread/pkg/deploy"
@@ -9,18 +9,18 @@ import (
 
 // ReplicationController represents api.ReplicationController in the Redspread hierarchy.
 type ReplicationController struct {
-	Base
+	base
 	rc  *api.ReplicationController
 	pod *Pod
 }
 
 func NewReplicationController(kubeRC *api.ReplicationController, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
-	base, err := newBase(ComponentReplicationController, defaults, source, objects)
+	base, err := newBase(EntityReplicationController, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	rc := ReplicationController{Base: base}
+	rc := ReplicationController{base: base}
 	if kubeRC.Spec.Template != nil {
 		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.Spec, defaults, source)
 		if err != nil {

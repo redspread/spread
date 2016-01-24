@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"math/rand"
@@ -16,14 +16,14 @@ func init() {
 }
 
 func TestNewBase(t *testing.T) {
-	componentType := Type(rand.Intn(5))
+	entityType := Type(rand.Intn(5))
 	source := randomString(8)
 	var objects []deploy.KubeObject
 
-	base, err := newBase(componentType, api.ObjectMeta{}, source, objects)
-	assert.NoError(t, err, "valid component")
+	base, err := newBase(entityType, api.ObjectMeta{}, source, objects)
+	assert.NoError(t, err, "valid entity")
 
-	assert.Equal(t, componentType, base.Type(), "type cannot change")
+	assert.Equal(t, entityType, base.Type(), "type cannot change")
 	assert.Equal(t, source, base.Source(), "source cannot change")
 
 	emptyDeploy := deploy.Deployment{}
@@ -31,13 +31,13 @@ func TestNewBase(t *testing.T) {
 }
 
 func TestBaseBadObject(t *testing.T) {
-	componentType := ComponentImage
+	entityType := EntityImage
 	source := "testSource"
 	objects := []deploy.KubeObject{
 		&api.Pod{}, // invalid object
 	}
 
-	_, err := newBase(componentType, api.ObjectMeta{}, source, objects)
+	_, err := newBase(entityType, api.ObjectMeta{}, source, objects)
 	assert.Error(t, err, "objects are invalid")
 }
 

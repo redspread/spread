@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 // Container represents api.Container in the Redspread hierarchy.
 type Container struct {
-	Base
+	base
 	container api.Container
 	image     *Image
 }
@@ -23,12 +23,12 @@ func NewContainer(container api.Container, defaults api.ObjectMeta, source strin
 		return nil, fmt.Errorf("could not create Container from `%s`: %v", source, err)
 	}
 
-	base, err := newBase(ComponentContainer, defaults, source, objects)
+	base, err := newBase(EntityContainer, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	}
 
-	newContainer := Container{Base: base}
+	newContainer := Container{base: base}
 	if len(container.Image) != 0 {
 		image, err := image.FromString(container.Image)
 		if err != nil {

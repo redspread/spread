@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"fmt"
@@ -8,25 +8,25 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-// A Component is an entity (potentially containing sub-components) that can be deployed to Kubernetes.
-type Component interface {
+// A Entity is an entity (potentially containing sub-entities) that can be deployed to Kubernetes.
+type Entity interface {
 	deploy.Deployable
 	Type() Type
 	Objects() []deploy.KubeObject
 	Source() string
-	Attach(Component) error
+	Attach(Entity) error
 	DefaultMeta() api.ObjectMeta
 }
 
-// Base provides fields that are shared between all Components.
-type Base struct {
-	componentType Type
-	objects       deploy.Deployment
-	source        string
-	defaults      api.ObjectMeta
+// base provides fields that are shared between all Entitys.
+type base struct {
+	entityType Type
+	objects    deploy.Deployment
+	source     string
+	defaults   api.ObjectMeta
 }
 
-func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.KubeObject) (base Base, err error) {
+func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.KubeObject) (base base, err error) {
 	base.defaults = defaults
 
 	deployment := deploy.Deployment{}
@@ -40,40 +40,40 @@ func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.Ku
 	}
 
 	base.source = source
-	base.componentType = t
+	base.entityType = t
 	base.objects = deployment
 	return
 }
 
-// Objects returns slice of objects attached to Component
-func (base Base) Objects() []deploy.KubeObject {
+// Objects returns slice of objects attached to Entity
+func (base base) Objects() []deploy.KubeObject {
 	return base.objects.Objects()
 }
 
 // Source returns an import source specific identifier
-func (base Base) Source() string {
+func (base base) Source() string {
 	return base.source
 }
 
-// DefaultMeta returns the ObjectMeta that the Component was created with
-func (base Base) DefaultMeta() api.ObjectMeta {
+// DefaultMeta returns the ObjectMeta that the Entity was created with
+func (base base) DefaultMeta() api.ObjectMeta {
 	return base.defaults
 }
 
-// Type returns itself for trivial implementation of Component
-func (base Base) Type() Type {
-	return base.componentType
+// Type returns itself for trivial implementation of Entity
+func (base base) Type() Type {
+	return base.entityType
 }
 
-// Type identifies the component's type.
+// Type identifies the entity's type.
 type Type int
 
 const (
-	ComponentApplication           Type = iota // Application (top of tree)
-	ComponentReplicationController             // Wrapper for api.ReplicationController
-	ComponentPod                               // Wrapper for api.Pod
-	ComponentContainer                         // Wrapper for api.Container
-	ComponentImage                             // Represented by api.Container's image field
+	EntityApplication           Type = iota // Application (top of tree)
+	EntityReplicationController             // Wrapper for api.ReplicationController
+	EntityPod                               // Wrapper for api.Pod
+	EntityContainer                         // Wrapper for api.Container
+	EntityImage                             // Represented by api.Container's image field
 )
 
 // metaDefaults applies a set of defaults on a KubeObject. Non-empty fields on object override defaults.

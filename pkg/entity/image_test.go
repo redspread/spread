@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"testing"
@@ -50,7 +50,7 @@ func TestImageImages(t *testing.T) {
 
 	image, err := NewImage(simple, api.ObjectMeta{}, "test")
 	if err != nil {
-		t.Fatalf("Could not create Image component: %v", err)
+		t.Fatalf("Could not create Image entity: %v", err)
 	}
 
 	// check images
@@ -68,24 +68,24 @@ func TestNilImage(t *testing.T) {
 func TestImageType(t *testing.T) {
 	image := newImage(t, "ghost:latest")
 
-	component, err := NewImage(image, api.ObjectMeta{}, "")
+	entity, err := NewImage(image, api.ObjectMeta{}, "")
 	if err != nil {
-		t.Fatalf("Could not create Image component: %v", err)
+		t.Fatalf("Could not create Image entity: %v", err)
 	}
 
-	assert.Equal(t, ComponentImage, component.Type(), "incorrect type")
+	assert.Equal(t, EntityImage, entity.Type(), "incorrect type")
 }
 
 func TestImageKube(t *testing.T) {
 	imageName := "redis:latest"
 	image := newImage(t, imageName)
 
-	component, err := NewImage(image, api.ObjectMeta{}, "")
+	entity, err := NewImage(image, api.ObjectMeta{}, "")
 	if err != nil {
-		t.Fatalf("Could not create Image component: %v", err)
+		t.Fatalf("Could not create Image entity: %v", err)
 	}
 
-	actual := component.kube()
+	actual := entity.kube()
 	assert.Equal(t, imageName, actual, "image names should match")
 }
 

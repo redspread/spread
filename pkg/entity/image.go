@@ -1,4 +1,4 @@
-package component
+package entity
 
 import (
 	"rsprd.com/spread/pkg/deploy"
@@ -9,16 +9,16 @@ import (
 
 // Image represents a Docker image in the Redspread hierarchy. It wraps image.Image.
 type Image struct {
-	Base
+	base
 	image *image.Image
 }
 
 func NewImage(image *image.Image, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Image, error) {
-	base, err := newBase(ComponentImage, defaults, source, objects)
+	base, err := newBase(EntityImage, defaults, source, objects)
 	if err != nil {
 		return nil, err
 	} else {
-		return &Image{Base: base, image: image}, nil
+		return &Image{base: base, image: image}, nil
 	}
 }
 
