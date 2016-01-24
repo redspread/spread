@@ -39,6 +39,10 @@ func (c ReplicationController) Images() (images []*image.Image) {
 	return c.pod.Images()
 }
 
+func (c ReplicationController) Attach(e Entity) error {
+	return nil
+}
+
 func (c ReplicationController) kube() *api.ReplicationController {
 	c.rc.Spec.Template.Spec = c.pod.kube().Spec
 	return c.rc

@@ -53,6 +53,10 @@ func (c Pod) Images() (images []*image.Image) {
 	return
 }
 
+func (c Pod) Attach(e Entity) error {
+	return nil
+}
+
 func (c Pod) kube() *api.Pod {
 	containers := []api.Container{}
 	for _, container := range c.containers {

@@ -8,7 +8,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-// A Entity is an entity (potentially containing sub-entities) that can be deployed to Kubernetes.
+// An Entity is a component (potentially containing sub-entities) that can be deployed to Kubernetes.
 type Entity interface {
 	deploy.Deployable
 	Type() Type
@@ -31,7 +31,7 @@ func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.Ku
 
 	deployment := deploy.Deployment{}
 	for _, obj := range objects {
-		setMetaDefaults(obj, defaults)
+		base.setDefaults(obj)
 		err = deployment.Add(obj)
 		if err != nil {
 			err = fmt.Errorf("error adding '%s': %v", source, err)
@@ -63,6 +63,17 @@ func (base base) DefaultMeta() api.ObjectMeta {
 // Type returns itself for trivial implementation of Entity
 func (base base) Type() Type {
 	return base.entityType
+}
+
+// validAttach checks object types to see if the attach is allowed. Objects can
+// only be attached to objects higher in the hierarchy. However, to the nature of iota Application is 0, RC is 1, ...
+func (base base) validAttach(e Entity) bool {
+	return e.Type() <= EntityImage && base.Type() < e.Type()
+}
+
+// setDefaults sets the bases defaults on an object
+func (base base) setDefaults(obj deploy.KubeObject) {
+	setMetaDefaults(obj, base.defaults)
 }
 
 // Type identifies the entity's type.

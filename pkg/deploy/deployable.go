@@ -6,6 +6,6 @@ import (
 
 // A Deployable can produce a Deployment
 type Deployable interface {
-	Deployment() *Deployment
+	Deployment() Deployment
 	Images() []*image.Image
 }

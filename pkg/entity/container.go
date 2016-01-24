@@ -54,6 +54,10 @@ func (c Container) Images() []*image.Image {
 	return c.image.Images()
 }
 
+func (c Container) Attach(e Entity) error {
+	return nil
+}
+
 func (c Container) kube() api.Container {
 	c.container.Image = c.image.kube()
 	return c.container

@@ -32,6 +32,10 @@ func (c Image) Images() []*image.Image {
 	}
 }
 
+func (c Image) Attach(e Entity) error {
+	return nil
+}
+
 // Kubernetes representation of image
 func (c Image) kube() string {
 	return c.image.DockerName()

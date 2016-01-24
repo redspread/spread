@@ -30,6 +30,100 @@ func TestNewBase(t *testing.T) {
 	assert.True(t, emptyDeploy.Equals(base.objects))
 }
 
+func TestBaseNoDefaults(t *testing.T) {
+	defaults := api.ObjectMeta{}
+	obj := createSecret(randomString(8))
+
+	base, err := newBase(EntityApplication, defaults, "src", []deploy.KubeObject{obj})
+	assert.NoError(t, err, "valid base")
+	assert.True(t, api.Semantic.DeepEqual(defaults, base.DefaultMeta()), "defaults should have not changed")
+
+	objects := base.Objects()
+	assert.Len(t, objects, 1, "should only have secret")
+
+	obj.GetObjectMeta().SetNamespace(api.NamespaceDefault)
+
+	actual := objects[0]
+	assert.True(t, api.Semantic.DeepEqual(obj, actual), "secrets should be same")
+}
+
+func TestBaseNamespaceDefaults(t *testing.T) {
+	defaults := api.ObjectMeta{
+		Namespace: "set-by-defaults",
+	}
+
+	nsSetName := "namespace-set"
+	nsSet := createSecret(nsSetName)
+	nsSet.Namespace = "set-on-object"
+
+	nsUnsetName := "namespace-unset"
+	nsUnset := createSecret(nsUnsetName)
+
+	objects := []deploy.KubeObject{nsSet, nsUnset}
+	base, err := newBase(EntityReplicationController, defaults, "src", objects)
+	assert.NoError(t, err, "valid base")
+
+	for _, obj := range base.Objects() {
+		meta := obj.GetObjectMeta()
+		switch meta.GetName() {
+		case nsSetName:
+			assert.Equal(t, "set-on-object", meta.GetNamespace(), "object namespace should override defaults")
+		case nsUnsetName:
+			assert.Equal(t, "set-by-defaults", meta.GetNamespace(), "should use defaults for namespace")
+		default:
+			t.Errorf("unexpected object `%s`", meta.GetName())
+		}
+	}
+}
+
+func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
+	initial := map[string]string{
+		"overwritten":     "no",
+		"not-overwritten": "yes",
+	}
+
+	defaults := api.ObjectMeta{
+		Labels:      initial,
+		Annotations: initial,
+	}
+
+	override := map[string]string{
+		"overwritten": "yes",
+	}
+
+	obj := createSecret(randomString(8))
+	obj.GetObjectMeta().SetLabels(override)
+	obj.GetObjectMeta().SetAnnotations(override)
+
+	base, err := newBase(EntityContainer, defaults, "src", []deploy.KubeObject{obj})
+	assert.NoError(t, err, "valid base")
+	assert.True(t, api.Semantic.DeepEqual(defaults, base.DefaultMeta()), "defaults should have not changed")
+
+	objects := base.Objects()
+	assert.Len(t, objects, 1)
+
+	expected := initial
+	expected["overwritten"] = "yes"
+
+	output := objects[0]
+	meta := output.GetObjectMeta()
+	assert.Equal(t, expected, meta.GetLabels(), "labels should match")
+	assert.Equal(t, expected, meta.GetAnnotations(), "annotations should match")
+}
+
+func TestBaseCheckAttach(t *testing.T) {
+	baseImage := newImage(t, "sample-image")
+	image, err := NewImage(baseImage, api.ObjectMeta{}, "")
+	assert.NoError(t, err, "valid image")
+
+	kubeContainer := newKubeContainer("sample-container", "golang")
+	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "")
+	assert.NoError(t, err, "valid container")
+
+	assert.False(t, image.validAttach(container), "containers should not be allowed to attach to images")
+	assert.True(t, container.validAttach(image), "images should be allowed to attach to containers")
+}
+
 func TestBaseBadObject(t *testing.T) {
 	entityType := EntityImage
 	source := "testSource"
@@ -48,4 +142,13 @@ func randomString(strlen int) string {
 		result[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+func createSecret(name string) *api.Secret {
+	return &api.Secret{
+		ObjectMeta: api.ObjectMeta{Name: name},
+
+		Type: api.SecretTypeOpaque,
+		Data: map[string][]byte{randomString(10): []byte(randomString(80))},
+	}
 }

@@ -32,3 +32,7 @@ func (c Application) Images() (images []*image.Image) {
 	}
 	return
 }
+
+func (c Application) Attach(e Entity) error {
+	return nil
+}

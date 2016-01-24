@@ -38,3 +38,12 @@ func TestContainerSimpleDeployment(t *testing.T) {
 
 	assert.True(t, expected.Equals(actual), "should be equivlant")
 }
+
+func newKubeContainer(name, imageName string) api.Container {
+	return api.Container{
+		Name:            name,
+		Image:           imageName,
+		Command:         []string{"/bin/busybox", "ls"},
+		ImagePullPolicy: api.PullAlways,
+	}
+}
