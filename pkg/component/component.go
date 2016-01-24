@@ -14,6 +14,7 @@ type Component interface {
 	Type() Type
 	Objects() []deploy.KubeObject
 	Source() string
+	Attach(Component) error
 	DefaultMeta() api.ObjectMeta
 }
 
@@ -54,6 +55,7 @@ func (base Base) Source() string {
 	return base.source
 }
 
+// DefaultMeta returns the ObjectMeta that the Component was created with
 func (base Base) DefaultMeta() api.ObjectMeta {
 	return base.defaults
 }
