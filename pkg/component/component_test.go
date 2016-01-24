@@ -3,22 +3,22 @@ package component
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"rsprd.com/spread/pkg/deploy"
 
 	"github.com/gh/stretchr/testify/assert"
-	"github.com/google/gofuzz"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/testapi"
-	kubetest "k8s.io/kubernetes/pkg/api/testing"
 )
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
 
 func TestNewBase(t *testing.T) {
 	componentType := Type(rand.Intn(5))
-	var source string
+	source := randomString(8)
 	var objects []deploy.KubeObject
-
-	fuzzer(t).Fuzz(&source)
 
 	base, err := newBase(componentType, api.ObjectMeta{}, source, objects)
 	assert.NoError(t, err, "valid component")
@@ -41,8 +41,11 @@ func TestBaseBadObject(t *testing.T) {
 	assert.Error(t, err, "objects are invalid")
 }
 
-func fuzzer(t *testing.T) *fuzz.Fuzzer {
-	version := testapi.Default.InternalGroupVersion()
-	seed := rand.Int63()
-	return kubetest.FuzzerFor(t, version, rand.NewSource(seed))
+func randomString(strlen int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, strlen)
+	for i := 0; i < strlen; i++ {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
 }

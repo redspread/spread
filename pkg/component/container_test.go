@@ -3,6 +3,8 @@ package component
 import (
 	"testing"
 
+	"rsprd.com/spread/pkg/deploy"
+
 	"github.com/gh/stretchr/testify/assert"
 	"k8s.io/kubernetes/pkg/api"
 )
@@ -15,11 +17,24 @@ func TestContainerSimpleDeployment(t *testing.T) {
 		ImagePullPolicy: api.PullAlways,
 	}
 
-	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "simpleTest")
+	ctr, err := NewContainer(kubeContainer, api.ObjectMeta{}, "simpleTest")
 	assert.NoError(t, err, "should be able to create container")
-}
 
-func generateContainer(t *testing.T) (container api.Container) {
-	fuzzer(t).Fuzz(&container)
-	return
+	pod := api.Pod{
+		ObjectMeta: api.ObjectMeta{
+			GenerateName: kubeContainer.Name,
+			Namespace:    api.NamespaceDefault,
+		},
+		Spec: api.PodSpec{
+			Containers: []api.Container{
+				kubeContainer,
+			},
+		},
+	}
+
+	expected := deploy.Deployment{}
+	assert.NoError(t, expected.Add(&pod), "valid pod")
+	actual := ctr.Deployment()
+
+	assert.True(t, expected.Equals(actual), "should be equivlant")
 }
