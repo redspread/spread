@@ -9,7 +9,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-func TestContainerSimpleDeployment(t *testing.T) {
+func TestContainerWithImageDeployment(t *testing.T) {
 	kubeContainer := api.Container{
 		Name:            "simple-container",
 		Image:           "busybox:latest",
@@ -34,9 +34,10 @@ func TestContainerSimpleDeployment(t *testing.T) {
 
 	expected := deploy.Deployment{}
 	assert.NoError(t, expected.Add(&pod), "valid pod")
-	actual := ctr.Deployment()
+	actual, err := ctr.Deployment()
+	assert.NoError(t, err, "deploy ok")
 
-	assert.True(t, expected.Equals(actual), "should be equivlant")
+	assert.True(t, expected.Equal(actual), "should be equivlant")
 }
 
 func newKubeContainer(name, imageName string) api.Container {

@@ -30,8 +30,8 @@ func NewImage(image *image.Image, defaults api.ObjectMeta, source string, object
 	return &Image{base: base, image: image}, nil
 }
 
-func (c Image) Deployment() deploy.Deployment {
-	return deploy.Deployment{}
+func (c Image) Deployment() (*deploy.Deployment, error) {
+	return nil, nil
 }
 
 func (c Image) Images() []*image.Image {

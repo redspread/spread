@@ -11,16 +11,16 @@ import (
 func TestDeploymentSimpleEquals1(t *testing.T) {
 	a, b := Deployment{}, Deployment{}
 
-	assert.True(t, a.Equals(a), "self")
-	assert.True(t, b.Equals(b), "self")
-	assert.True(t, a.Equals(b), "both are empty")
+	assert.True(t, a.Equal(a), "self")
+	assert.True(t, b.Equal(b), "self")
+	assert.True(t, a.Equal(b), "both are empty")
 
 	secret := createSecret("test", "a")
 	a.Add(secret)
-	assert.False(t, a.Equals(b), "a has secret")
+	assert.False(t, a.Equal(b), "a has secret")
 
 	b.Add(createSecret("secrete", "data"))
-	assert.False(t, a.Equals(b), "still bad")
+	assert.False(t, a.Equal(b), "still bad")
 }
 
 func TestDeploymentSimpleEquals2(t *testing.T) {
@@ -31,18 +31,18 @@ func TestDeploymentSimpleEquals2(t *testing.T) {
 	deployA.Add(b)
 	deployA.Add(c)
 
-	assert.False(t, deployA.Equals(deployB), "deployB is empty")
-	assert.False(t, deployB.Equals(deployA), "deployB is empty")
+	assert.False(t, deployA.Equal(deployB), "deployB is empty")
+	assert.False(t, deployB.Equal(deployA), "deployB is empty")
 
 	deployB.Add(c)
 	deployB.Add(b)
 	deployB.Add(a)
 
-	assert.True(t, deployB.Equals(deployA), "same")
+	assert.True(t, deployB.Equal(deployA), "same")
 
 	c.Name = "new"
 	deployB.Add(c)
-	assert.False(t, deployB.Equals(deployA), "added another c")
+	assert.False(t, deployB.Equal(deployA), "added another c")
 }
 
 func TestNoDuplicateNames(t *testing.T) {

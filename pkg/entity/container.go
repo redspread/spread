@@ -46,8 +46,8 @@ func NewContainer(container api.Container, defaults api.ObjectMeta, source strin
 	return &newContainer, nil
 }
 
-func (c Container) Deployment() deploy.Deployment {
-	return deploy.Deployment{}
+func (c Container) Deployment() (*deploy.Deployment, error) {
+	return nil, nil
 }
 
 func (c Container) Images() []*image.Image {

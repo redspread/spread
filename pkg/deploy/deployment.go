@@ -147,8 +147,11 @@ func (d *Deployment) AddDeployment(deployment Deployment) (err error) {
 	return nil
 }
 
-// Equals performs a deep equality check between Deployments. Internal ordering is ignored.
-func (d Deployment) Equals(other Deployment) bool {
+// Equal performs a deep equality check between Deployments. Internal ordering is ignored.
+func (d *Deployment) Equal(other *Deployment) bool {
+	if other == nil {
+		return false
+	}
 	if !equivalent(d.rcs, other.rcs) {
 		return false
 	}

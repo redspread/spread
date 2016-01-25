@@ -27,7 +27,7 @@ func TestNewBase(t *testing.T) {
 	assert.Equal(t, source, base.Source(), "source cannot change")
 
 	emptyDeploy := deploy.Deployment{}
-	assert.True(t, emptyDeploy.Equals(base.objects))
+	assert.True(t, emptyDeploy.Equal(&base.objects))
 }
 
 func TestBaseNoDefaults(t *testing.T) {

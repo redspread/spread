@@ -31,8 +31,8 @@ func NewReplicationController(kubeRC *api.ReplicationController, defaults api.Ob
 	return &rc, nil
 }
 
-func (c ReplicationController) Deployment() deploy.Deployment {
-	return deploy.Deployment{}
+func (c ReplicationController) Deployment() (*deploy.Deployment, error) {
+	return nil, nil
 }
 
 func (c ReplicationController) Images() (images []*image.Image) {

@@ -22,8 +22,8 @@ func NewApplication(source string, defaults api.ObjectMeta, objects ...deploy.Ku
 	return &ReplicationController{base: base}, nil
 }
 
-func (c Application) Deployment() deploy.Deployment {
-	return deploy.Deployment{}
+func (c Application) Deployment() (*deploy.Deployment, error) {
+	return nil, nil
 }
 
 func (c Application) Images() (images []*image.Image) {

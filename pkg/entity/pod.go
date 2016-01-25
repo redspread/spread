@@ -42,8 +42,8 @@ func NewPodFromPodSpec(podSpec api.PodSpec, defaults api.ObjectMeta, source stri
 	return NewPod(&pod, defaults, source, objects...)
 }
 
-func (c Pod) Deployment() deploy.Deployment {
-	return deploy.Deployment{}
+func (c Pod) Deployment() (*deploy.Deployment, error) {
+	return nil, nil
 }
 
 func (c Pod) Images() (images []*image.Image) {
