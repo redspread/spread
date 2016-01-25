@@ -10,9 +10,14 @@ import (
 )
 
 func TestPodNil(t *testing.T) {
-	var pod *api.Pod
-	_, err := NewPod(pod, api.ObjectMeta{}, "nilPod")
+	_, err := NewPod(nil, api.ObjectMeta{}, "nilPod")
 	assert.Error(t, err, "cannot created entity.Pod from nil Kube Pod")
+}
+
+func TestPodInvalid(t *testing.T) {
+	kubePod := new(api.Pod)
+	_, err := NewPod(kubePod, api.ObjectMeta{}, "")
+	assert.Error(t, err, "invalid pod")
 }
 
 func TestPodNoContainers(t *testing.T) {
@@ -34,6 +39,25 @@ func TestPodNoContainers(t *testing.T) {
 	// deployment
 	_, err = pod.Deployment()
 	assert.Error(t, err, "doesn't have containers, can't deploy")
+}
+
+func TestPodNoImage(t *testing.T) {
+	kubePod := testNewKubePod("no-image-pod")
+	kubePod.Spec.Containers = []api.Container{
+		api.Container{
+			Name: "no-image",
+			ImagePullPolicy: api.PullIfNotPresent,
+		},
+	}
+
+	pod, err := NewPod(kubePod, api.ObjectMeta{}, "")
+	assert.NoError(t, err, "imageless but valid pod")
+
+	_, err = pod.kube()
+	assert.Error(t, err, "kube not possible without image")
+
+	_, err = pod.Deployment()
+	assert.Error(t, err, "deployment not possible without image")
 }
 
 func TestPodWithContainersImage(t *testing.T) {

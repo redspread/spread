@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"errors"
 	"fmt"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -20,16 +19,17 @@ type Pod struct {
 
 func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	if kubePod == nil {
-		return nil, ErrorNilPod
+		return nil, fmt.Errorf("cannot create Pod from nil `%s`", source)
+	}
+
+	// deep copy
+	kubePod, err := copyPod(kubePod)
+	if err != nil {
+		return nil, err
 	}
 
 	base, err := newBase(EntityPod, defaults, source, objects)
 	if err != nil {
-		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
-	}
-
-	base.setDefaults(kubePod)
-	if err := validatePod(kubePod, true); err != nil {
 		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
 	}
 
@@ -43,6 +43,11 @@ func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ..
 		}
 	}
 	kubePod.Spec.Containers = []api.Container{}
+
+	base.setDefaults(kubePod)
+	if err := validatePod(kubePod, true); err != nil {
+		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
+	}
 
 	pod.pod = kubePod
 	return &pod, nil
@@ -116,7 +121,3 @@ func validatePod(pod *api.Pod, ignoreContainers bool) error {
 	}
 	return errList.ToAggregate()
 }
-
-var (
-	ErrorNilPod = errors.New("pod cannot be nil")
-)
