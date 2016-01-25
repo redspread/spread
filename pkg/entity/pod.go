@@ -57,12 +57,34 @@ func (c Pod) Attach(e Entity) error {
 	return nil
 }
 
-func (c Pod) kube() *api.Pod {
+func (c Pod) kube() (*api.Pod, error) {
 	containers := []api.Container{}
 	for _, container := range c.containers {
-		containers = append(containers, container.kube())
+		kubeContainer, err := container.kube()
+		if err != nil {
+			return nil, err
+		}
+		containers = append(containers, kubeContainer)
 	}
 
-	c.pod.Spec.Containers = containers
-	return c.pod
+	if len(containers) == 0 {
+		return nil, ErrorEntityNotReady
+	}
+
+	pod, err := copyPod(c.pod)
+	if err != nil {
+		return nil, err
+	}
+
+	pod.Spec.Containers = containers
+	return c.pod, nil
+}
+
+func copyPod(pod *api.Pod) (*api.Pod, error) {
+	copy, err := api.Scheme.DeepCopy(pod)
+	if err != nil {
+		return nil, err
+	}
+
+	return copy.(*api.Pod), nil
 }

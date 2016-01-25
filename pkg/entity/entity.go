@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -120,3 +121,7 @@ func setMetaDefaults(obj deploy.KubeObject, defaults api.ObjectMeta) {
 	}
 	meta.SetAnnotations(annotations)
 }
+
+var (
+	ErrorEntityNotReady = errors.New("entity not ready to be deployed")
+)

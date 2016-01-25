@@ -43,7 +43,16 @@ func (c ReplicationController) Attach(e Entity) error {
 	return nil
 }
 
-func (c ReplicationController) kube() *api.ReplicationController {
-	c.rc.Spec.Template.Spec = c.pod.kube().Spec
-	return c.rc
+func (c ReplicationController) kube() (*api.ReplicationController, error) {
+	if c.pod == nil {
+		return nil, ErrorEntityNotReady
+	}
+
+	pod, err := c.pod.kube()
+	if err != nil {
+		return nil, err
+	}
+
+	c.rc.Spec.Template.Spec = pod.Spec
+	return c.rc, nil
 }

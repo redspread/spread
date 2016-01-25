@@ -51,16 +51,26 @@ func (c Container) Deployment() (*deploy.Deployment, error) {
 }
 
 func (c Container) Images() []*image.Image {
-	return c.image.Images()
+	var images []*image.Image
+	if c.image != nil {
+		images = c.image.Images()
+	}
+	return images
 }
 
 func (c Container) Attach(e Entity) error {
 	return nil
 }
 
-func (c Container) kube() api.Container {
-	c.container.Image = c.image.kube()
-	return c.container
+func (c Container) kube() (api.Container, error) {
+	if c.image == nil {
+		return api.Container{}, ErrorEntityNotReady
+	}
+
+	// if image exists should always return valid result
+	container := c.container
+	container.Image = c.image.kube()
+	return container, nil
 }
 
 func validateContainer(c api.Container) error {
@@ -78,5 +88,14 @@ func validateContainer(c api.Container) error {
 		},
 	}
 
-	return validation.ValidatePod(&pod).ToAggregate()
+	errList := validation.ValidatePod(&pod)
+
+	// Remove error for missing image field
+	return errList.Filter(func(e error) bool {
+		return e.Error() == NoImageErrStr
+	}).ToAggregate()
 }
+
+const (
+	NoImageErrStr = "spec.containers[0].image: Required value"
+)
