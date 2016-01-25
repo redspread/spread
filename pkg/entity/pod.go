@@ -1,10 +1,14 @@
 package entity
 
 import (
+	"errors"
+	"fmt"
+
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/validation"
 )
 
 // Pod represents api.Pod in the Redspread hierarchy.
@@ -15,9 +19,18 @@ type Pod struct {
 }
 
 func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	if kubePod == nil {
+		return nil, ErrorNilPod
+	}
+
 	base, err := newBase(EntityPod, defaults, source, objects)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
+	}
+
+	base.setDefaults(kubePod)
+	if err := validatePod(kubePod, true); err != nil {
+		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
 	}
 
 	pod := Pod{base: base}
@@ -35,8 +48,11 @@ func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ..
 	return &pod, nil
 }
 
-func NewPodFromPodSpec(podSpec api.PodSpec, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+func NewPodFromPodSpec(name string, podSpec api.PodSpec, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	pod := api.Pod{
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
 		Spec: podSpec,
 	}
 	return NewPod(&pod, defaults, source, objects...)
@@ -77,7 +93,7 @@ func (c Pod) kube() (*api.Pod, error) {
 	}
 
 	pod.Spec.Containers = containers
-	return c.pod, nil
+	return pod, nil
 }
 
 func copyPod(pod *api.Pod) (*api.Pod, error) {
@@ -88,3 +104,19 @@ func copyPod(pod *api.Pod) (*api.Pod, error) {
 
 	return copy.(*api.Pod), nil
 }
+
+func validatePod(pod *api.Pod, ignoreContainers bool) error {
+	errList := validation.ValidatePod(pod)
+
+	// remove error for no containers if requested
+	if ignoreContainers {
+		errList = errList.Filter(func(e error) bool {
+			return e.Error() == "spec.containers: Required value"
+		})
+	}
+	return errList.ToAggregate()
+}
+
+var (
+	ErrorNilPod = errors.New("pod cannot be nil")
+)

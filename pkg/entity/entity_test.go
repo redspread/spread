@@ -142,7 +142,7 @@ func TestBaseCheckAttach(t *testing.T) {
 	image, err := NewImage(baseImage, api.ObjectMeta{}, "")
 	assert.NoError(t, err, "valid image")
 
-	kubeContainer := newKubeContainer("sample-container", "golang")
+	kubeContainer := testNewKubeContainer("sample-container", "golang")
 	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "")
 	assert.NoError(t, err, "valid container")
 

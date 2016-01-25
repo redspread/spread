@@ -88,6 +88,15 @@ func validateContainer(c api.Container) error {
 		},
 	}
 
+	// fake volumes to allow validation
+	for _, mount := range c.VolumeMounts {
+		volume := api.Volume{
+			Name:         mount.Name,
+			VolumeSource: api.VolumeSource{EmptyDir: &api.EmptyDirVolumeSource{}},
+		}
+		pod.Spec.Volumes = append(pod.Spec.Volumes, volume)
+	}
+
 	errList := validation.ValidatePod(&pod)
 
 	// Remove error for missing image field

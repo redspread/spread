@@ -81,7 +81,7 @@ func TestContainerAttach(t *testing.T) {
 	imageName := "to-be-attached"
 	image := testNewImage(t, imageName, api.ObjectMeta{}, "test", []deploy.KubeObject{})
 
-	kubeContainer := newKubeContainer("test-container", "") // no image
+	kubeContainer := testNewKubeContainer("test-container", "") // no image
 	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "attach")
 	assert.NoError(t, err, "valid container")
 
@@ -113,7 +113,7 @@ func TestContainerAttach(t *testing.T) {
 }
 
 func TestContainerBadObject(t *testing.T) {
-	kubeContainer := newKubeContainer("test-container", "test-image")
+	kubeContainer := testNewKubeContainer("test-container", "test-image")
 	objects := []deploy.KubeObject{
 		createSecret(""), // invalid - must have name
 	}
@@ -135,12 +135,12 @@ func TestContainerInvalidContainer(t *testing.T) {
 
 func TestContainerInvalidImage(t *testing.T) {
 	imageName := "*T*H*I*S* IS ILLEGAL"
-	kubeContainer := newKubeContainer("invalid-image", imageName)
+	kubeContainer := testNewKubeContainer("invalid-image", imageName)
 	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidimage")
 	assert.Error(t, err, "image was invalid")
 }
 
-func newKubeContainer(name, imageName string) api.Container {
+func testNewKubeContainer(name, imageName string) api.Container {
 	return api.Container{
 		Name:            name,
 		Image:           imageName,
@@ -148,3 +148,36 @@ func newKubeContainer(name, imageName string) api.Container {
 		ImagePullPolicy: api.PullAlways,
 	}
 }
+
+func testRandomContainer(defaults api.ObjectMeta, source string, objects []deploy.KubeObject) *Container {
+	kubeContainer := testNewKubeContainer(randomString(10), randomString(15))
+	container, _ := NewContainer(kubeContainer, defaults, source, objects...)
+	return container
+}
+
+var (
+	testKubeContainerSourcegraph = api.Container{
+		Name:  "src",
+		Image: "sourcegraph/sourcegraph:latest",
+		VolumeMounts: []api.VolumeMount{
+			api.VolumeMount{Name: "config", MountPath: "/home/sourcegraph/.sourcegraph"},
+		},
+		Ports: []api.ContainerPort{
+			api.ContainerPort{ContainerPort: 80, Protocol: api.ProtocolTCP},
+			api.ContainerPort{ContainerPort: 443, Protocol: api.ProtocolTCP},
+		},
+		ImagePullPolicy: api.PullAlways,
+	}
+
+	testKubeContainerPostgres = api.Container{
+		Name:  "postgres",
+		Image: "postgres:9.5",
+		VolumeMounts: []api.VolumeMount{
+			api.VolumeMount{Name: "db", MountPath: "/var/lib/postgresql/data/pgdata"},
+		},
+		Ports: []api.ContainerPort{
+			api.ContainerPort{ContainerPort: 5432, Protocol: api.ProtocolTCP},
+		},
+		ImagePullPolicy: api.PullAlways,
+	}
+)

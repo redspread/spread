@@ -22,7 +22,7 @@ func NewReplicationController(kubeRC *api.ReplicationController, defaults api.Ob
 
 	rc := ReplicationController{base: base}
 	if kubeRC.Spec.Template != nil {
-		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.Spec, defaults, source)
+		rc.pod, err = NewPodFromPodSpec("unamed", kubeRC.Spec.Template.Spec, defaults, source)
 		if err != nil {
 			return nil, err
 		}
