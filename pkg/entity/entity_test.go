@@ -85,6 +85,23 @@ func TestBaseNamespaceDefaults(t *testing.T) {
 	}
 }
 
+func TestBaseDefaultGenerateName(t *testing.T) {
+	defaults := api.ObjectMeta{
+		GenerateName: "inventory",
+	}
+
+	objects := []deploy.KubeObject{
+		createSecret(""), // empty name set
+	}
+
+	base, err := newBase(EntityApplication, defaults, "src", objects)
+	assert.NoError(t, err, "valid base")
+
+	for _, obj := range base.Objects() {
+		assert.Equal(t, defaults.GenerateName, obj.GetObjectMeta().GetGenerateName(), "generate name should have been set")
+	}
+}
+
 func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
 	initial := map[string]string{
 		"overwritten":     "no",
