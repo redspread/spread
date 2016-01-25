@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"rsprd.com/spread/pkg/deploy"
+	"rsprd.com/spread/pkg/image"
 
 	"github.com/gh/stretchr/testify/assert"
 	"k8s.io/kubernetes/pkg/api"
@@ -45,7 +46,7 @@ func TestPodNoImage(t *testing.T) {
 	kubePod := testNewKubePod("no-image-pod")
 	kubePod.Spec.Containers = []api.Container{
 		api.Container{
-			Name: "no-image",
+			Name:            "no-image",
 			ImagePullPolicy: api.PullIfNotPresent,
 		},
 	}
@@ -124,6 +125,82 @@ func TestPodFromPodSpec(t *testing.T) {
 	}
 	_, err := NewPodFromPodSpec("no-containers", spec, api.ObjectMeta{}, "no-containers")
 	assert.NoError(t, err, "should be valid entity.Pod")
+}
+
+func TestPodAttachImage(t *testing.T) {
+	podObjects := testRandomObjects(60)
+	kubePod := testNewKubePod("containerless")
+	pod, err := NewPod(kubePod, api.ObjectMeta{}, "pod", podObjects...)
+	assert.NoError(t, err, "valid")
+
+	imageObjects := testRandomObjects(20)
+	kubeImage, err := image.FromString("bprashanth/nginxhttps:1.0")
+	assert.NoError(t, err, "image should be valid")
+
+	image, err := NewImage(kubeImage, api.ObjectMeta{}, "image", imageObjects...)
+	assert.NoError(t, err, "valid")
+
+	err = pod.Attach(image)
+	assert.NoError(t, err, "should be attachable")
+
+	kubePod.Namespace = api.NamespaceDefault
+	kubePod.Spec.Containers = []api.Container{
+		api.Container{
+			Name:            "nginxhttps",
+			Image:           "bprashanth/nginxhttps:1.0",
+			ImagePullPolicy: api.PullIfNotPresent,
+		},
+	}
+
+	objects := append(podObjects, imageObjects...)
+
+	expected := deploy.Deployment{}
+	err = expected.Add(kubePod)
+	assert.NoError(t, err, "valid")
+
+	for _, obj := range objects {
+		assert.NoError(t, expected.Add(obj))
+	}
+
+	actual, err := pod.Deployment()
+	assert.NoError(t, err, "deployment should be ok")
+	assert.True(t, expected.Equal(actual), "should be same")
+}
+
+func TestPodAttachContainer(t *testing.T) {
+	podObjects := testRandomObjects(60)
+	kubePod := testNewKubePod("containerless")
+	pod, err := NewPod(kubePod, api.ObjectMeta{}, "pod", podObjects...)
+	assert.NoError(t, err, "valid")
+
+	containerObjects := testRandomObjects(20)
+
+	kubeContainer := testNewKubeContainer("container", "busybox:latest")
+	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "container", containerObjects...)
+	assert.NoError(t, err)
+
+	err = pod.Attach(container)
+	assert.NoError(t, err)
+
+	kubePod.Namespace = api.NamespaceDefault
+	kubePod.Spec.Containers = []api.Container{
+		kubeContainer,
+	}
+
+	expected := deploy.Deployment{}
+	err = expected.Add(kubePod)
+	assert.NoError(t, err)
+
+	actual, err := pod.Deployment()
+	assert.NoError(t, err)
+
+	objects := append(podObjects, containerObjects...)
+
+	for _, obj := range objects {
+		assert.NoError(t, expected.Add(obj))
+	}
+
+	assert.True(t, expected.Equal(actual))
 }
 
 func testNewKubePod(name string) *api.Pod {

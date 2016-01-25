@@ -11,6 +11,8 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
+var TestUsedNames = map[string]bool{}
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
@@ -185,9 +187,17 @@ func testRandomObjects(num int) (objects []deploy.KubeObject) {
 	if num == 0 {
 		num = rand.Intn(100)
 	}
+
 	for i := 0; i < num; i++ {
 		// TODO: create different types of objects
-		name := randomString(10)
+		name := ""
+		for {
+			name = randomString(10)
+			if !TestUsedNames[name] {
+				break
+			}
+		}
+		TestUsedNames[name] = true
 		objects = append(objects, createSecret(name))
 	}
 	return
