@@ -12,15 +12,15 @@ import (
 
 func TestImageDeployment(t *testing.T) {
 	imageName := "arch"
-	simple := newImage(t, imageName)
+	simple := newDockerImage(t, imageName)
 
 	image, err := NewImage(simple, api.ObjectMeta{}, "test")
 	assert.NoError(t, err, "valid image")
 
 	expectedPod := api.Pod{
 		ObjectMeta: api.ObjectMeta{
-			Name:      imageName,
-			Namespace: "default",
+			GenerateName: imageName,
+			Namespace:    "default",
 		},
 		Spec: api.PodSpec{
 			Containers: []api.Container{
@@ -46,7 +46,7 @@ func TestImageDeployment(t *testing.T) {
 
 func TestImageImages(t *testing.T) {
 	imageName := "gcr.io/google_containers/cassandra:v7"
-	simple := newImage(t, imageName)
+	simple := newDockerImage(t, imageName)
 
 	image, err := NewImage(simple, api.ObjectMeta{}, "test")
 	if err != nil {
@@ -59,14 +59,28 @@ func TestImageImages(t *testing.T) {
 	assert.EqualValues(t, simple, images[0], "should return image it was created with")
 }
 
-func TestNilImage(t *testing.T) {
+func TestImageNil(t *testing.T) {
 	var image *image.Image
 	_, err := NewImage(image, api.ObjectMeta{}, "")
 	assert.Error(t, err, "cannot be nil")
 }
 
+func TestImageInvalid(t *testing.T) {
+	image := new(image.Image)
+	_, err := NewImage(image, api.ObjectMeta{}, "")
+	assert.Error(t, err, "not valid")
+}
+
+func TestImageAttach(t *testing.T) {
+	a := testNewImage(t, "a", api.ObjectMeta{}, "", testRandomObjects(30))
+	b := testNewImage(t, "b", api.ObjectMeta{}, "", testRandomObjects(30))
+
+	err := a.Attach(b)
+	assert.Error(t, err, "Nothing can attach to images")
+}
+
 func TestImageType(t *testing.T) {
-	image := newImage(t, "ghost:latest")
+	image := newDockerImage(t, "ghost:latest")
 
 	entity, err := NewImage(image, api.ObjectMeta{}, "")
 	if err != nil {
@@ -78,7 +92,7 @@ func TestImageType(t *testing.T) {
 
 func TestImageKube(t *testing.T) {
 	imageName := "redis:latest"
-	image := newImage(t, imageName)
+	image := newDockerImage(t, imageName)
 
 	entity, err := NewImage(image, api.ObjectMeta{}, "")
 	if err != nil {
@@ -91,7 +105,7 @@ func TestImageKube(t *testing.T) {
 
 func TestImageBadObject(t *testing.T) {
 	imageName := "debian"
-	image := newImage(t, imageName)
+	image := newDockerImage(t, imageName)
 
 	service := api.Service{}
 
@@ -99,7 +113,16 @@ func TestImageBadObject(t *testing.T) {
 	assert.Error(t, err, "invalid object, should return error")
 }
 
-func newImage(t *testing.T, imageName string) *image.Image {
+func testNewImage(t *testing.T, imageName string, defaults api.ObjectMeta, source string, objects []deploy.KubeObject) *Image {
+	image, err := NewImage(newDockerImage(t, imageName), defaults, source, objects...)
+	if err != nil {
+		t.Fatalf("Could not create Image: %v", err)
+	}
+
+	return image
+}
+
+func newDockerImage(t *testing.T, imageName string) *image.Image {
 	simple, err := image.FromString(imageName)
 	if err != nil {
 		t.Fatalf("Could not create image.Image: %v", err)

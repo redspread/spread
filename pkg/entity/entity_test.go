@@ -112,7 +112,7 @@ func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
 }
 
 func TestBaseCheckAttach(t *testing.T) {
-	baseImage := newImage(t, "sample-image")
+	baseImage := newDockerImage(t, "sample-image")
 	image, err := NewImage(baseImage, api.ObjectMeta{}, "")
 	assert.NoError(t, err, "valid image")
 
@@ -151,4 +151,18 @@ func createSecret(name string) *api.Secret {
 		Type: api.SecretTypeOpaque,
 		Data: map[string][]byte{randomString(10): []byte(randomString(80))},
 	}
+}
+
+// testRandomObjects returns a slice of randomly generated objects. If it is called with an object
+// count of 0, a random number of slices (with an upper bound of 100) will be generated.
+func testRandomObjects(num int) (objects []deploy.KubeObject) {
+	if num == 0 {
+		num = rand.Intn(100)
+	}
+	for i := 0; i < num; i++ {
+		// TODO: create different types of objects
+		name := randomString(10)
+		objects = append(objects, createSecret(name))
+	}
+	return
 }

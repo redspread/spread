@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"errors"
+
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
@@ -14,12 +16,18 @@ type Image struct {
 }
 
 func NewImage(image *image.Image, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Image, error) {
+	if image == nil {
+		return nil, ErrorNilImage
+	}
+
 	base, err := newBase(EntityImage, defaults, source, objects)
 	if err != nil {
 		return nil, err
-	} else {
-		return &Image{base: base, image: image}, nil
+	} else if len(image.DockerName()) == 0 {
+		return nil, ErrorEmptyImageString
 	}
+
+	return &Image{base: base, image: image}, nil
 }
 
 func (c Image) Deployment() deploy.Deployment {
@@ -33,10 +41,16 @@ func (c Image) Images() []*image.Image {
 }
 
 func (c Image) Attach(e Entity) error {
-	return nil
+	return ErrorCannotAttachToImage
 }
 
 // Kubernetes representation of image
 func (c Image) kube() string {
 	return c.image.DockerName()
 }
+
+var (
+	ErrorEmptyImageString    = errors.New("image.Image's DockerString was empty")
+	ErrorNilImage            = errors.New("*image.Image cannot be nil")
+	ErrorCannotAttachToImage = errors.New("No entities are allowed to attach to an Image")
+)
