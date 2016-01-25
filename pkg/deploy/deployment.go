@@ -7,6 +7,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
+	"k8s.io/kubernetes/pkg/util/validation/field"
 )
 
 // A Deployment is a collection of Kubernetes deployed. Deployment stores a slice of deployable Kubernetes objects.
@@ -32,7 +33,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 	switch t := copy.(type) {
 	case *api.ReplicationController:
 		errList := validation.ValidateReplicationController(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.rcs {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -41,12 +42,12 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.rcs = append(d.rcs, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 
 	case *api.Pod:
 		errList := validation.ValidatePod(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.pods {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -55,12 +56,12 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.pods = append(d.pods, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 
 	case *api.Service:
 		errList := validation.ValidateService(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.services {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -69,12 +70,12 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.services = append(d.services, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 
 	case *api.Secret:
 		errList := validation.ValidateSecret(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.secrets {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -83,12 +84,12 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.secrets = append(d.secrets, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 
 	case *api.PersistentVolume:
 		errList := validation.ValidatePersistentVolume(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.volumes {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -97,12 +98,12 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.volumes = append(d.volumes, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 
 	case *api.PersistentVolumeClaim:
 		errList := validation.ValidatePersistentVolumeClaim(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.volumeClaims {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -111,12 +112,12 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.volumeClaims = append(d.volumeClaims, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 
 	case *api.Namespace:
 		errList := validation.ValidateNamespace(t)
-		if len(errList) == 0 {
+		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.namespaces {
 				if err = assertUniqueName(copy, v); err != nil {
 					return err
@@ -125,7 +126,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			d.namespaces = append(d.namespaces, t)
 			return nil
 		} else {
-			return errList.ToAggregate()
+			return err
 		}
 	default:
 		return ErrorObjectNotSupported
@@ -260,6 +261,18 @@ func deepCopy(obj KubeObject) (KubeObject, error) {
 		return nil, err
 	}
 	return copy.(KubeObject), nil
+}
+
+// checkErrList filters false positives about neither name or generateName being set when only generate is set
+func checkErrList(errList field.ErrorList, obj KubeObject) error {
+	meta := obj.GetObjectMeta()
+	if len(meta.GetName()) == 0 && len(meta.GetGenerateName()) > 0 {
+		errList = errList.Filter(func(e error) bool {
+			return e.Error() == "metadata.name: Required value: name or generateName is required"
+		})
+	}
+
+	return errList.ToAggregate()
 }
 
 var (
