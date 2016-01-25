@@ -112,6 +112,34 @@ func TestContainerAttach(t *testing.T) {
 	assert.True(t, expected.Equal(actual), "should be equivlant")
 }
 
+func TestContainerBadObject(t *testing.T) {
+	kubeContainer := newKubeContainer("test-container", "test-image")
+	objects := []deploy.KubeObject{
+		createSecret(""), // invalid - must have name
+	}
+
+	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidobjects", objects...)
+	assert.Error(t, err, "container should not be created with invalid objects")
+}
+
+func TestContainerInvalidContainer(t *testing.T) {
+	kubeContainer := api.Container{
+		// invalid - no name
+		Image:           "invalid-container",
+		Command:         []string{"/bin/busybox", "ls"},
+		ImagePullPolicy: api.PullAlways,
+	}
+	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidcontainer")
+	assert.Error(t, err, "name is missing, container is invalid")
+}
+
+func TestContainerInvalidImage(t *testing.T) {
+	imageName := "*T*H*I*S* IS ILLEGAL"
+	kubeContainer := newKubeContainer("invalid-image", imageName)
+	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidimage")
+	assert.Error(t, err, "image was invalid")
+}
+
 func newKubeContainer(name, imageName string) api.Container {
 	return api.Container{
 		Name:            name,
