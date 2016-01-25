@@ -32,6 +32,10 @@ func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.Ku
 
 	deployment := deploy.Deployment{}
 	for _, obj := range objects {
+		if obj == nil {
+			err = ErrorNilObject
+			return
+		}
 		base.setDefaults(obj)
 		err = deployment.Add(obj)
 		if err != nil {
@@ -124,4 +128,5 @@ func setMetaDefaults(obj deploy.KubeObject, defaults api.ObjectMeta) {
 
 var (
 	ErrorEntityNotReady = errors.New("entity not ready to be deployed")
+	ErrorNilObject      = errors.New("an object was nil, this is not allowed.")
 )

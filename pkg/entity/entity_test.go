@@ -15,7 +15,7 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-func TestNewBase(t *testing.T) {
+func TestBaseNew(t *testing.T) {
 	entityType := Type(rand.Intn(5))
 	source := randomString(8)
 	var objects []deploy.KubeObject
@@ -28,6 +28,15 @@ func TestNewBase(t *testing.T) {
 
 	emptyDeploy := deploy.Deployment{}
 	assert.True(t, emptyDeploy.Equal(&base.objects))
+}
+
+func TestBaseNilObjects(t *testing.T) {
+	objects := []deploy.KubeObject{
+		createSecret("test"),
+		nil, // illegal
+	}
+	_, err := newBase(EntityPod, api.ObjectMeta{}, "source", objects)
+	assert.Error(t, err, "should not be able to create base with nil components")
 }
 
 func TestBaseNoDefaults(t *testing.T) {
