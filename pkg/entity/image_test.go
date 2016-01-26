@@ -7,31 +7,31 @@ import (
 	"rsprd.com/spread/pkg/image"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 func TestImageDeployment(t *testing.T) {
 	imageName := "arch"
 	simple := newDockerImage(t, imageName)
 
-	image, err := NewImage(simple, api.ObjectMeta{}, "test")
+	image, err := NewImage(simple, kube.ObjectMeta{}, "test")
 	assert.NoError(t, err, "valid image")
 
-	expectedPod := api.Pod{
-		ObjectMeta: api.ObjectMeta{
+	expectedPod := kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
 			GenerateName: imageName,
 			Namespace:    "default",
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
-				api.Container{
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
+				kube.Container{
 					Name:            "container",
 					Image:           imageName,
-					ImagePullPolicy: api.PullAlways,
+					ImagePullPolicy: kube.PullAlways,
 				},
 			},
-			RestartPolicy: api.RestartPolicyAlways,
-			DNSPolicy:     api.DNSClusterFirst,
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSClusterFirst,
 		},
 	}
 
@@ -49,7 +49,7 @@ func TestImageImages(t *testing.T) {
 	imageName := "gcr.io/google_containers/cassandra:v7"
 	simple := newDockerImage(t, imageName)
 
-	image, err := NewImage(simple, api.ObjectMeta{}, "test")
+	image, err := NewImage(simple, kube.ObjectMeta{}, "test")
 	if err != nil {
 		t.Fatalf("Could not create Image entity: %v", err)
 	}
@@ -62,19 +62,19 @@ func TestImageImages(t *testing.T) {
 
 func TestImageNil(t *testing.T) {
 	var image *image.Image
-	_, err := NewImage(image, api.ObjectMeta{}, "")
+	_, err := NewImage(image, kube.ObjectMeta{}, "")
 	assert.Error(t, err, "cannot be nil")
 }
 
 func TestImageInvalid(t *testing.T) {
 	image := new(image.Image)
-	_, err := NewImage(image, api.ObjectMeta{}, "")
+	_, err := NewImage(image, kube.ObjectMeta{}, "")
 	assert.Error(t, err, "not valid")
 }
 
 func TestImageAttach(t *testing.T) {
-	a := testNewImage(t, "a", api.ObjectMeta{}, "", testRandomObjects(30))
-	b := testNewImage(t, "b", api.ObjectMeta{}, "", testRandomObjects(30))
+	a := testNewImage(t, "a", kube.ObjectMeta{}, "", testRandomObjects(30))
+	b := testNewImage(t, "b", kube.ObjectMeta{}, "", testRandomObjects(30))
 
 	err := a.Attach(b)
 	assert.Error(t, err, "Nothing can attach to images")
@@ -83,7 +83,7 @@ func TestImageAttach(t *testing.T) {
 func TestImageType(t *testing.T) {
 	image := newDockerImage(t, "ghost:latest")
 
-	entity, err := NewImage(image, api.ObjectMeta{}, "")
+	entity, err := NewImage(image, kube.ObjectMeta{}, "")
 	if err != nil {
 		t.Fatalf("Could not create Image entity: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestImageKube(t *testing.T) {
 	imageName := "redis:latest"
 	image := newDockerImage(t, imageName)
 
-	entity, err := NewImage(image, api.ObjectMeta{}, "")
+	entity, err := NewImage(image, kube.ObjectMeta{}, "")
 	if err != nil {
 		t.Fatalf("Could not create Image entity: %v", err)
 	}
@@ -108,13 +108,13 @@ func TestImageBadObject(t *testing.T) {
 	imageName := "debian"
 	image := newDockerImage(t, imageName)
 
-	service := api.Service{}
+	service := kube.Service{}
 
-	_, err := NewImage(image, api.ObjectMeta{}, "", &service)
+	_, err := NewImage(image, kube.ObjectMeta{}, "", &service)
 	assert.Error(t, err, "invalid object, should return error")
 }
 
-func testNewImage(t *testing.T, imageName string, defaults api.ObjectMeta, source string, objects []deploy.KubeObject) *Image {
+func testNewImage(t *testing.T, imageName string, defaults kube.ObjectMeta, source string, objects []deploy.KubeObject) *Image {
 	image, err := NewImage(newDockerImage(t, imageName), defaults, source, objects...)
 	if err != nil {
 		t.Fatalf("Could not create Image: %v", err)

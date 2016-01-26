@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
 	"k8s.io/kubernetes/pkg/util/validation/field"
 )
@@ -13,13 +13,13 @@ import (
 // A Deployment is a collection of Kubernetes deployed. Deployment stores a slice of deployable Kubernetes objects.
 // It can be used to create deployments deployments and is how the current state of a deployment is returned.
 type Deployment struct {
-	rcs          []*api.ReplicationController
-	pods         []*api.Pod
-	services     []*api.Service
-	secrets      []*api.Secret
-	volumes      []*api.PersistentVolume
-	volumeClaims []*api.PersistentVolumeClaim
-	namespaces   []*api.Namespace
+	rcs          []*kube.ReplicationController
+	pods         []*kube.Pod
+	services     []*kube.Service
+	secrets      []*kube.Secret
+	volumes      []*kube.PersistentVolume
+	volumeClaims []*kube.PersistentVolumeClaim
+	namespaces   []*kube.Namespace
 }
 
 // Add inserts an object into a deployment. The object must be a valid Kubernetes object or it will fail.
@@ -31,7 +31,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 	}
 
 	switch t := copy.(type) {
-	case *api.ReplicationController:
+	case *kube.ReplicationController:
 		errList := validation.ValidateReplicationController(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.rcs {
@@ -45,7 +45,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			return err
 		}
 
-	case *api.Pod:
+	case *kube.Pod:
 		errList := validation.ValidatePod(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.pods {
@@ -59,7 +59,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			return err
 		}
 
-	case *api.Service:
+	case *kube.Service:
 		errList := validation.ValidateService(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.services {
@@ -73,7 +73,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			return err
 		}
 
-	case *api.Secret:
+	case *kube.Secret:
 		errList := validation.ValidateSecret(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.secrets {
@@ -87,7 +87,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			return err
 		}
 
-	case *api.PersistentVolume:
+	case *kube.PersistentVolume:
 		errList := validation.ValidatePersistentVolume(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.volumes {
@@ -101,7 +101,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			return err
 		}
 
-	case *api.PersistentVolumeClaim:
+	case *kube.PersistentVolumeClaim:
 		errList := validation.ValidatePersistentVolumeClaim(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.volumeClaims {
@@ -115,7 +115,7 @@ func (d *Deployment) Add(obj KubeObject) error {
 			return err
 		}
 
-	case *api.Namespace:
+	case *kube.Namespace:
 		errList := validation.ValidateNamespace(t)
 		if err := checkErrList(errList, obj); err == nil {
 			for _, v := range d.namespaces {
@@ -211,7 +211,7 @@ func (d Deployment) Len() int {
 func appendObjects(obj []KubeObject, objectSlice interface{}) []KubeObject {
 	sliceVal := reflect.ValueOf(objectSlice)
 	for i := 0; i < sliceVal.Len(); i++ {
-		objCopy, err := api.Scheme.DeepCopy(sliceVal.Index(i).Interface())
+		objCopy, err := kube.Scheme.DeepCopy(sliceVal.Index(i).Interface())
 		if err != nil {
 			panic(err)
 		}
@@ -242,7 +242,7 @@ func equivalent(a, b interface{}) bool {
 		found := false
 		for j := 0; j < bSlice.Len(); j++ {
 			bPtr := bSlice.Index(j).Interface()
-			if api.Semantic.DeepEqual(aPtr, bPtr) {
+			if kube.Semantic.DeepEqual(aPtr, bPtr) {
 				found = true
 			}
 		}
@@ -256,7 +256,7 @@ func equivalent(a, b interface{}) bool {
 
 // deepCopy creates a deep copy of the Kubernetes object given.
 func deepCopy(obj KubeObject) (KubeObject, error) {
-	copy, err := api.Scheme.DeepCopy(obj)
+	copy, err := kube.Scheme.DeepCopy(obj)
 	if err != nil {
 		return nil, err
 	}

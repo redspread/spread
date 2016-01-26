@@ -8,7 +8,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 
 	"github.com/gh/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 var TestUsedNames = map[string]bool{}
@@ -22,7 +22,7 @@ func TestBaseNew(t *testing.T) {
 	source := randomString(8)
 	var objects []deploy.KubeObject
 
-	base, err := newBase(entityType, api.ObjectMeta{}, source, objects)
+	base, err := newBase(entityType, kube.ObjectMeta{}, source, objects)
 	assert.NoError(t, err, "valid entity")
 
 	assert.Equal(t, entityType, base.Type(), "type cannot change")
@@ -37,29 +37,29 @@ func TestBaseNilObjects(t *testing.T) {
 		createSecret("test"),
 		nil, // illegal
 	}
-	_, err := newBase(EntityPod, api.ObjectMeta{}, "source", objects)
+	_, err := newBase(EntityPod, kube.ObjectMeta{}, "source", objects)
 	assert.Error(t, err, "should not be able to create base with nil components")
 }
 
 func TestBaseNoDefaults(t *testing.T) {
-	defaults := api.ObjectMeta{}
+	defaults := kube.ObjectMeta{}
 	obj := createSecret(randomString(8))
 
 	base, err := newBase(EntityApplication, defaults, "src", []deploy.KubeObject{obj})
 	assert.NoError(t, err, "valid base")
-	assert.True(t, api.Semantic.DeepEqual(defaults, base.DefaultMeta()), "defaults should have not changed")
+	assert.True(t, kube.Semantic.DeepEqual(defaults, base.DefaultMeta()), "defaults should have not changed")
 
 	objects := base.Objects()
 	assert.Len(t, objects, 1, "should only have secret")
 
-	obj.GetObjectMeta().SetNamespace(api.NamespaceDefault)
+	obj.GetObjectMeta().SetNamespace(kube.NamespaceDefault)
 
 	actual := objects[0]
-	assert.True(t, api.Semantic.DeepEqual(obj, actual), "secrets should be same")
+	assert.True(t, kube.Semantic.DeepEqual(obj, actual), "secrets should be same")
 }
 
 func TestBaseNamespaceDefaults(t *testing.T) {
-	defaults := api.ObjectMeta{
+	defaults := kube.ObjectMeta{
 		Namespace: "set-by-defaults",
 	}
 
@@ -88,7 +88,7 @@ func TestBaseNamespaceDefaults(t *testing.T) {
 }
 
 func TestBaseDefaultGenerateName(t *testing.T) {
-	defaults := api.ObjectMeta{
+	defaults := kube.ObjectMeta{
 		GenerateName: "inventory",
 	}
 
@@ -110,7 +110,7 @@ func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
 		"not-overwritten": "yes",
 	}
 
-	defaults := api.ObjectMeta{
+	defaults := kube.ObjectMeta{
 		Labels:      initial,
 		Annotations: initial,
 	}
@@ -125,7 +125,7 @@ func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
 
 	base, err := newBase(EntityContainer, defaults, "src", []deploy.KubeObject{obj})
 	assert.NoError(t, err, "valid base")
-	assert.True(t, api.Semantic.DeepEqual(defaults, base.DefaultMeta()), "defaults should have not changed")
+	assert.True(t, kube.Semantic.DeepEqual(defaults, base.DefaultMeta()), "defaults should have not changed")
 
 	objects := base.Objects()
 	assert.Len(t, objects, 1)
@@ -141,11 +141,11 @@ func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
 
 func TestBaseCheckAttach(t *testing.T) {
 	baseImage := newDockerImage(t, "sample-image")
-	image, err := NewImage(baseImage, api.ObjectMeta{}, "")
+	image, err := NewImage(baseImage, kube.ObjectMeta{}, "")
 	assert.NoError(t, err, "valid image")
 
 	kubeContainer := testNewKubeContainer("sample-container", "golang")
-	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "")
+	container, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "")
 	assert.NoError(t, err, "valid container")
 
 	assert.False(t, image.validAttach(container), "containers should not be allowed to attach to images")
@@ -156,10 +156,10 @@ func TestBaseBadObject(t *testing.T) {
 	entityType := EntityImage
 	source := "testSource"
 	objects := []deploy.KubeObject{
-		&api.Pod{}, // invalid object
+		&kube.Pod{}, // invalid object
 	}
 
-	_, err := newBase(entityType, api.ObjectMeta{}, source, objects)
+	_, err := newBase(entityType, kube.ObjectMeta{}, source, objects)
 	assert.Error(t, err, "objects are invalid")
 }
 
@@ -172,11 +172,11 @@ func randomString(strlen int) string {
 	return string(result)
 }
 
-func createSecret(name string) *api.Secret {
-	return &api.Secret{
-		ObjectMeta: api.ObjectMeta{Name: name},
+func createSecret(name string) *kube.Secret {
+	return &kube.Secret{
+		ObjectMeta: kube.ObjectMeta{Name: name},
 
-		Type: api.SecretTypeOpaque,
+		Type: kube.SecretTypeOpaque,
 		Data: map[string][]byte{randomString(10): []byte(randomString(80))},
 	}
 }

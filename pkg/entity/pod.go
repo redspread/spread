@@ -6,18 +6,18 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
-// Pod represents api.Pod in the Redspread hierarchy.
+// Pod represents kube.Pod in the Redspread hierarchy.
 type Pod struct {
 	base
-	pod        *api.Pod
+	pod        *kube.Pod
 	containers []*Container
 }
 
-func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	if kubePod == nil {
 		return nil, fmt.Errorf("cannot create Pod from nil `%s`", source)
 	}
@@ -42,7 +42,7 @@ func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ..
 			pod.containers = append(pod.containers, container)
 		}
 	}
-	kubePod.Spec.Containers = []api.Container{}
+	kubePod.Spec.Containers = []kube.Container{}
 
 	base.setDefaults(kubePod)
 	if err := validatePod(kubePod, true); err != nil {
@@ -53,9 +53,9 @@ func NewPod(kubePod *api.Pod, defaults api.ObjectMeta, source string, objects ..
 	return &pod, nil
 }
 
-func NewPodFromPodSpec(name string, podSpec api.PodSpec, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
-	pod := api.Pod{
-		ObjectMeta: api.ObjectMeta{
+func NewPodFromPodSpec(name string, podSpec kube.PodSpec, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	pod := kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
 			Name: name,
 		},
 		Spec: podSpec,
@@ -78,8 +78,8 @@ func (c Pod) Attach(e Entity) error {
 	return nil
 }
 
-func (c Pod) kube() (*api.Pod, error) {
-	containers := []api.Container{}
+func (c Pod) kube() (*kube.Pod, error) {
+	containers := []kube.Container{}
 	for _, container := range c.containers {
 		kubeContainer, err := container.kube()
 		if err != nil {
@@ -101,16 +101,16 @@ func (c Pod) kube() (*api.Pod, error) {
 	return pod, nil
 }
 
-func copyPod(pod *api.Pod) (*api.Pod, error) {
-	copy, err := api.Scheme.DeepCopy(pod)
+func copyPod(pod *kube.Pod) (*kube.Pod, error) {
+	copy, err := kube.Scheme.DeepCopy(pod)
 	if err != nil {
 		return nil, err
 	}
 
-	return copy.(*api.Pod), nil
+	return copy.(*kube.Pod), nil
 }
 
-func validatePod(pod *api.Pod, ignoreContainers bool) error {
+func validatePod(pod *kube.Pod, ignoreContainers bool) error {
 	errList := validation.ValidatePod(pod)
 
 	// remove error for no containers if requested

@@ -6,7 +6,7 @@ import (
 
 	"rsprd.com/spread/pkg/deploy"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 // An Entity is a component (potentially containing sub-entities) that can be deployed to Kubernetes.
@@ -16,7 +16,7 @@ type Entity interface {
 	Objects() []deploy.KubeObject
 	Source() string
 	Attach(Entity) error
-	DefaultMeta() api.ObjectMeta
+	DefaultMeta() kube.ObjectMeta
 }
 
 // base provides fields that are shared between all Entitys.
@@ -24,10 +24,10 @@ type base struct {
 	entityType Type
 	objects    deploy.Deployment
 	source     string
-	defaults   api.ObjectMeta
+	defaults   kube.ObjectMeta
 }
 
-func newBase(t Type, defaults api.ObjectMeta, source string, objects []deploy.KubeObject) (base base, err error) {
+func newBase(t Type, defaults kube.ObjectMeta, source string, objects []deploy.KubeObject) (base base, err error) {
 	base.defaults = defaults
 
 	deployment := deploy.Deployment{}
@@ -61,7 +61,7 @@ func (base base) Source() string {
 }
 
 // DefaultMeta returns the ObjectMeta that the Entity was created with
-func (base base) DefaultMeta() api.ObjectMeta {
+func (base base) DefaultMeta() kube.ObjectMeta {
 	return base.defaults
 }
 
@@ -86,18 +86,18 @@ type Type int
 
 const (
 	EntityApplication           Type = iota // Application (top of tree)
-	EntityReplicationController             // Wrapper for api.ReplicationController
-	EntityPod                               // Wrapper for api.Pod
-	EntityContainer                         // Wrapper for api.Container
-	EntityImage                             // Represented by api.Container's image field
+	EntityReplicationController             // Wrapper for kube.ReplicationController
+	EntityPod                               // Wrapper for kube.Pod
+	EntityContainer                         // Wrapper for kube.Container
+	EntityImage                             // Represented by kube.Container's image field
 )
 
 // metaDefaults applies a set of defaults on a KubeObject. Non-empty fields on object override defaults.
-func setMetaDefaults(obj deploy.KubeObject, defaults api.ObjectMeta) {
+func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
 	meta := obj.GetObjectMeta()
 
 	// if namespace is not set, use default
-	namespace := api.NamespaceDefault
+	namespace := kube.NamespaceDefault
 	if len(defaults.Namespace) > 0 {
 		namespace = defaults.Namespace
 	}

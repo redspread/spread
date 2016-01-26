@@ -6,18 +6,18 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
-// Container represents api.Container in the Redspread hierarchy.
+// Container represents kube.Container in the Redspread hierarchy.
 type Container struct {
 	base
-	container api.Container
+	container kube.Container
 	image     *Image
 }
 
-func NewContainer(container api.Container, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Container, error) {
+func NewContainer(container kube.Container, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Container, error) {
 	err := validateContainer(container)
 	if err != nil {
 		return nil, fmt.Errorf("could not create Container from `%s`: %v", source, err)
@@ -62,9 +62,9 @@ func (c Container) Attach(e Entity) error {
 	return nil
 }
 
-func (c Container) kube() (api.Container, error) {
+func (c Container) kube() (kube.Container, error) {
 	if c.image == nil {
-		return api.Container{}, ErrorEntityNotReady
+		return kube.Container{}, ErrorEntityNotReady
 	}
 
 	// if image exists should always return valid result
@@ -73,26 +73,26 @@ func (c Container) kube() (api.Container, error) {
 	return container, nil
 }
 
-func validateContainer(c api.Container) error {
-	validMeta := api.ObjectMeta{
+func validateContainer(c kube.Container) error {
+	validMeta := kube.ObjectMeta{
 		Name:      "valid",
 		Namespace: "object",
 	}
 
-	pod := api.Pod{
+	pod := kube.Pod{
 		ObjectMeta: validMeta,
-		Spec: api.PodSpec{
-			Containers:    []api.Container{c},
-			RestartPolicy: api.RestartPolicyAlways,
-			DNSPolicy:     api.DNSClusterFirst,
+		Spec: kube.PodSpec{
+			Containers:    []kube.Container{c},
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSClusterFirst,
 		},
 	}
 
 	// fake volumes to allow validation
 	for _, mount := range c.VolumeMounts {
-		volume := api.Volume{
+		volume := kube.Volume{
 			Name:         mount.Name,
-			VolumeSource: api.VolumeSource{EmptyDir: &api.EmptyDirVolumeSource{}},
+			VolumeSource: kube.VolumeSource{EmptyDir: &kube.EmptyDirVolumeSource{}},
 		}
 		pod.Spec.Volumes = append(pod.Spec.Volumes, volume)
 	}

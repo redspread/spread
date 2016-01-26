@@ -4,17 +4,17 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
-// ReplicationController represents api.ReplicationController in the Redspread hierarchy.
+// ReplicationController represents kube.ReplicationController in the Redspread hierarchy.
 type ReplicationController struct {
 	base
-	rc  *api.ReplicationController
+	rc  *kube.ReplicationController
 	pod *Pod
 }
 
-func NewReplicationController(kubeRC *api.ReplicationController, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
+func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
 	base, err := newBase(EntityReplicationController, defaults, source, objects)
 	if err != nil {
 		return nil, err

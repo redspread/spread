@@ -6,19 +6,19 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 
 	"github.com/gh/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 func TestContainerWithImageDeployment(t *testing.T) {
 	const imageName = "busybox:latest"
-	kubeContainer := api.Container{
+	kubeContainer := kube.Container{
 		Name:            "simple-container",
 		Image:           imageName,
 		Command:         []string{"/bin/busybox", "ls"},
-		ImagePullPolicy: api.PullAlways,
+		ImagePullPolicy: kube.PullAlways,
 	}
 
-	ctr, err := NewContainer(kubeContainer, api.ObjectMeta{}, "simpleTest")
+	ctr, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "simpleTest")
 	assert.NoError(t, err, "should be able to create container")
 	assert.NotNil(t, ctr.image, "an image should have been created")
 
@@ -31,17 +31,17 @@ func TestContainerWithImageDeployment(t *testing.T) {
 	assert.Equal(t, expectedImage.DockerName(), actualImage.DockerName(), "image should not have changed")
 
 	// check kube
-	kube, err := ctr.kube()
+	kubectr, err := ctr.kube()
 	assert.NoError(t, err, "should be able to produce kube")
-	assert.True(t, api.Semantic.DeepEqual(&kube, &kubeContainer), "kube should be same as container")
+	assert.True(t, kube.Semantic.DeepEqual(&kubectr, &kubeContainer), "kube should be same as container")
 
-	pod := api.Pod{
-		ObjectMeta: api.ObjectMeta{
+	pod := kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
 			GenerateName: kubeContainer.Name,
-			Namespace:    api.NamespaceDefault,
+			Namespace:    kube.NamespaceDefault,
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
 				kubeContainer,
 			},
 		},
@@ -56,14 +56,14 @@ func TestContainerWithImageDeployment(t *testing.T) {
 }
 
 func TestContainerNoImageDeployment(t *testing.T) {
-	kubeContainer := api.Container{
+	kubeContainer := kube.Container{
 		Name: "no-image-container",
 		// no image
 		Command:         []string{"/bin/busybox", "ls"},
-		ImagePullPolicy: api.PullAlways,
+		ImagePullPolicy: kube.PullAlways,
 	}
 
-	ctr, err := NewContainer(kubeContainer, api.ObjectMeta{}, "noImage")
+	ctr, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "noImage")
 	assert.NoError(t, err, "should be able to create container")
 	assert.Nil(t, ctr.image, "no image should exist")
 
@@ -79,10 +79,10 @@ func TestContainerNoImageDeployment(t *testing.T) {
 
 func TestContainerAttach(t *testing.T) {
 	imageName := "to-be-attached"
-	image := testNewImage(t, imageName, api.ObjectMeta{}, "test", []deploy.KubeObject{})
+	image := testNewImage(t, imageName, kube.ObjectMeta{}, "test", []deploy.KubeObject{})
 
 	kubeContainer := testNewKubeContainer("test-container", "") // no image
-	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "attach")
+	container, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "attach")
 	assert.NoError(t, err, "valid container")
 
 	_, err = container.Deployment()
@@ -92,13 +92,13 @@ func TestContainerAttach(t *testing.T) {
 	assert.NoError(t, err, "attach should be allowed")
 
 	kubeContainer.Image = imageName
-	pod := api.Pod{
-		ObjectMeta: api.ObjectMeta{
+	pod := kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
 			GenerateName: kubeContainer.Name,
-			Namespace:    api.NamespaceDefault,
+			Namespace:    kube.NamespaceDefault,
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
 				kubeContainer,
 			},
 		},
@@ -118,66 +118,66 @@ func TestContainerBadObject(t *testing.T) {
 		createSecret(""), // invalid - must have name
 	}
 
-	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidobjects", objects...)
+	_, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "invalidobjects", objects...)
 	assert.Error(t, err, "container should not be created with invalid objects")
 }
 
 func TestContainerInvalidContainer(t *testing.T) {
-	kubeContainer := api.Container{
+	kubeContainer := kube.Container{
 		// invalid - no name
 		Image:           "invalid-container",
 		Command:         []string{"/bin/busybox", "ls"},
-		ImagePullPolicy: api.PullAlways,
+		ImagePullPolicy: kube.PullAlways,
 	}
-	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidcontainer")
+	_, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "invalidcontainer")
 	assert.Error(t, err, "name is missing, container is invalid")
 }
 
 func TestContainerInvalidImage(t *testing.T) {
 	imageName := "*T*H*I*S* IS ILLEGAL"
 	kubeContainer := testNewKubeContainer("invalid-image", imageName)
-	_, err := NewContainer(kubeContainer, api.ObjectMeta{}, "invalidimage")
+	_, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "invalidimage")
 	assert.Error(t, err, "image was invalid")
 }
 
-func testNewKubeContainer(name, imageName string) api.Container {
-	return api.Container{
+func testNewKubeContainer(name, imageName string) kube.Container {
+	return kube.Container{
 		Name:            name,
 		Image:           imageName,
 		Command:         []string{"/bin/busybox", "ls"},
-		ImagePullPolicy: api.PullAlways,
+		ImagePullPolicy: kube.PullAlways,
 	}
 }
 
-func testRandomContainer(defaults api.ObjectMeta, source string, objects []deploy.KubeObject) *Container {
+func testRandomContainer(defaults kube.ObjectMeta, source string, objects []deploy.KubeObject) *Container {
 	kubeContainer := testNewKubeContainer(randomString(10), randomString(15))
 	container, _ := NewContainer(kubeContainer, defaults, source, objects...)
 	return container
 }
 
 var (
-	testKubeContainerSourcegraph = api.Container{
+	testKubeContainerSourcegraph = kube.Container{
 		Name:  "src",
 		Image: "sourcegraph/sourcegraph:latest",
-		VolumeMounts: []api.VolumeMount{
-			api.VolumeMount{Name: "config", MountPath: "/home/sourcegraph/.sourcegraph"},
+		VolumeMounts: []kube.VolumeMount{
+			kube.VolumeMount{Name: "config", MountPath: "/home/sourcegraph/.sourcegraph"},
 		},
-		Ports: []api.ContainerPort{
-			api.ContainerPort{ContainerPort: 80, Protocol: api.ProtocolTCP},
-			api.ContainerPort{ContainerPort: 443, Protocol: api.ProtocolTCP},
+		Ports: []kube.ContainerPort{
+			kube.ContainerPort{ContainerPort: 80, Protocol: kube.ProtocolTCP},
+			kube.ContainerPort{ContainerPort: 443, Protocol: kube.ProtocolTCP},
 		},
-		ImagePullPolicy: api.PullAlways,
+		ImagePullPolicy: kube.PullAlways,
 	}
 
-	testKubeContainerPostgres = api.Container{
+	testKubeContainerPostgres = kube.Container{
 		Name:  "postgres",
 		Image: "postgres:9.5",
-		VolumeMounts: []api.VolumeMount{
-			api.VolumeMount{Name: "db", MountPath: "/var/lib/postgresql/data/pgdata"},
+		VolumeMounts: []kube.VolumeMount{
+			kube.VolumeMount{Name: "db", MountPath: "/var/lib/postgresql/data/pgdata"},
 		},
-		Ports: []api.ContainerPort{
-			api.ContainerPort{ContainerPort: 5432, Protocol: api.ProtocolTCP},
+		Ports: []kube.ContainerPort{
+			kube.ContainerPort{ContainerPort: 5432, Protocol: kube.ProtocolTCP},
 		},
-		ImagePullPolicy: api.PullAlways,
+		ImagePullPolicy: kube.PullAlways,
 	}
 )

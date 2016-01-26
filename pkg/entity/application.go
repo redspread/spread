@@ -4,7 +4,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 // Application is the root of the Redspread hierarchy
@@ -13,7 +13,7 @@ type Application struct {
 	entities []Entity
 }
 
-func NewApplication(source string, defaults api.ObjectMeta, objects ...deploy.KubeObject) (*ReplicationController, error) {
+func NewApplication(source string, defaults kube.ObjectMeta, objects ...deploy.KubeObject) (*ReplicationController, error) {
 	base, err := newBase(EntityApplication, defaults, source, objects)
 	if err != nil {
 		return nil, err

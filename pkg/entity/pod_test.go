@@ -7,23 +7,23 @@ import (
 	"rsprd.com/spread/pkg/image"
 
 	"github.com/gh/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 func TestPodNil(t *testing.T) {
-	_, err := NewPod(nil, api.ObjectMeta{}, "nilPod")
+	_, err := NewPod(nil, kube.ObjectMeta{}, "nilPod")
 	assert.Error(t, err, "cannot created entity.Pod from nil Kube Pod")
 }
 
 func TestPodInvalid(t *testing.T) {
-	kubePod := new(api.Pod)
-	_, err := NewPod(kubePod, api.ObjectMeta{}, "")
+	kubePod := new(kube.Pod)
+	_, err := NewPod(kubePod, kube.ObjectMeta{}, "")
 	assert.Error(t, err, "invalid pod")
 }
 
 func TestPodNoContainers(t *testing.T) {
 	kubePod := testNewKubePod("no-containers")
-	pod, err := NewPod(kubePod, api.ObjectMeta{}, "no-containers")
+	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "no-containers")
 	assert.NoError(t, err, "should be valid entity.Pod")
 
 	// internals
@@ -44,14 +44,14 @@ func TestPodNoContainers(t *testing.T) {
 
 func TestPodNoImage(t *testing.T) {
 	kubePod := testNewKubePod("no-image-pod")
-	kubePod.Spec.Containers = []api.Container{
-		api.Container{
+	kubePod.Spec.Containers = []kube.Container{
+		kube.Container{
 			Name:            "no-image",
-			ImagePullPolicy: api.PullIfNotPresent,
+			ImagePullPolicy: kube.PullIfNotPresent,
 		},
 	}
 
-	pod, err := NewPod(kubePod, api.ObjectMeta{}, "")
+	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "")
 	assert.NoError(t, err, "imageless but valid pod")
 
 	_, err = pod.kube()
@@ -62,7 +62,7 @@ func TestPodNoImage(t *testing.T) {
 }
 
 func TestPodWithContainersImage(t *testing.T) {
-	pod, err := NewPod(testCreateKubePodSourcegraph("test"), api.ObjectMeta{}, "has-containers")
+	pod, err := NewPod(testCreateKubePodSourcegraph("test"), kube.ObjectMeta{}, "has-containers")
 	assert.NoError(t, err, "valid pod")
 
 	images := pod.Images()
@@ -78,27 +78,27 @@ func TestPodWithContainersImage(t *testing.T) {
 }
 
 func TestPodWithContainersKube(t *testing.T) {
-	pod, err := NewPod(testCreateKubePodSourcegraph("test"), api.ObjectMeta{}, "with-containers")
+	pod, err := NewPod(testCreateKubePodSourcegraph("test"), kube.ObjectMeta{}, "with-containers")
 	assert.NoError(t, err, "valid pod")
 
 	// check internals
 	assert.Len(t, pod.containers, 2, "should have postgres and sourcegraph containers")
 
 	expected := testCreateKubePodSourcegraph("test")
-	expected.Namespace = api.NamespaceDefault
+	expected.Namespace = kube.NamespaceDefault
 
 	actual, err := pod.kube()
 	assert.NoError(t, err, "should generate kube")
 
-	assert.True(t, api.Semantic.DeepEqual(expected, actual), "Expected: %+v, Actual: %+v", expected, actual)
+	assert.True(t, kube.Semantic.DeepEqual(expected, actual), "Expected: %+v, Actual: %+v", expected, actual)
 }
 
 func TestPodWithContainersDeployment(t *testing.T) {
 	kubePod := testCreateKubePodSourcegraph("deploy")
-	pod, err := NewPod(kubePod, api.ObjectMeta{}, "containers-deploy")
+	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "containers-deploy")
 	assert.NoError(t, err, "valid pod")
 
-	kubePod.Namespace = api.NamespaceDefault
+	kubePod.Namespace = kube.NamespaceDefault
 
 	expected := deploy.Deployment{}
 	err = expected.Add(kubePod)
@@ -114,41 +114,41 @@ func TestPodBadObjects(t *testing.T) {
 	objects := []deploy.KubeObject{
 		nil, // illegal
 	}
-	_, err := NewPod(testNewKubePod("bad"), api.ObjectMeta{}, "", objects...)
+	_, err := NewPod(testNewKubePod("bad"), kube.ObjectMeta{}, "", objects...)
 	assert.Error(t, err, "bad objects")
 }
 
 func TestPodFromPodSpec(t *testing.T) {
-	spec := api.PodSpec{
-		RestartPolicy: api.RestartPolicyAlways,
-		DNSPolicy:     api.DNSDefault,
+	spec := kube.PodSpec{
+		RestartPolicy: kube.RestartPolicyAlways,
+		DNSPolicy:     kube.DNSDefault,
 	}
-	_, err := NewPodFromPodSpec("no-containers", spec, api.ObjectMeta{}, "no-containers")
+	_, err := NewPodFromPodSpec("no-containers", spec, kube.ObjectMeta{}, "no-containers")
 	assert.NoError(t, err, "should be valid entity.Pod")
 }
 
 func TestPodAttachImage(t *testing.T) {
 	podObjects := testRandomObjects(60)
 	kubePod := testNewKubePod("containerless")
-	pod, err := NewPod(kubePod, api.ObjectMeta{}, "pod", podObjects...)
+	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "pod", podObjects...)
 	assert.NoError(t, err, "valid")
 
 	imageObjects := testRandomObjects(20)
 	kubeImage, err := image.FromString("bprashanth/nginxhttps:1.0")
 	assert.NoError(t, err, "image should be valid")
 
-	image, err := NewImage(kubeImage, api.ObjectMeta{}, "image", imageObjects...)
+	image, err := NewImage(kubeImage, kube.ObjectMeta{}, "image", imageObjects...)
 	assert.NoError(t, err, "valid")
 
 	err = pod.Attach(image)
 	assert.NoError(t, err, "should be attachable")
 
-	kubePod.Namespace = api.NamespaceDefault
-	kubePod.Spec.Containers = []api.Container{
-		api.Container{
+	kubePod.Namespace = kube.NamespaceDefault
+	kubePod.Spec.Containers = []kube.Container{
+		kube.Container{
 			Name:            "nginxhttps",
 			Image:           "bprashanth/nginxhttps:1.0",
-			ImagePullPolicy: api.PullIfNotPresent,
+			ImagePullPolicy: kube.PullIfNotPresent,
 		},
 	}
 
@@ -170,20 +170,20 @@ func TestPodAttachImage(t *testing.T) {
 func TestPodAttachContainer(t *testing.T) {
 	podObjects := testRandomObjects(60)
 	kubePod := testNewKubePod("containerless")
-	pod, err := NewPod(kubePod, api.ObjectMeta{}, "pod", podObjects...)
+	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "pod", podObjects...)
 	assert.NoError(t, err, "valid")
 
 	containerObjects := testRandomObjects(20)
 
 	kubeContainer := testNewKubeContainer("container", "busybox:latest")
-	container, err := NewContainer(kubeContainer, api.ObjectMeta{}, "container", containerObjects...)
+	container, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "container", containerObjects...)
 	assert.NoError(t, err)
 
 	err = pod.Attach(container)
 	assert.NoError(t, err)
 
-	kubePod.Namespace = api.NamespaceDefault
-	kubePod.Spec.Containers = []api.Container{
+	kubePod.Namespace = kube.NamespaceDefault
+	kubePod.Spec.Containers = []kube.Container{
 		kubeContainer,
 	}
 
@@ -203,39 +203,39 @@ func TestPodAttachContainer(t *testing.T) {
 	assert.True(t, expected.Equal(actual))
 }
 
-func testNewKubePod(name string) *api.Pod {
-	return &api.Pod{
-		ObjectMeta: api.ObjectMeta{
+func testNewKubePod(name string) *kube.Pod {
+	return &kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
 			Name: name,
 		},
-		Spec: api.PodSpec{
-			RestartPolicy: api.RestartPolicyAlways,
-			DNSPolicy:     api.DNSDefault,
+		Spec: kube.PodSpec{
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSDefault,
 		},
 	}
 }
 
-func testCreateKubePodSourcegraph(name string) *api.Pod {
-	return &api.Pod{
-		ObjectMeta: api.ObjectMeta{Name: name},
-		Spec: api.PodSpec{
-			RestartPolicy: api.RestartPolicyAlways,
-			DNSPolicy:     api.DNSDefault,
-			Volumes: []api.Volume{
-				api.Volume{
+func testCreateKubePodSourcegraph(name string) *kube.Pod {
+	return &kube.Pod{
+		ObjectMeta: kube.ObjectMeta{Name: name},
+		Spec: kube.PodSpec{
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSDefault,
+			Volumes: []kube.Volume{
+				kube.Volume{
 					Name: "config",
-					VolumeSource: api.VolumeSource{
-						EmptyDir: &api.EmptyDirVolumeSource{},
+					VolumeSource: kube.VolumeSource{
+						EmptyDir: &kube.EmptyDirVolumeSource{},
 					},
 				},
-				api.Volume{
+				kube.Volume{
 					Name: "db",
-					VolumeSource: api.VolumeSource{
-						EmptyDir: &api.EmptyDirVolumeSource{},
+					VolumeSource: kube.VolumeSource{
+						EmptyDir: &kube.EmptyDirVolumeSource{},
 					},
 				},
 			},
-			Containers: []api.Container{
+			Containers: []kube.Container{
 				testKubeContainerSourcegraph,
 				testKubeContainerPostgres,
 			},

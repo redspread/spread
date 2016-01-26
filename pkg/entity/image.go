@@ -6,7 +6,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 // Image represents a Docker image in the Redspread hierarchy. It wraps image.Image.
@@ -15,7 +15,7 @@ type Image struct {
 	image *image.Image
 }
 
-func NewImage(image *image.Image, defaults api.ObjectMeta, source string, objects ...deploy.KubeObject) (*Image, error) {
+func NewImage(image *image.Image, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Image, error) {
 	if image == nil {
 		return nil, ErrorNilImage
 	}

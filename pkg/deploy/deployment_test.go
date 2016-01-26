@@ -5,7 +5,7 @@ import (
 
 	"github.com/gh/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 func TestDeploymentSimpleEquals1(t *testing.T) {
@@ -61,21 +61,21 @@ func TestNoDuplicateNames(t *testing.T) {
 
 func TestDeploymentObjects(t *testing.T) {
 	secret1, secret2 := createSecret("secret1", "dpn't tell"), createSecret("secret2", "spoilers!")
-	pod := api.Pod{
-		ObjectMeta: api.ObjectMeta{
+	pod := kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
 			Name:      "pod",
 			Namespace: "default",
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
-				api.Container{
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
+				kube.Container{
 					Name:            "container",
 					Image:           "redis",
-					ImagePullPolicy: api.PullAlways,
+					ImagePullPolicy: kube.PullAlways,
 				},
 			},
-			RestartPolicy: api.RestartPolicyAlways,
-			DNSPolicy:     api.DNSClusterFirst,
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSClusterFirst,
 		},
 	}
 
@@ -89,15 +89,15 @@ func TestDeploymentObjects(t *testing.T) {
 	objects := deploy.Objects()
 
 	for i := 0; i < len(objects); i++ {
-		if api.Semantic.DeepEqual(objects[i], secret1) {
+		if kube.Semantic.DeepEqual(objects[i], secret1) {
 			continue
 		}
 
-		if api.Semantic.DeepEqual(objects[i], secret2) {
+		if kube.Semantic.DeepEqual(objects[i], secret2) {
 			continue
 		}
 
-		if api.Semantic.DeepEqual(objects[i], &pod) {
+		if kube.Semantic.DeepEqual(objects[i], &pod) {
 			continue
 		}
 
@@ -105,13 +105,13 @@ func TestDeploymentObjects(t *testing.T) {
 	}
 }
 
-func createSecret(name, data string) *api.Secret {
-	return &api.Secret{
-		ObjectMeta: api.ObjectMeta{
+func createSecret(name, data string) *kube.Secret {
+	return &kube.Secret{
+		ObjectMeta: kube.ObjectMeta{
 			Name:      name,
 			Namespace: "default",
 		},
 		Data: map[string][]byte{"test": []byte(data)},
-		Type: api.SecretTypeOpaque,
+		Type: kube.SecretTypeOpaque,
 	}
 }
