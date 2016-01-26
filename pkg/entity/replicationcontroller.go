@@ -1,10 +1,13 @@
 package entity
 
 import (
+	"fmt"
+
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
 	kube "k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/validation"
 )
 
 // ReplicationController represents kube.ReplicationController in the Redspread hierarchy.
@@ -15,6 +18,10 @@ type ReplicationController struct {
 }
 
 func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
+	if kubeRC == nil {
+		return nil, fmt.Errorf("cannot create ReplicationController from nil `%s`", source)
+	}
+
 	base, err := newBase(EntityReplicationController, defaults, source, objects)
 	if err != nil {
 		return nil, err
@@ -28,6 +35,11 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 		}
 		kubeRC.Spec.Template = nil
 	}
+
+	if err = validateRC(kubeRC); err != nil {
+		return nil, err
+	}
+
 	return &rc, nil
 }
 
@@ -36,9 +48,22 @@ func (c ReplicationController) Deployment() (*deploy.Deployment, error) {
 }
 
 func (c ReplicationController) Images() (images []*image.Image) {
-	return c.pod.Images()
+	if c.pod != nil {
+		images = c.pod.Images()
+	}
+	return images
 }
 
 func (c ReplicationController) Attach(e Entity) error {
 	return nil
+}
+
+func validateRC(rc *kube.ReplicationController) error {
+	errList := validation.ValidateReplicationController(rc).Filter(
+		// remove errors about missing template
+		func(e error) bool {
+			return e.Error() == "spec.template: Required value"
+		},
+	)
+	return errList.ToAggregate()
 }
