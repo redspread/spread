@@ -112,14 +112,20 @@ func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
 	}
 
 	// set default labels
-	labels := defaults.Labels
+	labels := map[string]string{}
+	if defaults.Labels != nil {
+		labels = defaults.Labels
+	}
 	for k, v := range meta.GetLabels() {
 		labels[k] = v
 	}
 	meta.SetLabels(labels)
 
 	// set default annotations
-	annotations := defaults.Annotations
+	annotations := map[string]string{}
+	if defaults.Annotations != nil {
+		annotations = defaults.Annotations
+	}
 	for k, v := range meta.GetAnnotations() {
 		annotations[k] = v
 	}

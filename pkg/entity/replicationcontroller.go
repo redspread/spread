@@ -27,15 +27,22 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 		return nil, err
 	}
 
+	// deep copy
+	kubeRC, err = copyRC(kubeRC)
+	if err != nil {
+		return nil, err
+	}
+
 	rc := ReplicationController{base: base}
 	if kubeRC.Spec.Template != nil {
-		rc.pod, err = NewPodFromPodSpec("unamed", kubeRC.Spec.Template.Spec, defaults, source)
+		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.ObjectMeta, kubeRC.Spec.Template.Spec, defaults, source)
 		if err != nil {
 			return nil, err
 		}
 		kubeRC.Spec.Template = nil
 	}
 
+	base.setDefaults(kubeRC)
 	if err = validateRC(kubeRC); err != nil {
 		return nil, err
 	}
@@ -56,6 +63,15 @@ func (c ReplicationController) Images() (images []*image.Image) {
 
 func (c ReplicationController) Attach(e Entity) error {
 	return nil
+}
+
+func copyRC(rc *kube.ReplicationController) (*kube.ReplicationController, error) {
+	copy, err := kube.Scheme.DeepCopy(rc)
+	if err != nil {
+		return nil, err
+	}
+
+	return copy.(*kube.ReplicationController), nil
 }
 
 func validateRC(rc *kube.ReplicationController) error {

@@ -139,6 +139,25 @@ func TestBaseDefaultAnnotationsAndLabels(t *testing.T) {
 	assert.Equal(t, expected, meta.GetAnnotations(), "annotations should match")
 }
 
+func TestBaseNoDefaultAnnotationsAndLabels(t *testing.T) {
+	defaults := kube.ObjectMeta{}
+	obj := createSecret("postgres")
+	obj.Annotations = map[string]string{"object": "data"}
+	obj.Labels = map[string]string{"data": "object"}
+
+	base, err := newBase(EntityContainer, defaults, "src", []deploy.KubeObject{obj})
+	assert.NoError(t, err)
+
+	objects := base.Objects()
+	assert.Len(t, objects, 1)
+
+	expected := obj
+	actual := objects[0]
+
+	assert.Equal(t, expected.Annotations, actual.GetObjectMeta().GetAnnotations())
+	assert.Equal(t, expected.Labels, actual.GetObjectMeta().GetLabels())
+}
+
 func TestBaseCheckAttach(t *testing.T) {
 	baseImage := newDockerImage(t, "sample-image")
 	image, err := NewImage(baseImage, kube.ObjectMeta{}, "")

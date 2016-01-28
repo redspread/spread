@@ -53,12 +53,10 @@ func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects 
 	return &pod, nil
 }
 
-func NewPodFromPodSpec(name string, podSpec kube.PodSpec, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+func NewPodFromPodSpec(meta kube.ObjectMeta, podSpec kube.PodSpec, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	pod := kube.Pod{
-		ObjectMeta: kube.ObjectMeta{
-			Name: name,
-		},
-		Spec: podSpec,
+		ObjectMeta: meta,
+		Spec:       podSpec,
 	}
 	return NewPod(&pod, defaults, source, objects...)
 }

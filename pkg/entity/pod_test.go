@@ -123,7 +123,7 @@ func TestPodFromPodSpec(t *testing.T) {
 		RestartPolicy: kube.RestartPolicyAlways,
 		DNSPolicy:     kube.DNSDefault,
 	}
-	_, err := NewPodFromPodSpec("no-containers", spec, kube.ObjectMeta{}, "no-containers")
+	_, err := NewPodFromPodSpec(kube.ObjectMeta{Name: "no-containers"}, spec, kube.ObjectMeta{}, "no-containers")
 	assert.NoError(t, err, "should be valid entity.Pod")
 }
 
