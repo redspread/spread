@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"strings"
 	"testing"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -83,15 +84,147 @@ func TestRCValidPodDeployment(t *testing.T) {
 	assert.True(t, expected.Equal(actual))
 }
 
+func TestRCBadObjects(t *testing.T) {
+	objects := []deploy.KubeObject{
+		nil, // illegal
+	}
+
+	selector := map[string]string{"required": "value"}
+	kubePod := testNewKubePod("testPod")
+	kubePod.Labels = selector
+	kubeRC := testNewKubeRC(kube.ObjectMeta{}, selector, kubePod)
+	_, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "", objects...)
+	assert.Error(t, err, "bad objects")
+}
+
+func TestRCAttachImage(t *testing.T) {
+	imageName := "rc-attach-image"
+	selector := map[string]string{
+		"app": "cache",
+	}
+
+	// create kube.ReplicationController
+	// create ReplicationController
+	rcMeta := kube.ObjectMeta{Name: "test-rc"}
+	kubeRC := testNewKubeRC(rcMeta, selector, nil)
+	rcObjects := testRandomObjects(15)
+	rc, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "", rcObjects...)
+	assert.NoError(t, err, "should be valid RC")
+
+	// create Image
+	imageObjects := testRandomObjects(10)
+	image := testNewImage(t, imageName, kube.ObjectMeta{}, "", imageObjects)
+
+	// Attach image to RC
+	// Should assume defaults up tree creating necessary components
+	err = rc.Attach(image)
+	assert.NoError(t, err, "attachment should be allowed")
+
+	// Compare internal elements
+	assert.NotNil(t, rc.rc.Spec.Template, "should of created template")
+
+	// Create struct representation for expected
+	rcMeta.Namespace = kube.NamespaceDefault
+	containerName := strings.Join([]string{imageName, "container"}, "-")
+	expectedRC := &kube.ReplicationController{
+		ObjectMeta: rcMeta,
+		Spec: kube.ReplicationControllerSpec{
+			Selector: selector,
+			Template: &kube.PodTemplateSpec{
+				ObjectMeta: kube.ObjectMeta{Labels: selector},
+				Spec: kube.PodSpec{
+					Containers: []kube.Container{
+						kube.Container{
+							Name:            containerName,
+							Image:           imageName,
+							ImagePullPolicy: kube.PullIfNotPresent,
+						},
+					},
+					RestartPolicy: kube.RestartPolicyAlways,
+					DNSPolicy:     kube.DNSDefault,
+				},
+			},
+		},
+	}
+
+	// Insert into Deployment
+	expected := deploy.Deployment{}
+	err = expected.Add(expectedRC)
+	assert.NoError(t, err, "should be valid RC")
+
+	// add objects to deployment
+	expected.AddDeployment(image.objects)
+	expected.AddDeployment(rc.objects)
+
+	// Create Deployment from RC
+	actual, err := rc.Deployment()
+	assert.NoError(t, err, "should produce valid deployment")
+
+	// Compare deployments
+	equal := expected.Equal(actual)
+	assert.True(t, equal, "deployments should be same")
+
+	// check images
+	images := rc.Images()
+	assert.Len(t, images, 1)
+	for _, v := range images {
+		assert.EqualValues(t, image, v, "should match original image")
+	}
+}
+
+func TestRCAttachContainer(t *testing.T) {
+	// create kube.ReplicationController
+	// create ReplicationController
+
+	// create kube.Container
+	// create Container from created container
+
+	// Attach container to RC
+	// Should assume defaults up tree creating necessary components
+
+	// Compare internal elements
+
+	// Create struct representation for expected
+	// Insert into Deployment
+	// Create Deployment from RC
+
+	// Compare Len of Deployments
+	// Deep-equals deployments
+}
+
+func TestRCAttachPod(t *testing.T) {
+	// create kube.ReplicationController
+	// create ReplicationController
+
+	// create kube.Pod
+	// create Pod from created pod
+
+	// Attach pod to RC
+	// Should assume defaults up tree creating necessary components
+
+	// Compare internal elements
+
+	// Create struct representation for expected
+	// Insert into Deployment
+	// Create Deployment from RC
+
+	// Compare Len of Deployments
+	// Deep-equals deployments
+}
+
 func testNewKubeRC(meta kube.ObjectMeta, selector map[string]string, pod *kube.Pod) *kube.ReplicationController {
+	var spec *kube.PodTemplateSpec
+	if pod != nil {
+		spec = &kube.PodTemplateSpec{
+			ObjectMeta: pod.ObjectMeta,
+			Spec:       pod.Spec,
+		}
+	}
 	return &kube.ReplicationController{
 		ObjectMeta: meta,
 		Spec: kube.ReplicationControllerSpec{
 			Selector: selector,
-			Template: &kube.PodTemplateSpec{
-				ObjectMeta: pod.ObjectMeta,
-				Spec:       pod.Spec,
-			},
+			Template: spec,
 		},
 	}
 }
