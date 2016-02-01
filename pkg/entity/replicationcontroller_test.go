@@ -57,9 +57,18 @@ func TestRCValidPodImages(t *testing.T) {
 	selector := map[string]string{
 		"service": "hotline",
 	}
-	kubeRC := testNewRC(t, selector)
 
-	images := kubeRC.Images()
+	pod := testCreateKubePodSourcegraph("sourcegraph")
+	meta := kube.ObjectMeta{
+		Name: "sourcegraph-rc",
+	}
+	kubeRC := testNewKubeRC(meta, selector, pod)
+	kubeRC.Spec.Template.Labels = selector
+
+	rc, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "valid-rc")
+	assert.NoError(t, err)
+
+	images := rc.Images()
 	assert.Len(t, images, 2, "RC should have 2 images")
 }
 
@@ -103,13 +112,9 @@ func TestRCAttachImage(t *testing.T) {
 		"app": "cache",
 	}
 
-	// create kube.ReplicationController
 	// create ReplicationController
-	rcMeta := kube.ObjectMeta{Name: "test-rc"}
-	kubeRC := testNewKubeRC(rcMeta, selector, nil)
-	rcObjects := testRandomObjects(15)
-	rc, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "", rcObjects...)
-	assert.NoError(t, err, "should be valid RC")
+	rcObjects := testRandomObjects(10)
+	rc := testNewRC(t, "image-test", selector, rcObjects)
 
 	// create Image
 	imageObjects := testRandomObjects(10)
@@ -117,13 +122,14 @@ func TestRCAttachImage(t *testing.T) {
 
 	// Attach image to RC
 	// Should assume defaults up tree creating necessary components
-	err = rc.Attach(image)
+	err := rc.Attach(image)
 	assert.NoError(t, err, "attachment should be allowed")
 
 	// Compare internal elements
-	assert.NotNil(t, rc.rc.Spec.Template, "should of created template")
+	assert.NotNil(t, rc.pod, "should of created template")
 
 	// Create struct representation for expected
+	rcMeta := rc.rc.ObjectMeta
 	rcMeta.Namespace = kube.NamespaceDefault
 	containerName := strings.Join([]string{imageName, "container"}, "-")
 	expectedRC := &kube.ReplicationController{
@@ -173,43 +179,154 @@ func TestRCAttachImage(t *testing.T) {
 }
 
 func TestRCAttachContainer(t *testing.T) {
-	// create kube.ReplicationController
+	containerName := "attached"
+	imageName := "embeddedImage"
+	selector := map[string]string{
+		"app": "db",
+	}
+
 	// create ReplicationController
+	rcObjects := testRandomObjects(10)
+	rc := testNewRC(t, "container-test", selector, rcObjects)
 
 	// create kube.Container
 	// create Container from created container
+	containerObjects := testRandomObjects(20)
+	kubeContainer := testNewKubeContainer(containerName, imageName)
+	container, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "", containerObjects...)
+	assert.NoError(t, err, "should be valid container")
 
 	// Attach container to RC
 	// Should assume defaults up tree creating necessary components
+	err = rc.Attach(container)
+	assert.NoError(t, err, "container should be able to attach to rc")
 
 	// Compare internal elements
+	assert.NotNil(t, rc.pod, "should of created pod")
+	// assert.Len(t, rc.pod.containers, 1)
 
 	// Create struct representation for expected
 	// Insert into Deployment
 	// Create Deployment from RC
+	rcMeta := rc.rc.ObjectMeta
+	rcMeta.Namespace = kube.NamespaceDefault
+	expectedRC := &kube.ReplicationController{
+		ObjectMeta: rcMeta,
+		Spec: kube.ReplicationControllerSpec{
+			Selector: selector,
+			Template: &kube.PodTemplateSpec{
+				ObjectMeta: kube.ObjectMeta{Labels: selector},
+				Spec: kube.PodSpec{
+					Containers: []kube.Container{
+						kubeContainer,
+					},
+					RestartPolicy: kube.RestartPolicyAlways,
+					DNSPolicy:     kube.DNSDefault,
+				},
+			},
+		},
+	}
 
-	// Compare Len of Deployments
-	// Deep-equals deployments
+	// Insert into Deployment
+	expected := deploy.Deployment{}
+	err = expected.Add(expectedRC)
+	assert.NoError(t, err, "should be valid RC")
+
+	// add objects to deployment
+	expected.AddDeployment(container.objects)
+	expected.AddDeployment(rc.objects)
+
+	// Create Deployment from RC
+	actual, err := rc.Deployment()
+	assert.NoError(t, err, "should produce valid deployment")
+
+	// Compare deployments
+	equal := expected.Equal(actual)
+	assert.True(t, equal, "deployments should be same")
+
+	// check images
+	images := rc.Images()
+	assert.Len(t, images, 1)
 }
 
 func TestRCAttachPod(t *testing.T) {
-	// create kube.ReplicationController
+	kubeContainer := kube.Container{
+		Name:            "redis",
+		Image:           "redis",
+		ImagePullPolicy: kube.PullAlways,
+	}
+	selector := map[string]string{
+		"app": "db",
+	}
+
 	// create ReplicationController
+	rcObjects := testRandomObjects(10)
+	rc := testNewRC(t, "container-test", selector, rcObjects)
 
 	// create kube.Pod
 	// create Pod from created pod
+	kubePod := &kube.Pod{
+		ObjectMeta: kube.ObjectMeta{Name: "attached"},
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
+				kubeContainer,
+			},
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSDefault,
+		},
+	}
+	podObjects := testRandomObjects(10)
+	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "", podObjects...)
+	assert.NoError(t, err, "should be valid pod")
 
 	// Attach pod to RC
 	// Should assume defaults up tree creating necessary components
+	err = rc.Attach(pod)
+	assert.NoError(t, err, "pod should be able to attach to ")
 
 	// Compare internal elements
+	assert.NotNil(t, rc.pod, "should of created pod")
+	// assert.Len(t, rc.pod.containers, 1)
 
 	// Create struct representation for expected
 	// Insert into Deployment
 	// Create Deployment from RC
+	rcMeta := rc.rc.ObjectMeta
+	rcMeta.Namespace = kube.NamespaceDefault
 
-	// Compare Len of Deployments
-	// Deep-equals deployments
+	podMeta := pod.pod.ObjectMeta
+	podMeta.Labels = selector
+	expectedRC := &kube.ReplicationController{
+		ObjectMeta: rcMeta,
+		Spec: kube.ReplicationControllerSpec{
+			Selector: selector,
+			Template: &kube.PodTemplateSpec{
+				ObjectMeta: podMeta,
+				Spec:       kubePod.Spec,
+			},
+		},
+	}
+
+	// Insert into Deployment
+	expected := deploy.Deployment{}
+	err = expected.Add(expectedRC)
+	assert.NoError(t, err, "should be valid RC")
+
+	// add objects to deployment
+	expected.AddDeployment(pod.objects)
+	expected.AddDeployment(rc.objects)
+
+	// Create Deployment from RC
+	actual, err := rc.Deployment()
+	assert.NoError(t, err, "should produce valid deployment")
+
+	// Compare deployments
+	equal := expected.Equal(actual)
+	assert.True(t, equal, "deployments should be same")
+
+	// check images
+	images := rc.Images()
+	assert.Len(t, images, 1)
 }
 
 func testNewKubeRC(meta kube.ObjectMeta, selector map[string]string, pod *kube.Pod) *kube.ReplicationController {
@@ -229,19 +346,10 @@ func testNewKubeRC(meta kube.ObjectMeta, selector map[string]string, pod *kube.P
 	}
 }
 
-func testNewRC(t *testing.T, selector map[string]string) *ReplicationController {
-	return testNewRCWithOpts(t, selector, kube.ObjectMeta{}, []deploy.KubeObject{})
-}
-
-func testNewRCWithOpts(t *testing.T, selector map[string]string, defaults kube.ObjectMeta, objects []deploy.KubeObject) *ReplicationController {
-	pod := testCreateKubePodSourcegraph("sourcegraph")
-	meta := kube.ObjectMeta{
-		Name: "sourcegraph-rc",
-	}
-	kubeRC := testNewKubeRC(meta, selector, pod)
-	kubeRC.Spec.Template.Labels = selector
-
-	rc, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "valid-rc", objects...)
-	assert.NoError(t, err)
+func testNewRC(t *testing.T, name string, selector map[string]string, objects []deploy.KubeObject) *ReplicationController {
+	rcMeta := kube.ObjectMeta{Name: name}
+	kubeRC := testNewKubeRC(rcMeta, selector, nil)
+	rc, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "", objects...)
+	assert.NoError(t, err, "should be valid RC")
 	return rc
 }

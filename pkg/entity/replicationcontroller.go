@@ -46,6 +46,7 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 	if err = validateRC(kubeRC); err != nil {
 		return nil, err
 	}
+	rc.rc = kubeRC
 
 	return &rc, nil
 }
