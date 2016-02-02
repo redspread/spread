@@ -283,6 +283,8 @@ func TestRCAttachPod(t *testing.T) {
 	// Should assume defaults up tree creating necessary components
 	err = rc.Attach(pod)
 	assert.NoError(t, err, "pod should be able to attach to ")
+	children := rc.children()
+	assert.Contains(t, children, pod, "should have image as child")
 
 	// Compare internal elements
 	assert.NotNil(t, rc.pod, "should of created pod")

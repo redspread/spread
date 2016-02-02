@@ -92,6 +92,12 @@ func (c *Container) name() string {
 	return c.container.Name
 }
 
+func (c *Container) children() []Entity {
+	return []Entity{
+		c.image,
+	}
+}
+
 func (c *Container) data() (kube.Container, error) {
 	if c.image == nil {
 		return kube.Container{}, ErrorEntityNotReady

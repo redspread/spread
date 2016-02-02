@@ -107,6 +107,13 @@ func (c *Pod) name() string {
 	return c.pod.ObjectMeta.Name
 }
 
+func (c *Pod) children() (children []Entity) {
+	for _, v := range c.containers {
+		children = append(children, v)
+	}
+	return
+}
+
 func (c *Pod) data() (*kube.Pod, error) {
 	containers := []kube.Container{}
 	for _, container := range c.containers {

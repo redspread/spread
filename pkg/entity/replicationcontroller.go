@@ -95,6 +95,12 @@ func (c *ReplicationController) name() string {
 	return c.rc.ObjectMeta.Name
 }
 
+func (c *ReplicationController) children() []Entity {
+	return []Entity{
+		c.pod,
+	}
+}
+
 func copyRC(rc *kube.ReplicationController) (*kube.ReplicationController, error) {
 	copy, err := kube.Scheme.DeepCopy(rc)
 	if err != nil {

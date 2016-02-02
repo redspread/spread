@@ -117,6 +117,18 @@ func TestImageBadObject(t *testing.T) {
 	assert.Error(t, err, "invalid object, should return error")
 }
 
+func TestImageChildren(t *testing.T) {
+	image := newDockerImage(t, "ghost:latest")
+
+	entity, err := NewImage(image, kube.ObjectMeta{}, "")
+	if err != nil {
+		t.Fatalf("Could not create Image entity: %v", err)
+	}
+
+	children := entity.children()
+	assert.Len(t, children, 0, "images can't have children")
+}
+
 func testNewImage(t *testing.T, imageName string, defaults kube.ObjectMeta, source string, objects []deploy.KubeObject) *Image {
 	image, err := NewImage(newDockerImage(t, imageName), defaults, source, objects...)
 	if err != nil {

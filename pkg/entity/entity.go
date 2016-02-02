@@ -20,6 +20,7 @@ type Entity interface {
 
 	// prevents implementation by external packages
 	name() string
+	children() []Entity
 }
 
 // base provides fields that are shared between all Entitys.

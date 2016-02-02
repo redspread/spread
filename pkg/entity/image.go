@@ -54,6 +54,10 @@ func (c *Image) name() string {
 	return c.image.DockerName()
 }
 
+func (c *Image) children() []Entity {
+	return []Entity{}
+}
+
 // Kubernetes representation of image
 func (c *Image) data() (string, error) {
 	return c.image.DockerName(), nil

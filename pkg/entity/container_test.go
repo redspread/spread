@@ -90,6 +90,8 @@ func TestContainerAttach(t *testing.T) {
 
 	err = container.Attach(image)
 	assert.NoError(t, err, "attach should be allowed")
+	children := container.children()
+	assert.Contains(t, children, image, "should have image as child")
 
 	images := container.Images()
 	assert.Len(t, images, 1, "only one image should exist")

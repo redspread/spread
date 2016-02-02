@@ -181,6 +181,8 @@ func TestPodAttachContainer(t *testing.T) {
 
 	err = pod.Attach(container)
 	assert.NoError(t, err)
+	children := pod.children()
+	assert.Contains(t, children, container, "should have container as child")
 
 	kubePod.Namespace = kube.NamespaceDefault
 	kubePod.Spec.Containers = []kube.Container{
