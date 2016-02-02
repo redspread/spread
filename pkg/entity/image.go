@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+	"strings"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
@@ -30,22 +31,31 @@ func NewImage(image *image.Image, defaults kube.ObjectMeta, source string, objec
 	return &Image{base: base, image: image}, nil
 }
 
-func (c Image) Deployment() (*deploy.Deployment, error) {
-	return nil, nil
+func (c *Image) Deployment() (*deploy.Deployment, error) {
+	podName := strings.Join([]string{c.name(), "image"}, "-")
+	meta := kube.ObjectMeta{
+		Name: podName,
+	}
+
+	return deployWithPod(meta, c)
 }
 
-func (c Image) Images() []*image.Image {
+func (c *Image) Images() []*image.Image {
 	return []*image.Image{
 		c.image,
 	}
 }
 
-func (c Image) Attach(e Entity) error {
+func (c *Image) Attach(e Entity) error {
 	return ErrorCannotAttachToImage
 }
 
 // Kubernetes representation of image
-func (c Image) kube() string {
+func (c *Image) kube() string {
+	return c.image.DockerName()
+}
+
+func (c *Image) name() string {
 	return c.image.DockerName()
 }
 

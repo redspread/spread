@@ -10,6 +10,11 @@ import (
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
+var DefaultPodSpec = kube.PodSpec{
+	RestartPolicy: kube.RestartPolicyAlways,
+	DNSPolicy:     kube.DNSDefault,
+}
+
 // Pod represents kube.Pod in the Redspread hierarchy.
 type Pod struct {
 	base
@@ -61,22 +66,26 @@ func NewPodFromPodSpec(meta kube.ObjectMeta, podSpec kube.PodSpec, defaults kube
 	return NewPod(&pod, defaults, source, objects...)
 }
 
-func (c Pod) Deployment() (*deploy.Deployment, error) {
+func newDefaultPod(meta kube.ObjectMeta, source string) (*Pod, error) {
+	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source)
+}
+
+func (c *Pod) Deployment() (*deploy.Deployment, error) {
 	return nil, nil
 }
 
-func (c Pod) Images() (images []*image.Image) {
+func (c *Pod) Images() (images []*image.Image) {
 	for _, v := range c.containers {
 		images = append(images, v.Images()...)
 	}
 	return
 }
 
-func (c Pod) Attach(e Entity) error {
+func (c *Pod) Attach(e Entity) error {
 	return nil
 }
 
-func (c Pod) kube() (*kube.Pod, error) {
+func (c *Pod) kube() (*kube.Pod, error) {
 	containers := []kube.Container{}
 	for _, container := range c.containers {
 		kubeContainer, err := container.kube()
@@ -118,4 +127,18 @@ func validatePod(pod *kube.Pod, ignoreContainers bool) error {
 		})
 	}
 	return errList.ToAggregate()
+}
+
+func deployWithPod(meta kube.ObjectMeta, attached Entity) (*deploy.Deployment, error) {
+	pod, err := newDefaultPod(meta, attached.Source())
+	if err != nil {
+		return nil, err
+	}
+
+	err = pod.Attach(attached)
+	if err != nil {
+		return nil, err
+	}
+
+	return pod.Deployment()
 }

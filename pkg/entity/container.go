@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"strings"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
@@ -46,11 +47,16 @@ func NewContainer(container kube.Container, defaults kube.ObjectMeta, source str
 	return &newContainer, nil
 }
 
-func (c Container) Deployment() (*deploy.Deployment, error) {
-	return nil, nil
+func (c *Container) Deployment() (*deploy.Deployment, error) {
+	podName := strings.Join([]string{c.name(), "container"}, "-")
+	meta := kube.ObjectMeta{
+		Name: podName,
+	}
+
+	return deployWithPod(meta, c)
 }
 
-func (c Container) Images() []*image.Image {
+func (c *Container) Images() []*image.Image {
 	var images []*image.Image
 	if c.image != nil {
 		images = c.image.Images()
@@ -58,11 +64,11 @@ func (c Container) Images() []*image.Image {
 	return images
 }
 
-func (c Container) Attach(e Entity) error {
+func (c *Container) Attach(e Entity) error {
 	return nil
 }
 
-func (c Container) kube() (kube.Container, error) {
+func (c *Container) kube() (kube.Container, error) {
 	if c.image == nil {
 		return kube.Container{}, ErrorEntityNotReady
 	}
@@ -71,6 +77,10 @@ func (c Container) kube() (kube.Container, error) {
 	container := c.container
 	container.Image = c.image.kube()
 	return container, nil
+}
+
+func (c *Container) name() string {
+	return c.container.Name
 }
 
 func validateContainer(c kube.Container) error {

@@ -51,18 +51,18 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 	return &rc, nil
 }
 
-func (c ReplicationController) Deployment() (*deploy.Deployment, error) {
+func (c *ReplicationController) Deployment() (*deploy.Deployment, error) {
 	return nil, nil
 }
 
-func (c ReplicationController) Images() (images []*image.Image) {
+func (c *ReplicationController) Images() (images []*image.Image) {
 	if c.pod != nil {
 		images = c.pod.Images()
 	}
 	return images
 }
 
-func (c ReplicationController) Attach(e Entity) error {
+func (c *ReplicationController) Attach(e Entity) error {
 	return nil
 }
 
