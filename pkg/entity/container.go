@@ -11,6 +11,10 @@ import (
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
+var DefaultContainer = kube.Container{
+	ImagePullPolicy: kube.PullAlways,
+}
+
 // Container represents kube.Container in the Redspread hierarchy.
 type Container struct {
 	base
@@ -47,6 +51,12 @@ func NewContainer(container kube.Container, defaults kube.ObjectMeta, source str
 	return &newContainer, nil
 }
 
+func newDefaultContainer(name, source string) (*Container, error) {
+	kubeContainer := DefaultContainer
+	kubeContainer.Name = name
+	return NewContainer(kubeContainer, kube.ObjectMeta{}, source)
+}
+
 func (c *Container) Deployment() (*deploy.Deployment, error) {
 	podName := strings.Join([]string{c.name(), "container"}, "-")
 	meta := kube.ObjectMeta{
@@ -65,7 +75,21 @@ func (c *Container) Images() []*image.Image {
 }
 
 func (c *Container) Attach(e Entity) error {
+	if c.image != nil {
+		return ErrorMaxAttached
+	}
+
+	if err := c.validAttach(e); err != nil {
+		return err
+	}
+
+	// entity must be image
+	c.image = e.(*Image)
 	return nil
+}
+
+func (c *Container) name() string {
+	return c.container.Name
 }
 
 func (c *Container) data() (kube.Container, error) {
@@ -81,10 +105,6 @@ func (c *Container) data() (kube.Container, error) {
 	}
 	container.Image = image
 	return container, nil
-}
-
-func (c *Container) name() string {
-	return c.container.Name
 }
 
 func validateContainer(c kube.Container) error {

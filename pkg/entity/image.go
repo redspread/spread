@@ -47,7 +47,11 @@ func (c *Image) Images() []*image.Image {
 }
 
 func (c *Image) Attach(e Entity) error {
-	return ErrorCannotAttachToImage
+	return ErrorMaxAttached
+}
+
+func (c *Image) name() string {
+	return c.image.DockerName()
 }
 
 // Kubernetes representation of image
@@ -55,12 +59,7 @@ func (c *Image) data() (string, error) {
 	return c.image.DockerName(), nil
 }
 
-func (c *Image) name() string {
-	return c.image.DockerName()
-}
-
 var (
-	ErrorEmptyImageString    = errors.New("image.Image's DockerString was empty")
-	ErrorNilImage            = errors.New("*image.Image cannot be nil")
-	ErrorCannotAttachToImage = errors.New("No entities are allowed to attach to an Image")
+	ErrorEmptyImageString = errors.New("image.Image's DockerString was empty")
+	ErrorNilImage         = errors.New("*image.Image cannot be nil")
 )

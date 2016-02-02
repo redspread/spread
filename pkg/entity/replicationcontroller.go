@@ -63,7 +63,36 @@ func (c *ReplicationController) Images() (images []*image.Image) {
 }
 
 func (c *ReplicationController) Attach(e Entity) error {
-	return nil
+	if c.pod != nil {
+		return ErrorMaxAttached
+	}
+
+	if err := c.validAttach(e); err != nil {
+		return err
+	}
+
+	switch e := e.(type) {
+	case *Pod:
+		c.pod = e
+		return nil
+	default:
+		meta := kube.ObjectMeta{Name: e.name()}
+		pod, err := newDefaultPod(meta, e.Source())
+		if err != nil {
+			return err
+		}
+
+		err = pod.Attach(e)
+		if err != nil {
+			return err
+		}
+
+		return c.Attach(pod)
+	}
+}
+
+func (c *ReplicationController) name() string {
+	return c.rc.ObjectMeta.Name
 }
 
 func copyRC(rc *kube.ReplicationController) (*kube.ReplicationController, error) {

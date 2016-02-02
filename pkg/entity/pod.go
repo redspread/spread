@@ -81,8 +81,30 @@ func (c *Pod) Images() (images []*image.Image) {
 	return
 }
 
-func (c *Pod) Attach(e Entity) error {
-	return nil
+func (c *Pod) Attach(curEntity Entity) error {
+	if err := c.validAttach(curEntity); err != nil {
+		return err
+	}
+	for {
+		switch e := curEntity.(type) {
+		case *Image:
+			container, err := newDefaultContainer(e.name(), e.Source())
+			if err != nil {
+				return err
+			}
+
+			err = container.Attach(e)
+			curEntity = container
+			break
+		case *Container:
+			c.containers = append(c.containers, e)
+			return nil
+		}
+	}
+}
+
+func (c *Pod) name() string {
+	return c.pod.ObjectMeta.Name
 }
 
 func (c *Pod) data() (*kube.Pod, error) {

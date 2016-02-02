@@ -17,6 +17,9 @@ type Entity interface {
 	Source() string
 	Attach(Entity) error
 	DefaultMeta() kube.ObjectMeta
+
+	// prevents implementation by external packages
+	name() string
 }
 
 // base provides fields that are shared between all Entitys.
@@ -142,4 +145,5 @@ var (
 	ErrorNilObject         = errors.New("an object was nil, this is not allowed.")
 	ErrorInvalidAttachType = errors.New("the entity to be attached is of an unknown type")
 	ErrorBadAttachOrder    = errors.New("entities cannot attach to entities of a lower type")
+	ErrorMaxAttached       = errors.New("no more entities can be attached")
 )
