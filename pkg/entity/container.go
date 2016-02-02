@@ -98,19 +98,21 @@ func (c *Container) children() []Entity {
 	}
 }
 
-func (c *Container) data() (kube.Container, error) {
+func (c *Container) data() (container kube.Container, objects deploy.Deployment, err error) {
 	if c.image == nil {
-		return kube.Container{}, ErrorEntityNotReady
+		return kube.Container{}, deploy.Deployment{}, ErrorEntityNotReady
 	}
 
 	// if image exists should always return valid result
-	container := c.container
-	image, err := c.image.data()
+	container = c.container
+	image, objects, err := c.image.data()
 	if err != nil {
-		return container, err
+		return container, deploy.Deployment{}, err
 	}
+
+	objects.AddDeployment(c.objects)
 	container.Image = image
-	return container, nil
+	return container, objects, nil
 }
 
 func validateContainer(c kube.Container) error {

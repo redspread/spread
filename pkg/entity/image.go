@@ -59,8 +59,9 @@ func (c *Image) children() []Entity {
 }
 
 // Kubernetes representation of image
-func (c *Image) data() (string, error) {
-	return c.image.DockerName(), nil
+func (c *Image) data() (image string, objects deploy.Deployment, err error) {
+	objects.AddDeployment(c.objects)
+	return c.image.DockerName(), objects, nil
 }
 
 var (

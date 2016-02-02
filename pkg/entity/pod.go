@@ -114,27 +114,32 @@ func (c *Pod) children() (children []Entity) {
 	return
 }
 
-func (c *Pod) data() (*kube.Pod, error) {
+func (c *Pod) data() (pod *kube.Pod, objects deploy.Deployment, err error) {
 	containers := []kube.Container{}
 	for _, container := range c.containers {
-		kubeContainer, err := container.data()
+		kubeContainer, cObj, err := container.data()
 		if err != nil {
-			return nil, err
+			return nil, objects, err
 		}
 		containers = append(containers, kubeContainer)
+		// add containers objects
+		objects.AddDeployment(cObj)
 	}
 
 	if len(containers) == 0 {
-		return nil, ErrorEntityNotReady
+		return nil, objects, ErrorEntityNotReady
 	}
 
-	pod, err := copyPod(c.pod)
+	// add own objects
+	objects.AddDeployment(c.objects)
+
+	pod, err = copyPod(c.pod)
 	if err != nil {
-		return nil, err
+		return nil, objects, err
 	}
 
 	pod.Spec.Containers = containers
-	return pod, nil
+	return pod, objects, nil
 }
 
 func copyPod(pod *kube.Pod) (*kube.Pod, error) {

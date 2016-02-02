@@ -97,13 +97,14 @@ func TestImageKube(t *testing.T) {
 	imageName := "redis:latest"
 	image := newDockerImage(t, imageName)
 
-	entity, err := NewImage(image, kube.ObjectMeta{}, "")
+	entity, err := NewImage(image, kube.ObjectMeta{}, "", createSecret("helo"))
 	if err != nil {
 		t.Fatalf("Could not create Image entity: %v", err)
 	}
 
-	actual, err := entity.data()
+	actual, objects, err := entity.data()
 	assert.NoError(t, err, "images can't have bad data")
+	assert.Equal(t, objects.Len(), 1, "should only have secret")
 	assert.Equal(t, imageName, actual, "image names should match")
 }
 

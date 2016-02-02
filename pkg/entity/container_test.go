@@ -31,9 +31,10 @@ func TestContainerWithImageDeployment(t *testing.T) {
 	assert.Equal(t, expectedImage.DockerName(), actualImage.DockerName(), "image should not have changed")
 
 	// check kube
-	kubectr, err := ctr.data()
+	kubectr, objects, err := ctr.data()
 	assert.NoError(t, err, "should be able to produce kube")
 	assert.True(t, kube.Semantic.DeepEqual(&kubectr, &kubeContainer), "kube should be same as container")
+	assert.Equal(t, objects.Len(), 0, "no objects should have been added")
 
 	pod := kube.Pod{
 		ObjectMeta: kube.ObjectMeta{
@@ -70,7 +71,7 @@ func TestContainerNoImageDeployment(t *testing.T) {
 	images := ctr.Images()
 	assert.Len(t, images, 0, "no image should have been created")
 
-	_, err = ctr.data()
+	_, _, err = ctr.data()
 	assert.Error(t, err, "container is not ready")
 
 	_, err = ctr.Deployment()
