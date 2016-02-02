@@ -138,8 +138,8 @@ func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
 }
 
 var (
-	ErrorEntityNotReady = errors.New("entity not ready to be deployed")
-	ErrorNilObject      = errors.New("an object was nil, this is not allowed.")
+	ErrorEntityNotReady    = errors.New("entity not ready to be deployed")
+	ErrorNilObject         = errors.New("an object was nil, this is not allowed.")
 	ErrorInvalidAttachType = errors.New("the entity to be attached is of an unknown type")
-	ErrorBadAttachOrder = errors.New("entities cannot attach to entities of a lower type")
+	ErrorBadAttachOrder    = errors.New("entities cannot attach to entities of a lower type")
 )

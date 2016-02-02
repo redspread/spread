@@ -34,7 +34,7 @@ func TestPodNoContainers(t *testing.T) {
 	assert.Len(t, images, 0, "no image should have been created")
 
 	// kube
-	_, err = pod.kube()
+	_, err = pod.data()
 	assert.Error(t, err, "doesn't have containers, no kube")
 
 	// deployment
@@ -54,7 +54,7 @@ func TestPodNoImage(t *testing.T) {
 	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "")
 	assert.NoError(t, err, "imageless but valid pod")
 
-	_, err = pod.kube()
+	_, err = pod.data()
 	assert.Error(t, err, "kube not possible without image")
 
 	_, err = pod.Deployment()
@@ -87,7 +87,7 @@ func TestPodWithContainersKube(t *testing.T) {
 	expected := testCreateKubePodSourcegraph("test")
 	expected.Namespace = kube.NamespaceDefault
 
-	actual, err := pod.kube()
+	actual, err := pod.data()
 	assert.NoError(t, err, "should generate kube")
 
 	assert.True(t, kube.Semantic.DeepEqual(expected, actual), "Expected: %+v, Actual: %+v", expected, actual)

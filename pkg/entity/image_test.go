@@ -102,7 +102,8 @@ func TestImageKube(t *testing.T) {
 		t.Fatalf("Could not create Image entity: %v", err)
 	}
 
-	actual := entity.kube()
+	actual, err := entity.data()
+	assert.NoError(t, err, "images can't have bad data")
 	assert.Equal(t, imageName, actual, "image names should match")
 }
 

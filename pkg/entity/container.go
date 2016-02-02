@@ -68,14 +68,18 @@ func (c *Container) Attach(e Entity) error {
 	return nil
 }
 
-func (c *Container) kube() (kube.Container, error) {
+func (c *Container) data() (kube.Container, error) {
 	if c.image == nil {
 		return kube.Container{}, ErrorEntityNotReady
 	}
 
 	// if image exists should always return valid result
 	container := c.container
-	container.Image = c.image.kube()
+	image, err := c.image.data()
+	if err != nil {
+		return container, err
+	}
+	container.Image = image
 	return container, nil
 }
 

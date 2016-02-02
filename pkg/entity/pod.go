@@ -85,10 +85,10 @@ func (c *Pod) Attach(e Entity) error {
 	return nil
 }
 
-func (c *Pod) kube() (*kube.Pod, error) {
+func (c *Pod) data() (*kube.Pod, error) {
 	containers := []kube.Container{}
 	for _, container := range c.containers {
-		kubeContainer, err := container.kube()
+		kubeContainer, err := container.data()
 		if err != nil {
 			return nil, err
 		}
