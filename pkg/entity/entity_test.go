@@ -167,8 +167,8 @@ func TestBaseCheckAttach(t *testing.T) {
 	container, err := NewContainer(kubeContainer, kube.ObjectMeta{}, "")
 	assert.NoError(t, err, "valid container")
 
-	assert.False(t, image.validAttach(container), "containers should not be allowed to attach to images")
-	assert.True(t, container.validAttach(image), "images should be allowed to attach to containers")
+	assert.Error(t, image.validAttach(container), "containers should not be allowed to attach to images")
+	assert.NoError(t, container.validAttach(image), "images should be allowed to attach to containers")
 }
 
 func TestBaseBadObject(t *testing.T) {

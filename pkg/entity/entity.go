@@ -72,8 +72,13 @@ func (base base) Type() Type {
 
 // validAttach checks object types to see if the attach is allowed. Objects can
 // only be attached to objects higher in the hierarchy. However, to the nature of iota Application is 0, RC is 1, ...
-func (base base) validAttach(e Entity) bool {
-	return e.Type() <= EntityImage && base.Type() < e.Type()
+func (base base) validAttach(e Entity) error {
+	if e.Type() > EntityImage {
+		return ErrorInvalidAttachType
+	} else if base.Type() > e.Type() {
+		return ErrorBadAttachOrder
+	}
+	return nil
 }
 
 // setDefaults sets the bases defaults on an object
@@ -135,4 +140,6 @@ func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
 var (
 	ErrorEntityNotReady = errors.New("entity not ready to be deployed")
 	ErrorNilObject      = errors.New("an object was nil, this is not allowed.")
+	ErrorInvalidAttachType = errors.New("the entity to be attached is of an unknown type")
+	ErrorBadAttachOrder = errors.New("entities cannot attach to entities of a lower type")
 )
