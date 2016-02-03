@@ -185,7 +185,7 @@ func TestRCAttachImage(t *testing.T) {
 
 func TestRCAttachContainer(t *testing.T) {
 	containerName := "attached"
-	imageName := "embeddedImage"
+	imageName := "embedded-image"
 	selector := map[string]string{
 		"app": "db",
 	}
