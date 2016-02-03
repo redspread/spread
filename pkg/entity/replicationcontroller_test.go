@@ -1,10 +1,10 @@
 package entity
 
 import (
-	"strings"
 	"testing"
 
 	"rsprd.com/spread/pkg/deploy"
+	"rsprd.com/spread/pkg/image"
 
 	"github.com/stretchr/testify/assert"
 	kube "k8s.io/kubernetes/pkg/api"
@@ -108,42 +108,46 @@ func TestRCBadObjects(t *testing.T) {
 
 func TestRCAttachImage(t *testing.T) {
 	imageName := "rc-attach-image"
+	rcName := "image-test"
 	selector := map[string]string{
 		"app": "cache",
 	}
 
 	// create ReplicationController
 	rcObjects := testRandomObjects(10)
-	rc := testNewRC(t, "image-test", selector, rcObjects)
+	rc := testNewRC(t, rcName, selector, rcObjects)
 
 	// create Image
 	imageObjects := testRandomObjects(10)
-	image := testNewImage(t, imageName, kube.ObjectMeta{}, "", imageObjects)
+	imageEntity := testNewImage(t, imageName, kube.ObjectMeta{}, "", imageObjects)
 
 	// Attach image to RC
 	// Should assume defaults up tree creating necessary components
-	err := rc.Attach(image)
+	err := rc.Attach(imageEntity)
 	assert.NoError(t, err, "attachment should be allowed")
 
 	// Compare internal elements
 	assert.NotNil(t, rc.pod, "should of created template")
 
 	// Create struct representation for expected
-	rcMeta := rc.rc.ObjectMeta
-	rcMeta.Namespace = kube.NamespaceDefault
-	containerName := strings.Join([]string{imageName, "container"}, "-")
 	expectedRC := &kube.ReplicationController{
-		ObjectMeta: rcMeta,
+		ObjectMeta: kube.ObjectMeta{
+			Name:      rcName,
+			Namespace: kube.NamespaceDefault,
+		},
 		Spec: kube.ReplicationControllerSpec{
 			Selector: selector,
 			Template: &kube.PodTemplateSpec{
-				ObjectMeta: kube.ObjectMeta{Labels: selector},
+				ObjectMeta: kube.ObjectMeta{
+					Namespace: kube.NamespaceDefault,
+					Labels:    selector,
+				},
 				Spec: kube.PodSpec{
 					Containers: []kube.Container{
 						kube.Container{
-							Name:            containerName,
+							Name:            imageName,
 							Image:           imageName,
-							ImagePullPolicy: kube.PullIfNotPresent,
+							ImagePullPolicy: kube.PullAlways,
 						},
 					},
 					RestartPolicy: kube.RestartPolicyAlways,
@@ -159,7 +163,7 @@ func TestRCAttachImage(t *testing.T) {
 	assert.NoError(t, err, "should be valid RC")
 
 	// add objects to deployment
-	expected.AddDeployment(image.objects)
+	expected.AddDeployment(imageEntity.objects)
 	expected.AddDeployment(rc.objects)
 
 	// Create Deployment from RC
@@ -171,9 +175,10 @@ func TestRCAttachImage(t *testing.T) {
 
 	// check images
 	images := rc.Images()
+	expectedImage, _ := image.FromString(imageName)
 	assert.Len(t, images, 1)
 	for _, v := range images {
-		assert.EqualValues(t, image, v, "should match original image")
+		assert.EqualValues(t, expectedImage, v, "should match original image")
 	}
 }
 
@@ -214,7 +219,10 @@ func TestRCAttachContainer(t *testing.T) {
 		Spec: kube.ReplicationControllerSpec{
 			Selector: selector,
 			Template: &kube.PodTemplateSpec{
-				ObjectMeta: kube.ObjectMeta{Labels: selector},
+				ObjectMeta: kube.ObjectMeta{
+					Labels:    selector,
+					Namespace: kube.NamespaceDefault,
+				},
 				Spec: kube.PodSpec{
 					Containers: []kube.Container{
 						kubeContainer,
@@ -286,7 +294,7 @@ func TestRCAttachPod(t *testing.T) {
 
 	// Compare internal elements
 	assert.NotNil(t, rc.pod, "should of created pod")
-	// assert.Len(t, rc.pod.containers, 1)
+	assert.Len(t, rc.pod.containers, 1)
 
 	// Create struct representation for expected
 	// Insert into Deployment
@@ -301,8 +309,11 @@ func TestRCAttachPod(t *testing.T) {
 		Spec: kube.ReplicationControllerSpec{
 			Selector: selector,
 			Template: &kube.PodTemplateSpec{
-				ObjectMeta: podMeta,
-				Spec:       kubePod.Spec,
+				ObjectMeta: kube.ObjectMeta{
+					Namespace: kube.NamespaceDefault,
+					Labels:    selector,
+				},
+				Spec: kubePod.Spec,
 			},
 		},
 	}

@@ -85,12 +85,6 @@ func (c *Pod) Deployment() (*deploy.Deployment, error) {
 		return nil, err
 	}
 
-	// add own objects
-	err = deployment.AddDeployment(c.objects)
-	if err != nil {
-		return nil, err
-	}
-
 	// add child objects
 	err = deployment.AddDeployment(childObj)
 	if err != nil {

@@ -109,6 +109,8 @@ func TestContainerAttach(t *testing.T) {
 			Containers: []kube.Container{
 				kubeContainer,
 			},
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSDefault,
 		},
 	}
 

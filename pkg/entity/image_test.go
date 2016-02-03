@@ -29,7 +29,7 @@ func TestImageDeployment(t *testing.T) {
 				kube.Container{
 					Name:            containerName,
 					Image:           imageName,
-					ImagePullPolicy: kube.PullIfNotPresent,
+					ImagePullPolicy: kube.PullAlways,
 				},
 			},
 			RestartPolicy: kube.RestartPolicyAlways,

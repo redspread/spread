@@ -66,12 +66,6 @@ func (c *ReplicationController) Deployment() (*deploy.Deployment, error) {
 		return nil, err
 	}
 
-	// add own objects
-	err = deployment.AddDeployment(c.objects)
-	if err != nil {
-		return nil, err
-	}
-
 	// add child objects
 	err = deployment.AddDeployment(childObj)
 	if err != nil {
@@ -142,8 +136,12 @@ func (c *ReplicationController) data() (*kube.ReplicationController, deploy.Depl
 		return nil, deploy.Deployment{}, err
 	}
 
+	// add selectors
+	meta := pod.ObjectMeta
+	meta.Labels = c.rc.Spec.Selector
+	meta.Name = ""
 	rc.Spec.Template = &kube.PodTemplateSpec{
-		ObjectMeta: pod.ObjectMeta,
+		ObjectMeta: meta,
 		Spec:       pod.Spec,
 	}
 	return rc, objects, nil
