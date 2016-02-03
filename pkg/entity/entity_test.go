@@ -221,3 +221,8 @@ func testRandomObjects(num int) (objects []deploy.KubeObject) {
 	}
 	return
 }
+
+func testDeploymentEqual(t *testing.T, expected, actual *deploy.Deployment) bool {
+	equal := expected.Equal(actual)
+	return assert.True(t, equal, "expected: %s,\n actual: %s,\n diff:\n%s", expected, actual, expected.Diff(actual))
+}

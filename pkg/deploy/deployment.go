@@ -1,10 +1,12 @@
 package deploy
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 
+	"github.com/pmezard/go-difflib/difflib"
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/validation"
 	"k8s.io/kubernetes/pkg/util/validation/field"
@@ -206,6 +208,51 @@ func (d Deployment) Len() int {
 	sum += len(d.volumeClaims)
 	sum += len(d.namespaces)
 	return sum
+}
+
+// String returns a JSON representation of a Deployment
+func (d *Deployment) String() string {
+	data := struct {
+		RCs          []*kube.ReplicationController
+		Pods         []*kube.Pod
+		Services     []*kube.Service
+		Secrets      []*kube.Secret
+		Volumes      []*kube.PersistentVolume
+		VolumeClaims []*kube.PersistentVolumeClaim
+		Namespaces   []*kube.Namespace
+	}{
+		d.rcs,
+		d.pods,
+		d.services,
+		d.secrets,
+		d.volumes,
+		d.volumeClaims,
+		d.namespaces,
+	}
+
+	output, err := json.MarshalIndent(data, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	return string(output)
+}
+
+// Diff returns the difference between the textual representation of two deployments
+func (d *Deployment) Diff(other *Deployment) string {
+	diff := difflib.UnifiedDiff{
+		A:        difflib.SplitLines(d.String()),
+		B:        difflib.SplitLines(other.String()),
+		FromFile: "ThisDeployment",
+		ToFile:   "OtherDeployment",
+	}
+
+	out, err := difflib.GetUnifiedDiffString(diff)
+	if err != nil {
+		panic(err)
+	}
+
+	return out
 }
 
 func appendObjects(obj []KubeObject, objectSlice interface{}) []KubeObject {
