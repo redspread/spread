@@ -185,6 +185,14 @@ func validatePod(pod *kube.Pod, ignoreContainers bool) error {
 			return e.Error() == "spec.containers: Required value"
 		})
 	}
+
+	meta := pod.GetObjectMeta()
+	if len(meta.GetName()) == 0 && len(meta.GetGenerateName()) > 0 {
+		errList = errList.Filter(func(e error) bool {
+			return e.Error() == "metadata.name: Required value: name or generateName is required"
+		})
+	}
+
 	return errList.ToAggregate()
 }
 

@@ -85,12 +85,12 @@ func TestRCValidPodDeployment(t *testing.T) {
 	assert.NotNil(t, rc.pod, "a pod should have be created")
 	assert.Len(t, rc.pod.containers, 2, "two containers should have been created")
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	expected.Add(kubeRC)
 
 	actual, err := rc.Deployment()
 	assert.NoError(t, err)
-	assert.True(t, expected.Equal(actual))
+	testDeploymentEqual(t, expected, actual)
 }
 
 func TestRCBadObjects(t *testing.T) {
@@ -154,7 +154,7 @@ func TestRCAttachImage(t *testing.T) {
 	}
 
 	// Insert into Deployment
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	err = expected.Add(expectedRC)
 	assert.NoError(t, err, "should be valid RC")
 
@@ -167,8 +167,7 @@ func TestRCAttachImage(t *testing.T) {
 	assert.NoError(t, err, "should produce valid deployment")
 
 	// Compare deployments
-	equal := expected.Equal(actual)
-	assert.True(t, equal, "deployments should be same")
+	testDeploymentEqual(t, expected, actual)
 
 	// check images
 	images := rc.Images()
@@ -228,7 +227,7 @@ func TestRCAttachContainer(t *testing.T) {
 	}
 
 	// Insert into Deployment
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	err = expected.Add(expectedRC)
 	assert.NoError(t, err, "should be valid RC")
 
@@ -241,8 +240,7 @@ func TestRCAttachContainer(t *testing.T) {
 	assert.NoError(t, err, "should produce valid deployment")
 
 	// Compare deployments
-	equal := expected.Equal(actual)
-	assert.True(t, equal, "deployments should be same")
+	testDeploymentEqual(t, expected, actual)
 
 	// check images
 	images := rc.Images()
@@ -310,7 +308,7 @@ func TestRCAttachPod(t *testing.T) {
 	}
 
 	// Insert into Deployment
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	err = expected.Add(expectedRC)
 	assert.NoError(t, err, "should be valid RC")
 
@@ -323,8 +321,7 @@ func TestRCAttachPod(t *testing.T) {
 	assert.NoError(t, err, "should produce valid deployment")
 
 	// Compare deployments
-	equal := expected.Equal(actual)
-	assert.True(t, equal, "deployments should be same")
+	testDeploymentEqual(t, expected, actual)
 
 	// check images
 	images := rc.Images()

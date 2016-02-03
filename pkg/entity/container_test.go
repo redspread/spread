@@ -45,15 +45,17 @@ func TestContainerWithImageDeployment(t *testing.T) {
 			Containers: []kube.Container{
 				kubeContainer,
 			},
+			RestartPolicy: kube.RestartPolicyAlways,
+			DNSPolicy:     kube.DNSDefault,
 		},
 	}
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	assert.NoError(t, expected.Add(&pod), "valid pod")
 	actual, err := ctr.Deployment()
 	assert.NoError(t, err, "deploy ok")
 
-	assert.True(t, expected.Equal(actual), "should be equivlant")
+	testDeploymentEqual(t, expected, actual)
 }
 
 func TestContainerNoImageDeployment(t *testing.T) {
@@ -110,12 +112,12 @@ func TestContainerAttach(t *testing.T) {
 		},
 	}
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	assert.NoError(t, expected.Add(&pod), "valid pod")
 	actual, err := container.Deployment()
 	assert.NoError(t, err, "deploy ok")
 
-	assert.True(t, expected.Equal(actual), "should be equivlant")
+	testDeploymentEqual(t, expected, actual)
 }
 
 func TestContainerBadObject(t *testing.T) {

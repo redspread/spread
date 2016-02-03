@@ -100,14 +100,14 @@ func TestPodWithContainersDeployment(t *testing.T) {
 
 	kubePod.Namespace = kube.NamespaceDefault
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	err = expected.Add(kubePod)
 	assert.NoError(t, err, "valid pod")
 
 	actual, err := pod.Deployment()
 	assert.NoError(t, err, "deployment should be valid")
 
-	assert.True(t, expected.Equal(actual), "deployments should be the same")
+	testDeploymentEqual(t, expected, actual)
 }
 
 func TestPodBadObjects(t *testing.T) {
@@ -154,7 +154,7 @@ func TestPodAttachImage(t *testing.T) {
 
 	objects := append(podObjects, imageObjects...)
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	err = expected.Add(kubePod)
 	assert.NoError(t, err, "valid")
 
@@ -164,7 +164,7 @@ func TestPodAttachImage(t *testing.T) {
 
 	actual, err := pod.Deployment()
 	assert.NoError(t, err, "deployment should be ok")
-	assert.True(t, expected.Equal(actual), "should be same")
+	testDeploymentEqual(t, expected, actual)
 }
 
 func TestPodAttachContainer(t *testing.T) {
@@ -189,7 +189,7 @@ func TestPodAttachContainer(t *testing.T) {
 		kubeContainer,
 	}
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	err = expected.Add(kubePod)
 	assert.NoError(t, err)
 
@@ -202,7 +202,7 @@ func TestPodAttachContainer(t *testing.T) {
 		assert.NoError(t, expected.Add(obj))
 	}
 
-	assert.True(t, expected.Equal(actual))
+	testDeploymentEqual(t, expected, actual)
 }
 
 func testNewKubePod(name string) *kube.Pod {

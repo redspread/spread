@@ -240,6 +240,9 @@ func (d *Deployment) String() string {
 
 // Diff returns the difference between the textual representation of two deployments
 func (d *Deployment) Diff(other *Deployment) string {
+	if other == nil {
+		return "other was nil"
+	}
 	diff := difflib.UnifiedDiff{
 		A:        difflib.SplitLines(d.String()),
 		B:        difflib.SplitLines(other.String()),

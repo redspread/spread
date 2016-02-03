@@ -2,7 +2,6 @@ package entity
 
 import (
 	"fmt"
-	"strings"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
@@ -58,9 +57,8 @@ func newDefaultContainer(name, source string) (*Container, error) {
 }
 
 func (c *Container) Deployment() (*deploy.Deployment, error) {
-	podName := strings.Join([]string{c.name(), "container"}, "-")
 	meta := kube.ObjectMeta{
-		Name: podName,
+		GenerateName: c.name(),
 	}
 
 	return deployWithPod(meta, c)

@@ -37,14 +37,12 @@ func TestImageDeployment(t *testing.T) {
 		},
 	}
 
-	expected := deploy.Deployment{}
+	expected := new(deploy.Deployment)
 	assert.NoError(t, expected.Add(&expectedPod), "should be able to add pod")
 
 	actual, err := image.Deployment()
 	assert.NoError(t, err, "deploy ok")
-	if !expected.Equal(actual) {
-		t.Errorf("Expected: %#v, saw: %#v", expected, actual)
-	}
+	testDeploymentEqual(t, expected, actual)
 }
 
 func TestImageImages(t *testing.T) {
