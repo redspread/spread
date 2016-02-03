@@ -9,7 +9,12 @@ import (
 	kube "k8s.io/kubernetes/pkg/api"
 )
 
-// An Entity is a component (potentially containing sub-entities) that can be deployed to Kubernetes.
+// Entity is the fundamental building block of `spread`'s internal representation of state. Entities exist for both
+// constructs that already exist in Kubernetes (RC, Pod, Container) as well as ones that have been added (image).
+//
+// An entity must at all times be capable of producing a Deployment.
+//
+// Entities are attached in the order: Image -> Container -> Pod -> RC. Attachments out of order are not allowed.
 type Entity interface {
 	deploy.Deployable
 	Type() Type
