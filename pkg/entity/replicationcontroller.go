@@ -52,7 +52,32 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 }
 
 func (c *ReplicationController) Deployment() (*deploy.Deployment, error) {
-	return nil, nil
+	deployment := new(deploy.Deployment)
+
+	// create RC
+	kubeRC, childObj, err := c.data()
+	if err != nil {
+		return nil, err
+	}
+
+	// add RC to deployment
+	err = deployment.Add(kubeRC)
+	if err != nil {
+		return nil, err
+	}
+
+	// add own objects
+	err = deployment.AddDeployment(c.objects)
+	if err != nil {
+		return nil, err
+	}
+
+	// add child objects
+	err = deployment.AddDeployment(childObj)
+	if err != nil {
+		return nil, err
+	}
+	return deployment, nil
 }
 
 func (c *ReplicationController) Images() (images []*image.Image) {
@@ -99,6 +124,29 @@ func (c *ReplicationController) children() []Entity {
 	return []Entity{
 		c.pod,
 	}
+}
+
+func (c *ReplicationController) data() (*kube.ReplicationController, deploy.Deployment, error) {
+	if c.pod == nil {
+		return nil, deploy.Deployment{}, ErrorEntityNotReady
+	}
+
+	rc := c.rc
+	pod, objects, err := c.pod.data()
+	if err != nil {
+		return nil, deploy.Deployment{}, err
+	}
+
+	err = objects.AddDeployment(c.objects)
+	if err != nil {
+		return nil, deploy.Deployment{}, err
+	}
+
+	rc.Spec.Template = &kube.PodTemplateSpec{
+		ObjectMeta: pod.ObjectMeta,
+		Spec:       pod.Spec,
+	}
+	return rc, objects, nil
 }
 
 func copyRC(rc *kube.ReplicationController) (*kube.ReplicationController, error) {

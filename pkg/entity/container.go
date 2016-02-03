@@ -108,7 +108,10 @@ func (c *Container) data() (container kube.Container, objects deploy.Deployment,
 		return container, deploy.Deployment{}, err
 	}
 
-	objects.AddDeployment(c.objects)
+	err = objects.AddDeployment(c.objects)
+	if err != nil {
+		return container, deploy.Deployment{}, err
+	}
 	container.Image = image
 	return container, objects, nil
 }
