@@ -1,71 +1,331 @@
 package deploy
 
 import (
-	"k8s.io/kubernetes/pkg/api/meta"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"reflect"
+
+	"github.com/pmezard/go-difflib/difflib"
+	kube "k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/validation"
+	"k8s.io/kubernetes/pkg/util/validation/field"
 )
 
 // A Deployment is a collection of Kubernetes deployed. Deployment stores a slice of deployable Kubernetes objects.
 // It can be used to create deployments deployments and is how the current state of a deployment is returned.
 type Deployment struct {
-	Name    string
-	Objects []meta.ObjectMetaAccessor
+	rcs          []*kube.ReplicationController
+	pods         []*kube.Pod
+	services     []*kube.Service
+	secrets      []*kube.Secret
+	volumes      []*kube.PersistentVolume
+	volumeClaims []*kube.PersistentVolumeClaim
+	namespaces   []*kube.Namespace
 }
 
-// WithOptions customizes deployment with values set in options. The rules this follows can be found
-// in DeploymentOptions.
-func (d Deployment) WithOptions(opts DeploymentOptions) {
-	// setting namespace if not set
-	if len(opts.Namespace) > 0 {
-		for _, v := range d.Objects {
-			m := v.GetObjectMeta()
-			if len(m.GetNamespace()) == 0 {
-				m.SetNamespace(opts.Namespace)
+// Add inserts an object into a deployment. The object must be a valid Kubernetes object or it will fail.
+// There can only be a single object of the same name, namespace, and type. Objects are deep-copied into the Deployment.
+func (d *Deployment) Add(obj KubeObject) error {
+	copy, err := deepCopy(obj)
+	if err != nil {
+		return err
+	}
+
+	switch t := copy.(type) {
+	case *kube.ReplicationController:
+		errList := validation.ValidateReplicationController(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.rcs {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
 			}
+			d.rcs = append(d.rcs, t)
+			return nil
+		} else {
+			return err
+		}
+
+	case *kube.Pod:
+		errList := validation.ValidatePod(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.pods {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
+			d.pods = append(d.pods, t)
+			return nil
+		} else {
+			return err
+		}
+
+	case *kube.Service:
+		errList := validation.ValidateService(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.services {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
+			d.services = append(d.services, t)
+			return nil
+		} else {
+			return err
+		}
+
+	case *kube.Secret:
+		errList := validation.ValidateSecret(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.secrets {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
+			d.secrets = append(d.secrets, t)
+			return nil
+		} else {
+			return err
+		}
+
+	case *kube.PersistentVolume:
+		errList := validation.ValidatePersistentVolume(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.volumes {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
+			d.volumes = append(d.volumes, t)
+			return nil
+		} else {
+			return err
+		}
+
+	case *kube.PersistentVolumeClaim:
+		errList := validation.ValidatePersistentVolumeClaim(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.volumeClaims {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
+			d.volumeClaims = append(d.volumeClaims, t)
+			return nil
+		} else {
+			return err
+		}
+
+	case *kube.Namespace:
+		errList := validation.ValidateNamespace(t)
+		if err := checkErrList(errList, obj); err == nil {
+			for _, v := range d.namespaces {
+				if err = assertUniqueName(copy, v); err != nil {
+					return err
+				}
+			}
+			d.namespaces = append(d.namespaces, t)
+			return nil
+		} else {
+			return err
+		}
+	default:
+		return ErrorObjectNotSupported
+	}
+}
+
+// AddDeployment inserts the contents of one Deployment into another.
+func (d *Deployment) AddDeployment(deployment Deployment) (err error) {
+	// this is inefficient-it results in two deep copies being made, ones that's thrown out
+	// if this becomes frequently used it should be reimplemented
+
+	// TODO: perform check for collisions before mutation to prevent incomplete additions
+	for _, obj := range deployment.Objects() {
+		err = d.Add(obj)
+		if err != nil {
+			return fmt.Errorf("could not add `%s`: %v", obj.GetObjectMeta().GetName(), err)
 		}
 	}
-
-	d.ApplyAnnotations(opts.Annotations)
-	d.ApplyLabels(opts.Labels)
+	return nil
 }
 
-// ApplyLabels applies a provided map on top of the current set of Labels of each object.
-func (d *Deployment) ApplyLabels(labels map[string]string) {
-	d.apply(func(m meta.Object) {
-		current := m.GetLabels()
-		m.SetLabels(applyMap(labels, current))
-	})
-}
-
-// ApplyAnnotations applies a provided map on top of the current set of Annotations of each object.
-func (d *Deployment) ApplyAnnotations(annotations map[string]string) {
-	d.apply(func(m meta.Object) {
-		current := m.GetAnnotations()
-		m.SetAnnotations(applyMap(annotations, current))
-	})
-}
-
-func (d *Deployment) apply(f func(meta.Object)) {
-	for _, object := range d.Objects {
-		meta := object.GetObjectMeta()
-		f(meta)
+// Equal performs a deep equality check between Deployments. Internal ordering is ignored.
+func (d *Deployment) Equal(other *Deployment) bool {
+	if other == nil {
+		return false
 	}
-}
-
-func applyMap(src, dst map[string]string) map[string]string {
-	for k, v := range src {
-		dst[k] = v
+	if !equivalent(d.rcs, other.rcs) {
+		return false
 	}
-	return dst
+
+	if !equivalent(d.pods, other.pods) {
+		return false
+	}
+
+	if !equivalent(d.services, other.services) {
+		return false
+	}
+
+	if !equivalent(d.secrets, other.secrets) {
+		return false
+	}
+
+	if !equivalent(d.volumes, other.volumes) {
+		return false
+	}
+
+	if !equivalent(d.volumeClaims, other.volumeClaims) {
+		return false
+	}
+
+	if !equivalent(d.namespaces, other.namespaces) {
+		return false
+	}
+	return true
 }
 
-// DeploymentOptions specify deployment time parameters.
-//
-// If the Namespace field is set, then all objects without a namespace explicitly set will default to it’s value.
-//
-// Deployments can have a sets of Annotations and Labels which will be applied to each deployed object. If an Annotation
-// or Label already exists it will be overwritten.
-type DeploymentOptions struct {
-	Namespace   string
-	Labels      map[string]string
-	Annotations map[string]string
+// Objects returns the contents of a Deployment. No ordering guarantees are given.
+func (d Deployment) Objects() (obj []KubeObject) {
+	obj = appendObjects(obj, d.rcs)
+	obj = appendObjects(obj, d.pods)
+	obj = appendObjects(obj, d.services)
+	obj = appendObjects(obj, d.secrets)
+	obj = appendObjects(obj, d.volumes)
+	obj = appendObjects(obj, d.volumeClaims)
+	obj = appendObjects(obj, d.namespaces)
+	return
+
 }
+
+// Len returns the number of objects in a Deployment.
+func (d Deployment) Len() int {
+	sum := len(d.rcs)
+	sum += len(d.pods)
+	sum += len(d.services)
+	sum += len(d.secrets)
+	sum += len(d.volumes)
+	sum += len(d.volumeClaims)
+	sum += len(d.namespaces)
+	return sum
+}
+
+// String returns a JSON representation of a Deployment
+func (d *Deployment) String() string {
+	data := struct {
+		RCs          []*kube.ReplicationController
+		Pods         []*kube.Pod
+		Services     []*kube.Service
+		Secrets      []*kube.Secret
+		Volumes      []*kube.PersistentVolume
+		VolumeClaims []*kube.PersistentVolumeClaim
+		Namespaces   []*kube.Namespace
+	}{
+		d.rcs,
+		d.pods,
+		d.services,
+		d.secrets,
+		d.volumes,
+		d.volumeClaims,
+		d.namespaces,
+	}
+
+	output, err := json.MarshalIndent(data, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	return string(output)
+}
+
+// Diff returns the difference between the textual representation of two deployments
+func (d *Deployment) Diff(other *Deployment) string {
+	if other == nil {
+		return "other was nil"
+	}
+	diff := difflib.UnifiedDiff{
+		A:        difflib.SplitLines(d.String()),
+		B:        difflib.SplitLines(other.String()),
+		FromFile: "ThisDeployment",
+		ToFile:   "OtherDeployment",
+	}
+
+	out, err := difflib.GetUnifiedDiffString(diff)
+	if err != nil {
+		panic(err)
+	}
+
+	return out
+}
+
+func appendObjects(obj []KubeObject, objectSlice interface{}) []KubeObject {
+	sliceVal := reflect.ValueOf(objectSlice)
+	for i := 0; i < sliceVal.Len(); i++ {
+		objCopy, err := kube.Scheme.DeepCopy(sliceVal.Index(i).Interface())
+		if err != nil {
+			panic(err)
+		}
+		obj = append(obj, objCopy.(KubeObject))
+	}
+	return obj
+}
+
+// assertUniqueName checks a slice of objects for naming collisions. It assumes that the slice is of a single type.
+func assertUniqueName(a, b KubeObject) error {
+	aMeta, bMeta := a.GetObjectMeta(), b.GetObjectMeta()
+
+	if aMeta.GetName() == bMeta.GetName() && aMeta.GetNamespace() == bMeta.GetNamespace() {
+		return ErrorConflict
+	}
+
+	return nil
+}
+
+func equivalent(a, b interface{}) bool {
+	aSlice, bSlice := reflect.ValueOf(a), reflect.ValueOf(b)
+	if aSlice.Len() != bSlice.Len() {
+		return false
+	}
+
+	for i := 0; i < aSlice.Len(); i++ {
+		aPtr := aSlice.Index(i).Interface()
+		found := false
+		for j := 0; j < bSlice.Len(); j++ {
+			bPtr := bSlice.Index(j).Interface()
+			if kube.Semantic.DeepEqual(aPtr, bPtr) {
+				found = true
+			}
+		}
+
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+// deepCopy creates a deep copy of the Kubernetes object given.
+func deepCopy(obj KubeObject) (KubeObject, error) {
+	copy, err := kube.Scheme.DeepCopy(obj)
+	if err != nil {
+		return nil, err
+	}
+	return copy.(KubeObject), nil
+}
+
+// checkErrList filters false positives about neither name or generateName being set when only generate is set
+func checkErrList(errList field.ErrorList, obj KubeObject) error {
+	meta := obj.GetObjectMeta()
+	if len(meta.GetName()) == 0 && len(meta.GetGenerateName()) > 0 {
+		errList = errList.Filter(func(e error) bool {
+			return e.Error() == "metadata.name: Required value: name or generateName is required"
+		})
+	}
+
+	return errList.ToAggregate()
+}
+
+var (
+	ErrorObjectNotSupported = errors.New("could not add to deployment, object not supported")
+	ErrorConflict           = errors.New("name/namespace combination already exists for type")
+)
