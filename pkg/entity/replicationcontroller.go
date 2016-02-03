@@ -17,6 +17,7 @@ type ReplicationController struct {
 	pod *Pod
 }
 
+// NewReplicationController creates a new Entity for the provided kube.ReplicationController. Must be valid.
 func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*ReplicationController, error) {
 	if kubeRC == nil {
 		return nil, fmt.Errorf("cannot create ReplicationController from nil `%s`", source)
@@ -53,6 +54,7 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 	return &rc, nil
 }
 
+// Deployment is created for RC attached with it's Pod.
 func (c *ReplicationController) Deployment() (*deploy.Deployment, error) {
 	deployment := new(deploy.Deployment)
 
@@ -76,6 +78,7 @@ func (c *ReplicationController) Deployment() (*deploy.Deployment, error) {
 	return deployment, nil
 }
 
+// Images contained by ReplicationController's Pods.
 func (c *ReplicationController) Images() (images []*image.Image) {
 	if c.pod != nil {
 		images = c.pod.Images()
@@ -83,6 +86,7 @@ func (c *ReplicationController) Images() (images []*image.Image) {
 	return images
 }
 
+// Attach allows Pods, Containers, and Images to be attached.
 func (c *ReplicationController) Attach(e Entity) error {
 	if c.pod != nil {
 		return ErrorMaxAttached

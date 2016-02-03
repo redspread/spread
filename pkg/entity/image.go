@@ -15,6 +15,7 @@ type Image struct {
 	image *image.Image
 }
 
+// NewImage creates a new Entity for the image.Image it's provided with.
 func NewImage(image *image.Image, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Image, error) {
 	if image == nil {
 		return nil, ErrorNilImage
@@ -30,6 +31,8 @@ func NewImage(image *image.Image, defaults kube.ObjectMeta, source string, objec
 	return &Image{base: base, image: image}, nil
 }
 
+// Deployment is created with image attached to default pod. The GenerateName of the Pod
+// is the name of the image.
 func (c *Image) Deployment() (*deploy.Deployment, error) {
 	meta := kube.ObjectMeta{
 		GenerateName: c.name(),
@@ -38,12 +41,14 @@ func (c *Image) Deployment() (*deploy.Deployment, error) {
 	return deployWithPod(meta, c)
 }
 
+// Images returns the associated image.Image
 func (c *Image) Images() []*image.Image {
 	return []*image.Image{
 		c.image,
 	}
 }
 
+// Attach is not allowed on Images
 func (c *Image) Attach(e Entity) error {
 	return ErrorMaxAttached
 }
@@ -63,6 +68,8 @@ func (c *Image) data() (image string, objects deploy.Deployment, err error) {
 }
 
 var (
-	ErrorEmptyImageString = errors.New("image.Image's DockerString was empty")
-	ErrorNilImage         = errors.New("*image.Image cannot be nil")
+	// ErrorEmptyImageString is when an Image is created with an empty name
+	ErrorEmptyImageString = errors.New("image.Image's String was empty")
+	// ErrorNilImage is when an Image is created with a nil *image.Image.
+	ErrorNilImage = errors.New("*image.Image cannot be nil")
 )

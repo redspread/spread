@@ -10,9 +10,13 @@ import (
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
+// DefaultContainer is the default for all new Containers
 var DefaultContainer = kube.Container{
 	ImagePullPolicy: kube.PullAlways,
 }
+
+// NoImageErrStr is the error message returned by k8s when the image field has been left blank.
+const NoImageErrStr = "spec.containers[0].image: Required value"
 
 // Container represents kube.Container in the Redspread hierarchy.
 type Container struct {
@@ -21,6 +25,7 @@ type Container struct {
 	image     *Image
 }
 
+// NewContainer creates a new Entity for the provided kube.Container. Container must be valid.
 func NewContainer(container kube.Container, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Container, error) {
 	err := validateContainer(container)
 	if err != nil {
@@ -37,13 +42,13 @@ func NewContainer(container kube.Container, defaults kube.ObjectMeta, source str
 		image, err := image.FromString(container.Image)
 		if err != nil {
 			return nil, err
-		} else {
-			newContainer.image, err = NewImage(image, defaults, source)
-			if err != nil {
-				return nil, err
-			}
-			container.Image = "placeholder"
 		}
+
+		newContainer.image, err = NewImage(image, defaults, source)
+		if err != nil {
+			return nil, err
+		}
+		container.Image = "placeholder"
 	}
 
 	newContainer.container = container
@@ -56,6 +61,7 @@ func newDefaultContainer(name, source string) (*Container, error) {
 	return NewContainer(kubeContainer, kube.ObjectMeta{}, source)
 }
 
+// Deployment is created with Container attached to Pod. The pod is named after the kube.Container.
 func (c *Container) Deployment() (*deploy.Deployment, error) {
 	meta := kube.ObjectMeta{
 		GenerateName: c.name(),
@@ -64,6 +70,7 @@ func (c *Container) Deployment() (*deploy.Deployment, error) {
 	return deployWithPod(meta, c)
 }
 
+// Images returns the Container's image
 func (c *Container) Images() []*image.Image {
 	var images []*image.Image
 	if c.image != nil {
@@ -72,6 +79,7 @@ func (c *Container) Images() []*image.Image {
 	return images
 }
 
+// Attach is only possible for images.
 func (c *Container) Attach(e Entity) error {
 	if c.image != nil {
 		return ErrorMaxAttached
@@ -147,7 +155,3 @@ func validateContainer(c kube.Container) error {
 		return e.Error() == NoImageErrStr
 	}).ToAggregate()
 }
-
-const (
-	NoImageErrStr = "spec.containers[0].image: Required value"
-)

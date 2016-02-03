@@ -94,11 +94,16 @@ func (base base) setDefaults(obj deploy.KubeObject) {
 type Type int
 
 const (
-	EntityApplication           Type = iota // Application (top of tree)
-	EntityReplicationController             // Wrapper for kube.ReplicationController
-	EntityPod                               // Wrapper for kube.Pod
-	EntityContainer                         // Wrapper for kube.Container
-	EntityImage                             // Represented by kube.Container's image field
+	// EntityApplication is for Application (top of tree)
+	EntityApplication Type = iota
+	// EntityReplicationController is for ReplicationController
+	EntityReplicationController
+	// EntityPod is for Pod
+	EntityPod
+	// EntityContainer is for Container
+	EntityContainer
+	// EntityImage is for Image
+	EntityImage
 )
 
 // metaDefaults applies a set of defaults on a KubeObject. Non-empty fields on object override defaults.
@@ -142,9 +147,14 @@ func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
 }
 
 var (
-	ErrorEntityNotReady    = errors.New("entity not ready to be deployed")
-	ErrorNilObject         = errors.New("an object was nil, this is not allowed.")
+	// ErrorEntityNotReady is when Entity is not in a valid state to be deployed.
+	ErrorEntityNotReady = errors.New("entity not ready to be deployed")
+	// ErrorNilObject is when a deploy.KubeObject is null.
+	ErrorNilObject = errors.New("an object was nil, this is not allowed")
+	// ErrorInvalidAttachType is when the Type of the attached object in invalid.
 	ErrorInvalidAttachType = errors.New("the entity to be attached is of an unknown type")
-	ErrorBadAttachOrder    = errors.New("entities cannot attach to entities of a lower type")
-	ErrorMaxAttached       = errors.New("no more entities can be attached")
+	// ErrorBadAttachOrder is when an attachment is attempted in an improper order
+	ErrorBadAttachOrder = errors.New("entities cannot attach to entities of a lower type")
+	// ErrorMaxAttached is when an Entity cannot support more Entities attaching
+	ErrorMaxAttached = errors.New("no more entities can be attached")
 )

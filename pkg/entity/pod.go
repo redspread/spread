@@ -10,6 +10,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
+// DefaultPodSpec is the default for newly created Pods
 var DefaultPodSpec = kube.PodSpec{
 	RestartPolicy: kube.RestartPolicyAlways,
 	DNSPolicy:     kube.DNSDefault,
@@ -22,6 +23,7 @@ type Pod struct {
 	containers []*Container
 }
 
+// NewPod creates a Entity for a corresponding *kube.Pod. Pod must be valid.
 func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	if kubePod == nil {
 		return nil, fmt.Errorf("cannot create Pod from nil `%s`", source)
@@ -43,9 +45,8 @@ func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects 
 		container, err := NewContainer(v, defaults, source)
 		if err != nil {
 			return nil, err
-		} else {
-			pod.containers = append(pod.containers, container)
 		}
+		pod.containers = append(pod.containers, container)
 	}
 	kubePod.Spec.Containers = []kube.Container{}
 
@@ -58,6 +59,7 @@ func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects 
 	return &pod, nil
 }
 
+// NewPodFromPodSpec creates a new Pod using ObjectMeta and a PodSpec.
 func NewPodFromPodSpec(meta kube.ObjectMeta, podSpec kube.PodSpec, defaults kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	pod := kube.Pod{
 		ObjectMeta: meta,
@@ -70,6 +72,7 @@ func newDefaultPod(meta kube.ObjectMeta, source string) (*Pod, error) {
 	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source)
 }
 
+// Deployment is created containing Pod with attached Containers.
 func (c *Pod) Deployment() (*deploy.Deployment, error) {
 	deployment := deploy.Deployment{}
 
@@ -93,6 +96,7 @@ func (c *Pod) Deployment() (*deploy.Deployment, error) {
 	return &deployment, nil
 }
 
+// Images for all Containers in Pod
 func (c *Pod) Images() (images []*image.Image) {
 	for _, v := range c.containers {
 		images = append(images, v.Images()...)
@@ -100,6 +104,7 @@ func (c *Pod) Images() (images []*image.Image) {
 	return
 }
 
+// Attach appends Images and Containers.
 func (c *Pod) Attach(curEntity Entity) error {
 	if err := c.validAttach(curEntity); err != nil {
 		return err
@@ -118,6 +123,8 @@ func (c *Pod) Attach(curEntity Entity) error {
 		case *Container:
 			c.containers = append(c.containers, e)
 			return nil
+		default:
+			panic("Unexpected type")
 		}
 	}
 }
