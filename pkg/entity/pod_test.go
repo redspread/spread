@@ -6,7 +6,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	"github.com/gh/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 	kube "k8s.io/kubernetes/pkg/api"
 )
 
