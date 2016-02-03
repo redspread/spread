@@ -71,7 +71,32 @@ func newDefaultPod(meta kube.ObjectMeta, source string) (*Pod, error) {
 }
 
 func (c *Pod) Deployment() (*deploy.Deployment, error) {
-	return nil, nil
+	deployment := deploy.Deployment{}
+
+	// create Pod from tree of Entities
+	kubePod, childObj, err := c.data()
+	if err != nil {
+		return nil, err
+	}
+
+	// add Pod to deployment
+	err = deployment.Add(kubePod)
+	if err != nil {
+		return nil, err
+	}
+
+	// add own objects
+	err = deployment.AddDeployment(c.objects)
+	if err != nil {
+		return nil, err
+	}
+
+	// add child objects
+	err = deployment.AddDeployment(childObj)
+	if err != nil {
+		return nil, err
+	}
+	return &deployment, nil
 }
 
 func (c *Pod) Images() (images []*image.Image) {
