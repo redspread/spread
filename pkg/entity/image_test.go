@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"strings"
 	"testing"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -18,7 +17,6 @@ func TestImageDeployment(t *testing.T) {
 	image, err := NewImage(simple, kube.ObjectMeta{}, "test")
 	assert.NoError(t, err, "valid image")
 
-	containerName := strings.Join([]string{imageName, "container"}, "-")
 	expectedPod := kube.Pod{
 		ObjectMeta: kube.ObjectMeta{
 			GenerateName: imageName,
@@ -27,7 +25,7 @@ func TestImageDeployment(t *testing.T) {
 		Spec: kube.PodSpec{
 			Containers: []kube.Container{
 				kube.Container{
-					Name:            containerName,
+					Name:            imageName,
 					Image:           imageName,
 					ImagePullPolicy: kube.PullAlways,
 				},

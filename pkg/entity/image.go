@@ -2,7 +2,6 @@ package entity
 
 import (
 	"errors"
-	"strings"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
@@ -32,9 +31,8 @@ func NewImage(image *image.Image, defaults kube.ObjectMeta, source string, objec
 }
 
 func (c *Image) Deployment() (*deploy.Deployment, error) {
-	podName := strings.Join([]string{c.name(), "image"}, "-")
 	meta := kube.ObjectMeta{
-		Name: podName,
+		GenerateName: c.name(),
 	}
 
 	return deployWithPod(meta, c)

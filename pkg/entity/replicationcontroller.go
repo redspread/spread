@@ -35,7 +35,9 @@ func NewReplicationController(kubeRC *kube.ReplicationController, defaults kube.
 
 	rc := ReplicationController{base: base}
 	if kubeRC.Spec.Template != nil {
-		rc.pod, err = NewPodFromPodSpec(kubeRC.Spec.Template.ObjectMeta, kubeRC.Spec.Template.Spec, defaults, source)
+		templateMeta := kubeRC.Spec.Template.ObjectMeta
+		templateMeta.Name = kubeRC.Name
+		rc.pod, err = NewPodFromPodSpec(templateMeta, kubeRC.Spec.Template.Spec, defaults, source)
 		if err != nil {
 			return nil, err
 		}

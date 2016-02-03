@@ -78,7 +78,7 @@ func TestRCValidPodDeployment(t *testing.T) {
 	}
 	kubePod := testCreateKubePodSourcegraph("sourcegraph")
 	kubePod.Labels = selector
-	kubeRC := testNewKubeRC(kube.ObjectMeta{Name: "sourcegraph-rc"}, selector, kubePod)
+	kubeRC := testNewKubeRC(kube.ObjectMeta{Name: "sourcegraph-rc", Namespace: kube.NamespaceDefault}, selector, kubePod)
 
 	rc, err := NewReplicationController(kubeRC, kube.ObjectMeta{}, "")
 	assert.NoError(t, err)
@@ -86,7 +86,8 @@ func TestRCValidPodDeployment(t *testing.T) {
 	assert.Len(t, rc.pod.containers, 2, "two containers should have been created")
 
 	expected := new(deploy.Deployment)
-	expected.Add(kubeRC)
+	err = expected.Add(kubeRC)
+	assert.NoError(t, err, "should be valid RC")
 
 	actual, err := rc.Deployment()
 	assert.NoError(t, err)
@@ -342,8 +343,11 @@ func TestRCAttachPod(t *testing.T) {
 func testNewKubeRC(meta kube.ObjectMeta, selector map[string]string, pod *kube.Pod) *kube.ReplicationController {
 	var spec *kube.PodTemplateSpec
 	if pod != nil {
+		meta := pod.ObjectMeta
+		meta.Namespace = kube.NamespaceDefault
+		meta.Name = ""
 		spec = &kube.PodTemplateSpec{
-			ObjectMeta: pod.ObjectMeta,
+			ObjectMeta: meta,
 			Spec:       pod.Spec,
 		}
 	}
