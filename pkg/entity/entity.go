@@ -28,6 +28,12 @@ type Entity interface {
 	children() []Entity
 }
 
+// Builder is used by input sources that create Entities.
+type Builder interface {
+	// Build returns an Entity based on the implementations internal logic, Errors are returned if state is invalid.
+	Build() (Entity, error)
+}
+
 // base provides fields that are shared between all Entitys.
 type base struct {
 	entityType Type
