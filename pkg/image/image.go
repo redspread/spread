@@ -1,9 +1,11 @@
 package image
 
 import (
+	"io"
 	"strings"
 
 	"github.com/docker/docker/reference"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // Image contains configuration necessary to deploy an image or if necessary, built it.
@@ -27,6 +29,11 @@ func (i Image) KubeImage() (out string) {
 func (i Image) Name() string {
 	userName := strings.Split(i.image.RemoteName(), "/")
 	return userName[1]
+}
+
+// PushOptions returns the parameters needed to push an image.
+func (i Image) PushOptions(outputStream io.Writer, json bool) docker.PushImageOptions {
+	return docker.PushImageOptions{}
 }
 
 // FromString creates an Image using a string representation

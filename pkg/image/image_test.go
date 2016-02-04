@@ -3,8 +3,11 @@ package image
 import (
 	"testing"
 
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
+
+const DefaultDockerRegistry = "docker.io"
 
 func TestParseName(t *testing.T) {
 	name := "debian"
@@ -20,6 +23,17 @@ func TestParseName(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+
+	// PushOptions
+	out := testSampleWriter(2)
+	json := false
+	expected := docker.PushImageOptions{
+		Name:          name,
+		Registry:      DefaultDockerRegistry,
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+	assert.Equal(t, expected, image.PushOptions(out, json))
 }
 
 func TestParseTag(t *testing.T) {
@@ -37,6 +51,18 @@ func TestParseTag(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+
+	// PushOptions
+	out := testSampleWriter(3)
+	json := true
+	expected := docker.PushImageOptions{
+		Name:          name,
+		Tag:           tag,
+		Registry:      DefaultDockerRegistry,
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+	assert.Equal(t, expected, image.PushOptions(out, json))
 }
 
 func TestParseUserName(t *testing.T) {
@@ -54,6 +80,17 @@ func TestParseUserName(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+
+	// PushOptions
+	out := testSampleWriter(3)
+	json := true
+	expected := docker.PushImageOptions{
+		Name:          imageStr,
+		Registry:      DefaultDockerRegistry,
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+	assert.Equal(t, expected, image.PushOptions(out, json))
 }
 
 func TestParseUserTag(t *testing.T) {
@@ -72,6 +109,18 @@ func TestParseUserTag(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+
+	// PushOptions
+	out := testSampleWriter(4)
+	json := false
+	expected := docker.PushImageOptions{
+		Name:          user + "/" + name,
+		Tag:           tag,
+		Registry:      DefaultDockerRegistry,
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+	assert.Equal(t, expected, image.PushOptions(out, json))
 }
 
 func TestParseRegistryUserName(t *testing.T) {
@@ -90,6 +139,17 @@ func TestParseRegistryUserName(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+
+	// PushOptions
+	out := testSampleWriter(5)
+	json := true
+	expected := docker.PushImageOptions{
+		Name:          registry + "/" + user + "/" + name,
+		Registry:      registry,
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+	assert.Equal(t, expected, image.PushOptions(out, json))
 }
 
 func TestParseRegistryUserTag(t *testing.T) {
@@ -109,10 +169,28 @@ func TestParseRegistryUserTag(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+
+	// PushOptions
+	out := testSampleWriter(6)
+	json := false
+	expected := docker.PushImageOptions{
+		Name:          registry + "/" + user + "/" + name,
+		Tag:           tag,
+		Registry:      registry,
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+	assert.Equal(t, expected, image.PushOptions(out, json))
 }
 
 func TestParseInvalidImage(t *testing.T) {
 	imageName := "H * A * P * P * Y"
 	_, err := FromString(imageName)
 	assert.Error(t, err, "invalid image name")
+}
+
+type testSampleWriter int
+
+func (testSampleWriter) Write(p []byte) (n int, err error) {
+	return 0, nil
 }
