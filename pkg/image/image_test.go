@@ -28,7 +28,7 @@ func TestParseName(t *testing.T) {
 	out := testSampleWriter(2)
 	json := false
 	expected := docker.PushImageOptions{
-		Name:          name,
+		Name:          "library/" + name,
 		Registry:      DefaultDockerRegistry,
 		OutputStream:  out,
 		RawJSONStream: json,
@@ -56,7 +56,7 @@ func TestParseTag(t *testing.T) {
 	out := testSampleWriter(3)
 	json := true
 	expected := docker.PushImageOptions{
-		Name:          name,
+		Name:          "library/" + name,
 		Tag:           tag,
 		Registry:      DefaultDockerRegistry,
 		OutputStream:  out,

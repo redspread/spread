@@ -20,7 +20,7 @@ func (i Image) KubeImage() (out string) {
 	imageStr := i.image.String()
 	if !i.tag {
 		// remove default latest tag
-		return strings.TrimRight(imageStr, ":latest")
+		return strings.TrimSuffix(imageStr, ":latest")
 	}
 	return imageStr
 }
@@ -32,8 +32,19 @@ func (i Image) Name() string {
 }
 
 // PushOptions returns the parameters needed to push an image.
-func (i Image) PushOptions(outputStream io.Writer, json bool) docker.PushImageOptions {
-	return docker.PushImageOptions{}
+func (i Image) PushOptions(out io.Writer, json bool) docker.PushImageOptions {
+	name := strings.TrimPrefix(i.image.FullName(), "docker.io/")
+	opts := docker.PushImageOptions{
+		Name:          name,
+		Registry:      i.image.Hostname(),
+		OutputStream:  out,
+		RawJSONStream: json,
+	}
+
+	if i.tag {
+		opts.Tag = i.image.Tag()
+	}
+	return opts
 }
 
 // FromString creates an Image using a string representation
