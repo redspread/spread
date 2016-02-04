@@ -28,7 +28,7 @@ func TestContainerWithImageDeployment(t *testing.T) {
 
 	expectedImage := newDockerImage(t, imageName)
 	actualImage := images[0]
-	assert.Equal(t, expectedImage.DockerName(), actualImage.DockerName(), "image should not have changed")
+	assert.Equal(t, expectedImage.KubeImage(), actualImage.KubeImage(), "image should not have changed")
 
 	// check kube
 	kubectr, objects, err := ctr.data()

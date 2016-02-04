@@ -24,7 +24,7 @@ func NewImage(image *image.Image, defaults kube.ObjectMeta, source string, objec
 	base, err := newBase(EntityImage, defaults, source, objects)
 	if err != nil {
 		return nil, err
-	} else if len(image.DockerName()) == 0 {
+	} else if len(image.KubeImage()) == 0 {
 		return nil, ErrorEmptyImageString
 	}
 
@@ -54,7 +54,7 @@ func (c *Image) Attach(e Entity) error {
 }
 
 func (c *Image) name() string {
-	return c.image.DockerName()
+	return c.image.Name()
 }
 
 func (c *Image) children() []Entity {
@@ -64,7 +64,7 @@ func (c *Image) children() []Entity {
 // Kubernetes representation of image
 func (c *Image) data() (image string, objects deploy.Deployment, err error) {
 	objects.AddDeployment(c.objects)
-	return c.image.DockerName(), objects, nil
+	return c.image.KubeImage(), objects, nil
 }
 
 var (

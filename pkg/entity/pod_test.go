@@ -70,7 +70,7 @@ func TestPodWithContainersImage(t *testing.T) {
 
 	imageNames := []string{}
 	for _, image := range images {
-		imageNames = append(imageNames, image.DockerName())
+		imageNames = append(imageNames, image.KubeImage())
 	}
 
 	assert.Contains(t, imageNames, testKubeContainerPostgres.Image)
@@ -128,12 +128,12 @@ func TestPodFromPodSpec(t *testing.T) {
 }
 
 func TestPodAttachImage(t *testing.T) {
-	podObjects := testRandomObjects(60)
+	podObjects := testRandomObjects(3)
 	kubePod := testNewKubePod("containerless")
 	pod, err := NewPod(kubePod, kube.ObjectMeta{}, "pod", podObjects...)
 	assert.NoError(t, err, "valid")
 
-	imageObjects := testRandomObjects(20)
+	imageObjects := testRandomObjects(3)
 	kubeImage, err := image.FromString("bprashanth/nginxhttps:1.0")
 	assert.NoError(t, err, "image should be valid")
 
@@ -148,7 +148,7 @@ func TestPodAttachImage(t *testing.T) {
 		kube.Container{
 			Name:            "nginxhttps",
 			Image:           "bprashanth/nginxhttps:1.0",
-			ImagePullPolicy: kube.PullIfNotPresent,
+			ImagePullPolicy: kube.PullAlways,
 		},
 	}
 
