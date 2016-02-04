@@ -17,6 +17,9 @@ type Image struct {
 
 // KubeImage returns a reference to the Image for use with the Image field of kube.Container.
 func (i Image) KubeImage() (out string) {
+	if i.image == nil {
+		return ""
+	}
 	imageStr := i.image.String()
 	if !i.tag {
 		// remove default latest tag
@@ -27,12 +30,18 @@ func (i Image) KubeImage() (out string) {
 
 // Name returns a human readable identifier for the Image. Should be a DNS Label.
 func (i Image) Name() string {
+	if i.image == nil {
+		return ""
+	}
 	userName := strings.Split(i.image.RemoteName(), "/")
 	return userName[1]
 }
 
 // PushOptions returns the parameters needed to push an image.
 func (i Image) PushOptions(out io.Writer, json bool) docker.PushImageOptions {
+	if i.image == nil {
+		return docker.PushImageOptions{}
+	}
 	name := strings.TrimPrefix(i.image.FullName(), "docker.io/")
 	opts := docker.PushImageOptions{
 		Name:          name,

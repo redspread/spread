@@ -189,6 +189,13 @@ func TestParseInvalidImage(t *testing.T) {
 	assert.Error(t, err, "invalid image name")
 }
 
+func TestNonInitImage(t *testing.T) {
+	image := new(Image)
+	assert.Len(t, image.Name(), 0, "not setup")
+	assert.Len(t, image.KubeImage(), 0, "not setup")
+	assert.EqualValues(t, docker.PushImageOptions{}, image.PushOptions(nil, false), "not setup")
+}
+
 type testSampleWriter int
 
 func (testSampleWriter) Write(p []byte) (n int, err error) {
