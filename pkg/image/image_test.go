@@ -22,7 +22,7 @@ func TestParseName(t *testing.T) {
 	assert.Equal(t, imageStr, image.KubeImage())
 }
 
-func TestParseNameTag(t *testing.T) {
+func TestParseTag(t *testing.T) {
 	name := "debian"
 	tag := "jessie"
 
@@ -39,12 +39,12 @@ func TestParseNameTag(t *testing.T) {
 	assert.Equal(t, imageStr, image.KubeImage())
 }
 
-func TestParseNamespaceName(t *testing.T) {
-	ns := "library"
+func TestParseUserName(t *testing.T) {
+	user := "base"
 	name := "debian"
 
-	// "library/debian"
-	imageStr := ns + "/" + name
+	// "base/debian"
+	imageStr := user + "/" + name
 
 	image, err := FromString(imageStr)
 	assert.NoError(t, err, "valid image name")
@@ -56,13 +56,13 @@ func TestParseNamespaceName(t *testing.T) {
 	assert.Equal(t, imageStr, image.KubeImage())
 }
 
-func TestParseNamespaceTag(t *testing.T) {
-	ns := "library"
+func TestParseUserTag(t *testing.T) {
+	user := "base"
 	name := "debian"
 	tag := "jessie"
 
-	// "library/debian:jessie"
-	imageStr := ns + "/" + name + ":" + tag
+	// "base/debian:jessie"
+	imageStr := user + "/" + name + ":" + tag
 
 	image, err := FromString(imageStr)
 	assert.NoError(t, err, "valid image name")
@@ -74,13 +74,13 @@ func TestParseNamespaceTag(t *testing.T) {
 	assert.Equal(t, imageStr, image.KubeImage())
 }
 
-func TestParseRegistryNamespaceName(t *testing.T) {
+func TestParseRegistryUserName(t *testing.T) {
 	registry := "docker.redspread.com:443"
-	ns := "library"
+	user := "base"
 	name := "debian"
 
-	// "docker.redspread.com:443/library/debian"
-	imageStr := registry + "/" + ns + "/" + name
+	// "docker.redspread.com:443/base/debian"
+	imageStr := registry + "/" + user + "/" + name
 
 	image, err := FromString(imageStr)
 	assert.NoError(t, err, "valid image name")
@@ -92,14 +92,14 @@ func TestParseRegistryNamespaceName(t *testing.T) {
 	assert.Equal(t, imageStr, image.KubeImage())
 }
 
-func TestParseRegistryNamespaceTag(t *testing.T) {
+func TestParseRegistryUserTag(t *testing.T) {
 	registry := "docker.redspread.com:443"
-	ns := "library"
+	user := "base"
 	name := "debian"
 	tag := "jessie"
 
-	// "docker.redspread.com:443/library/debian:jessie"
-	imageStr := registry + "/" + ns + "/" + name + ":" + tag
+	// "docker.redspread.com:443/base/debian:jessie"
+	imageStr := registry + "/" + user + "/" + name + ":" + tag
 
 	image, err := FromString(imageStr)
 	assert.NoError(t, err, "valid image name")
@@ -109,4 +109,10 @@ func TestParseRegistryNamespaceTag(t *testing.T) {
 
 	// KubeImage
 	assert.Equal(t, imageStr, image.KubeImage())
+}
+
+func TestParseInvalidImage(t *testing.T) {
+	imageName := "H * A * P * P * Y"
+	_, err := FromString(imageName)
+	assert.Error(t, err, "invalid image name")
 }
