@@ -3,7 +3,7 @@ package deploy
 import (
 	"testing"
 
-	"github.com/gh/davecgh/go-spew/spew"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	kube "k8s.io/kubernetes/pkg/api"
 )
