@@ -9,7 +9,7 @@ import (
 )
 
 func TestDeploymentSimpleEquals1(t *testing.T) {
-	a, b := Deployment{}, Deployment{}
+	a, b := new(Deployment), new(Deployment)
 
 	assert.True(t, a.Equal(a), "self")
 	assert.True(t, b.Equal(b), "self")
@@ -25,7 +25,7 @@ func TestDeploymentSimpleEquals1(t *testing.T) {
 
 func TestDeploymentSimpleEquals2(t *testing.T) {
 	a, b, c := createSecret("a", "1"), createSecret("b", "2"), createSecret("c", "3")
-	deployA, deployB := Deployment{}, Deployment{}
+	deployA, deployB := new(Deployment), new(Deployment)
 
 	deployA.Add(a)
 	deployA.Add(b)
@@ -49,7 +49,7 @@ func TestNoDuplicateNames(t *testing.T) {
 	secretA := createSecret("secret-a", "some data")
 	secretB := createSecret("secret-a", "different data")
 
-	deployment := Deployment{}
+	deployment := new(Deployment)
 	assert.NoError(t, deployment.Add(secretA), "valid add")
 	assert.Error(t, deployment.Add(secretA), "duplicate name")
 	assert.Error(t, deployment.Add(secretB), "duplicate name")
@@ -79,7 +79,7 @@ func TestDeploymentObjects(t *testing.T) {
 		},
 	}
 
-	deploy := Deployment{}
+	deploy := new(Deployment)
 	deploy.Add(secret1)
 	deploy.Add(secret2)
 	deploy.Add(&pod)
