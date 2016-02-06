@@ -1,0 +1,13 @@
+language: go
+sudo: false
+go:
+  - 1.5
+  - tip
+go_import_path: rsprd.com/spread
+before_script:
+  - go vet ./...
+install:
+  # Add Godeps dependencies to GOPATH and PATH
+  - go get -v -d ./...
+  - export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH"
+  - export PATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace/bin:$PATH"

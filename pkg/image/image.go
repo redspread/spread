@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/reference"
-	docker "github.com/fsouza/go-dockerclient"
+	docker "rsprd.com/spread/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 // Image contains configuration necessary to deploy an image or if necessary, built it.

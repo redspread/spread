@@ -6,8 +6,8 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
 
-	kube "k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/validation"
+	kube "rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api"
+	"rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api/validation"
 )
 
 // DefaultContainer is the default for all new Containers
