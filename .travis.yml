@@ -2,7 +2,6 @@ language: go
 sudo: false
 go:
   - 1.5
-  - tip
 go_import_path: rsprd.com/spread
 before_script:
   - go vet ./...
