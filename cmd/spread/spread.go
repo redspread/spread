@@ -6,7 +6,7 @@ import (
 
 	"rsprd.com/spread/cli"
 
-	clilib "github.com/codegangsta/cli"
+	clilib "rsprd.com/spread/Godeps/_workspace/src/github.com/codegangsta/cli"
 )
 
 func main() {

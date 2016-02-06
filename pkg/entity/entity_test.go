@@ -7,8 +7,8 @@ import (
 
 	"rsprd.com/spread/pkg/deploy"
 
-	"github.com/stretchr/testify/assert"
-	kube "k8s.io/kubernetes/pkg/api"
+	"rsprd.com/spread/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	kube "rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api"
 )
 
 var TestUsedNames = map[string]bool{}

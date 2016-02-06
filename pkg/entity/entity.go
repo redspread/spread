@@ -6,7 +6,7 @@ import (
 
 	"rsprd.com/spread/pkg/deploy"
 
-	kube "k8s.io/kubernetes/pkg/api"
+	kube "rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api"
 )
 
 // Entity is the fundamental building block of `spread`'s internal representation of state. Entities exist for both
