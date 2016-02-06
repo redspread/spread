@@ -7,8 +7,8 @@ import (
 )
 
 // Version returns the current spread version
-func (spread SpreadCli) Version() cli.Command {
-	return cli.Command{
+func (spread SpreadCli) Version() *cli.Command {
+	return &cli.Command{
 		Name:    "version",
 		Aliases: []string{"v"},
 		Usage:   "prints spread version",

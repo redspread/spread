@@ -27,9 +27,12 @@ func commands(spread *cli.SpreadCli) []clilib.Command {
 
 		// check that is returning command
 		cmdType := cmd.Type()
-		if cmdType.NumOut() == 1 && cmdType.Out(0) == reflect.TypeOf(clilib.Command{}) {
-			command := cmd.Interface().(func() clilib.Command)
-			cmds = append(cmds, command())
+		if cmdType.NumOut() == 1 && cmdType.Out(0) == reflect.TypeOf(new(clilib.Command)) {
+			cmdFn := cmd.Interface().(func() *clilib.Command)
+			command := cmdFn()
+			if command != nil {
+				cmds = append(cmds, *command)
+			}
 		}
 	}
 	return cmds
