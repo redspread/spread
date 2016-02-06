@@ -8,16 +8,16 @@ import (
 
 func TestSourceNonexistentPath(t *testing.T) {
 	doesNotExist := "/dev/null/null"
-	_, err := NewDirSource(doesNotExist)
+	_, err := NewFileSource(doesNotExist)
 	assert.Error(t, err, "should not create for nonexistent path")
 }
 
 func TestSourceValidPath(t *testing.T) {
 	exists := "/"
-	_, err := NewDirSource(exists)
+	_, err := NewFileSource(exists)
 	assert.NoError(t, err, "valid path")
 
 	relative := "."
-	_, err = NewDirSource(relative)
+	_, err = NewFileSource(relative)
 	assert.NoError(t, err, "valid path")
 }
