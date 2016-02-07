@@ -8,12 +8,14 @@ env:
 go_import_path: rsprd.com/spread
 
 install:
+  # install vendor deps
+  - cp -r ./vendor/* $GOPATH/src
   # install golint
   - go get -u github.com/golang/lint/golint
-  # enables /vendor directory to contain import dependencies
-  - export GO15VENDOREXPERIMENT=1
 
 before_script:
+  # Fix to get around issue with Kubernetes not
+  # loading types from rewritten imports
   - go vet $SPREAD
 
 script:
