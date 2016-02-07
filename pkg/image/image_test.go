@@ -3,8 +3,8 @@ package image
 import (
 	"testing"
 
-	docker "rsprd.com/spread/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	docker "github.com/fsouza/go-dockerclient"
+	"github.com/stretchr/testify/assert"
 )
 
 const DefaultDockerRegistry = "docker.io"

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/codegangsta/cli"
 )
 
 // Version returns the current spread version

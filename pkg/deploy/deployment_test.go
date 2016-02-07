@@ -3,9 +3,9 @@ package deploy
 import (
 	"testing"
 
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/davecgh/go-spew/spew"
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/stretchr/testify/assert"
-	kube "rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 func TestDeploymentSimpleEquals1(t *testing.T) {

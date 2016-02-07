@@ -5,8 +5,8 @@ import (
 
 	"rsprd.com/spread/pkg/deploy"
 
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/stretchr/testify/assert"
-	kube "rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api"
+	"github.com/stretchr/testify/assert"
+	kube "k8s.io/kubernetes/pkg/api"
 )
 
 func TestContainerWithImageDeployment(t *testing.T) {

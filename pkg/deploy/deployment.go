@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/pmezard/go-difflib/difflib"
-	kube "rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api"
-	"rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api/validation"
-	"rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/util/validation/field"
+	"github.com/pmezard/go-difflib/difflib"
+	kube "k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/validation"
+	"k8s.io/kubernetes/pkg/util/validation/field"
 )
 
 // A Deployment is a collection of Kubernetes deployed. Deployment stores a slice of deployable Kubernetes objects.

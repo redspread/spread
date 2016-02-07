@@ -4,8 +4,8 @@ import (
 	"io"
 	"strings"
 
-	"rsprd.com/spread/Godeps/_workspace/src/github.com/docker/distribution/reference"
-	docker "rsprd.com/spread/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	"github.com/docker/distribution/reference"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // Image contains configuration necessary to deploy an image or if necessary, built it.

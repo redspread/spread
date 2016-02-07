@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/api/meta"
-	"rsprd.com/spread/Godeps/_workspace/src/k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/kubernetes/pkg/api/meta"
+	"k8s.io/kubernetes/pkg/runtime"
 )
 
 // A KubeObject is an alias for Kubernetes objects.
