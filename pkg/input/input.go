@@ -6,5 +6,5 @@ import (
 
 // Input represents a source of Entities and metadata.
 type Input interface {
-	entity.EntityBuilder
+	entity.Entity
 }

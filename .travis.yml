@@ -1,0 +1,30 @@
+language: go
+sudo: false
+go:
+  - 1.5
+env:
+  - SPREAD="./pkg/... ./cli/... ./cmd/..."
+
+go_import_path: rsprd.com/spread
+
+install:
+  # install golint
+  - go get -u github.com/golang/lint/golint
+  # enables /vendor directory to contain import dependencies
+  - export GO15VENDOREXPERIMENT=1
+
+before_script:
+  - go vet $SPREAD
+
+script:
+  - go test -v $SPREAD
+
+after_success:
+  - |
+    while IFS=' ' read -ra PKG; do
+      for i in "${PKG[@]}"; do
+        echo "Running golint on $i:"
+        golint $i
+        printf "#########################\n\n\n"
+      done
+    done <<< "$SPREAD"
