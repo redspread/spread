@@ -1,0 +1,6 @@
+language: go
+sudo: false
+go:
+  - 1.5
+
+go_import_path: rsprd.com/spread
