@@ -55,6 +55,21 @@ func TestSourceObjectsNoKubeDir(t *testing.T) {
 	}
 }
 
+func TestSourceObjectsEmptyKubeDir(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	kubeDir := path.Join(string(fs), ObjectsDir)
+	err := os.Mkdir(kubeDir, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	objects, err := fs.Objects()
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, objects, 0, "should not have any objects")
+}
+
 func TestSourceObjectsKubeDir(t *testing.T) {
 	fs := testTempFileSource(t)
 	defer os.RemoveAll(string(fs))

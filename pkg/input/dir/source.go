@@ -58,7 +58,11 @@ func (fs fileSource) Entities(t entity.Type) ([]entity.Entity, error) {
 func (fs fileSource) Objects() (objects []deploy.KubeObject, err error) {
 	dirPath := path.Join(string(fs), ObjectsDir)
 
-	err = walkPathForObjects(dirPath, func(info *resource.Info, err error) error {
+	err = walkPathForObjects(dirPath, func(info *resource.Info, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+
 		obj, ok := info.Object.(deploy.KubeObject)
 		if !ok {
 			return ErrTypeMismatch
@@ -72,7 +76,7 @@ func (fs fileSource) Objects() (objects []deploy.KubeObject, err error) {
 	if err != nil && !checkErrNotFound(err) {
 		return nil, err
 	}
-	return
+	return objects, nil
 }
 
 // getRCs returns entities for the rcs in the RCFile
@@ -140,12 +144,12 @@ func walkPathForObjects(path string, fn resource.VisitorFunc) error {
 		Do()
 
 	err = result.Err()
-	if err != nil {
+	if err != nil && !checkErrNotFound(err) {
 		return err
 	}
 
 	err = result.Visit(fn)
-	if err != nil && !checkErrNotFound(err) {
+	if err != nil {
 		return err
 	}
 	return nil
