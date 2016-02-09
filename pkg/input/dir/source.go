@@ -43,14 +43,14 @@ func NewFileSource(path string) (FileSource, error) {
 }
 
 // Entities returns the entities of the requested type from the source. Errors if any invalid entities.
-func (fs FileSource) Entities(t entity.Type) ([]entity.Entity, error) {
+func (fs FileSource) Entities(t entity.Type, objects ...deploy.KubeObject) ([]entity.Entity, error) {
 	switch t {
 	case entity.EntityReplicationController:
-		return fs.rcs()
+		return fs.rcs(objects)
 	case entity.EntityPod:
-		return fs.pods()
+		return fs.pods(objects)
 	case entity.EntityContainer:
-		return fs.containers()
+		return fs.containers(objects)
 	case entity.EntityImage:
 		// getting images not implemented
 		return []entity.Entity{}, nil
@@ -76,14 +76,14 @@ func (fs FileSource) Objects() (objects []deploy.KubeObject, err error) {
 	})
 
 	// don't throw error if simply didn't find anything
-	if err != nil && !checkErrNotFound(err) {
+	if err != nil && !checkErrNotFound(err) && !checkErrPathDoesNotExist(err) {
 		return nil, err
 	}
 	return objects, nil
 }
 
 // rcs returns entities for the rcs in the RCFile
-func (fs FileSource) rcs() (rcs []entity.Entity, err error) {
+func (fs FileSource) rcs(objects []deploy.KubeObject) (rcs []entity.Entity, err error) {
 	filePath := path.Join(string(fs), RCFile)
 
 	err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
@@ -92,7 +92,7 @@ func (fs FileSource) rcs() (rcs []entity.Entity, err error) {
 			return fmt.Errorf("expected type `ReplicationController` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
 		}
 
-		rc, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, info.Source)
+		rc, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, info.Source, objects...)
 		if err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func (fs FileSource) rcs() (rcs []entity.Entity, err error) {
 }
 
 // pods returns Pods for the rcs in the PodFile
-func (fs FileSource) pods() (pods []entity.Entity, err error) {
+func (fs FileSource) pods(objects []deploy.KubeObject) (pods []entity.Entity, err error) {
 	filePath := path.Join(string(fs), PodFile)
 
 	err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
@@ -118,7 +118,7 @@ func (fs FileSource) pods() (pods []entity.Entity, err error) {
 			return fmt.Errorf("expected type `Pod` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
 		}
 
-		pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, info.Source)
+		pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, info.Source, objects...)
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func (fs FileSource) pods() (pods []entity.Entity, err error) {
 }
 
 // containers creates entities from files with the ContainerExtension
-func (fs FileSource) containers() (containers []entity.Entity, err error) {
+func (fs FileSource) containers(objects []deploy.KubeObject) (containers []entity.Entity, err error) {
 	info, err := os.Stat(string(fs))
 	if err != nil {
 		return
@@ -148,7 +148,7 @@ func (fs FileSource) containers() (containers []entity.Entity, err error) {
 			return nil, err
 		}
 
-		ctr, err := entity.NewContainer(kubeCtr, kube.ObjectMeta{}, string(fs))
+		ctr, err := entity.NewContainer(kubeCtr, kube.ObjectMeta{}, string(fs), objects...)
 		if err != nil {
 			return nil, err
 		}

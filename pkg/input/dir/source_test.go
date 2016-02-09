@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"os"
 	"path"
-	"strings"
 	"testing"
 	"time"
 
@@ -50,10 +49,7 @@ func TestSourceObjectsNoKubeDir(t *testing.T) {
 	defer os.RemoveAll(string(fs))
 
 	_, err := fs.Objects()
-	assert.Error(t, err, "directory doesn't exist")
-	if !strings.HasSuffix(err.Error(), "does not exist") {
-		t.Error("should have failed from .kube not existing")
-	}
+	assert.NoError(t, err, "ok")
 }
 
 func TestSourceObjectsEmptyKubeDir(t *testing.T) {

@@ -68,8 +68,8 @@ func NewPodFromPodSpec(meta kube.ObjectMeta, podSpec kube.PodSpec, defaults kube
 	return NewPod(&pod, defaults, source, objects...)
 }
 
-func newDefaultPod(meta kube.ObjectMeta, source string) (*Pod, error) {
-	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source)
+func NewDefaultPod(meta kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source, objects...)
 }
 
 // Deployment is created containing Pod with attached Containers.
@@ -198,7 +198,7 @@ func validatePod(pod *kube.Pod, ignoreContainers bool) error {
 }
 
 func deployWithPod(meta kube.ObjectMeta, attached Entity) (*deploy.Deployment, error) {
-	pod, err := newDefaultPod(meta, attached.Source())
+	pod, err := NewDefaultPod(meta, attached.Source())
 	if err != nil {
 		return nil, err
 	}
