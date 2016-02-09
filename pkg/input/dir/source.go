@@ -18,33 +18,36 @@ import (
 const (
 	// RCFile is the filename checked for Replication Controllers.
 	RCFile = "rc.yml"
+
 	// PodFile is the filename checked for Pods.
 	PodFile = "pod.yml"
+
 	// ContainerExtension is the file extension checked for Containers.
 	ContainerExtension = ".ctr"
+
 	// ObjectsDir is the directory checked for arbitrary Kubernetes objects.
 	ObjectsDir = ".k2e"
 )
 
-type fileSource string
+type FileSource string
 
 // NewFileSource returns a source for the path to a file or directory. Path must be valid.
-func NewFileSource(path string) (fileSource, error) {
+func NewFileSource(path string) (FileSource, error) {
 	if _, err := os.Stat(path); err != nil {
-		return fileSource(""), fmt.Errorf("could not create fileSource: %v", err)
+		return FileSource(""), fmt.Errorf("could not create fileSource: %v", err)
 	}
-	return fileSource(path), nil
+	return FileSource(path), nil
 }
 
 // Entities returns the entities of the requested type from the source. Errors if any invalid entities.
-func (fs fileSource) Entities(t entity.Type) ([]entity.Entity, error) {
+func (fs FileSource) Entities(t entity.Type) ([]entity.Entity, error) {
 	switch t {
 	case entity.EntityReplicationController:
-		return fs.getRCs()
+		return fs.rcs()
 	case entity.EntityPod:
-		return fs.getPods()
+		return fs.pods()
 	case entity.EntityContainer:
-		return fs.getContainers()
+		return fs.containers()
 	case entity.EntityImage:
 		// getting images not implemented
 		return []entity.Entity{}, nil
@@ -55,7 +58,7 @@ func (fs fileSource) Entities(t entity.Type) ([]entity.Entity, error) {
 }
 
 // Objects returns the Kubernetes objects available from the source. Errors if any invalid objects.
-func (fs fileSource) Objects() (objects []deploy.KubeObject, err error) {
+func (fs FileSource) Objects() (objects []deploy.KubeObject, err error) {
 	dirPath := path.Join(string(fs), ObjectsDir)
 
 	err = walkPathForObjects(dirPath, func(info *resource.Info, walkErr error) error {
@@ -63,10 +66,7 @@ func (fs fileSource) Objects() (objects []deploy.KubeObject, err error) {
 			return walkErr
 		}
 
-		obj, ok := info.Object.(deploy.KubeObject)
-		if !ok {
-			return ErrTypeMismatch
-		}
+		obj := info.Object.(deploy.KubeObject)
 
 		objects = append(objects, obj)
 		return nil
@@ -79,8 +79,8 @@ func (fs fileSource) Objects() (objects []deploy.KubeObject, err error) {
 	return objects, nil
 }
 
-// getRCs returns entities for the rcs in the RCFile
-func (fs fileSource) getRCs() (rcs []entity.Entity, err error) {
+// rcs returns entities for the rcs in the RCFile
+func (fs FileSource) rcs() (rcs []entity.Entity, err error) {
 	filePath := path.Join(string(fs), RCFile)
 
 	err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
@@ -105,8 +105,8 @@ func (fs fileSource) getRCs() (rcs []entity.Entity, err error) {
 	return
 }
 
-// getPods returns Pods for the rcs in the PodFile
-func (fs fileSource) getPods() (pods []entity.Entity, err error) {
+// pods returns Pods for the rcs in the PodFile
+func (fs FileSource) pods() (pods []entity.Entity, err error) {
 	filePath := path.Join(string(fs), PodFile)
 
 	err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
@@ -131,8 +131,8 @@ func (fs fileSource) getPods() (pods []entity.Entity, err error) {
 	return
 }
 
-// getContainers creates entities from files with the ContainerExtension
-func (fs fileSource) getContainers() ([]entity.Entity, error) {
+// containers creates entities from files with the ContainerExtension
+func (fs FileSource) containers() ([]entity.Entity, error) {
 	return []entity.Entity{}, nil
 }
 
@@ -181,6 +181,5 @@ func checkErrPathDoesNotExist(err error) bool {
 
 var (
 	// ErrInvalidType is returned when the entity.Type is unknown
-	ErrInvalidType  = errors.New("passed invalid type")
-	ErrTypeMismatch = errors.New("was expecting a KubeObject")
+	ErrInvalidType = errors.New("passed invalid type")
 )

@@ -292,7 +292,7 @@ func testWriteYAMLToFile(t *testing.T, filename string, typ interface{}) {
 	}
 }
 
-func testTempFileSource(t *testing.T) fileSource {
+func testTempFileSource(t *testing.T) FileSource {
 	dir := testTempDir(t)
 	fs, err := NewFileSource(dir)
 	if err != nil {
