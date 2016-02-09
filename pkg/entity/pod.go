@@ -106,6 +106,10 @@ func (c *Pod) Images() (images []*image.Image) {
 
 // Attach appends Images and Containers.
 func (c *Pod) Attach(curEntity Entity) error {
+	if curEntity == nil {
+		return ErrorNilEntity
+	}
+
 	if err := c.validAttach(curEntity); err != nil {
 		return err
 	}

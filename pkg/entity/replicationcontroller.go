@@ -88,6 +88,10 @@ func (c *ReplicationController) Images() (images []*image.Image) {
 
 // Attach allows Pods, Containers, and Images to be attached.
 func (c *ReplicationController) Attach(e Entity) error {
+	if e == nil {
+		return ErrorNilEntity
+	}
+
 	if err := c.validAttach(e); err != nil {
 		return err
 	}

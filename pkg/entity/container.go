@@ -81,6 +81,10 @@ func (c *Container) Images() []*image.Image {
 
 // Attach is only possible for images.
 func (c *Container) Attach(e Entity) error {
+	if e == nil {
+		return ErrorNilEntity
+	}
+
 	if c.image != nil {
 		return ErrorMaxAttached
 	}

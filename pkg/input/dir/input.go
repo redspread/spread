@@ -13,6 +13,7 @@ type fileInput struct {
 	FileSource
 }
 
+// NewFileInput returns an Input based on a file system
 func NewFileInput(path string) (*fileInput, error) {
 	src, err := NewFileSource(path)
 	if err != nil {
@@ -24,7 +25,8 @@ func NewFileInput(path string) (*fileInput, error) {
 	}, nil
 }
 
-func (d fileInput) Build() (entity.Entity, error) {
+// Build creates an Entity by merging by multiple entity types together.
+func (d *fileInput) Build() (entity.Entity, error) {
 	base, err := d.base()
 	if err != nil {
 		return nil, err
@@ -34,7 +36,12 @@ func (d fileInput) Build() (entity.Entity, error) {
 	return base, err
 }
 
-func (d fileInput) base() (entity.Entity, error) {
+// Path returns the location the fileInput was created
+func (d fileInput) Path() string {
+	return string(d.FileSource)
+}
+
+func (d *fileInput) base() (entity.Entity, error) {
 	objects, err := d.Objects()
 	if err != nil {
 		return nil, err
@@ -60,10 +67,10 @@ func (d fileInput) base() (entity.Entity, error) {
 		return pods[0], nil
 	}
 
-	return entity.NewDefaultPod(kube.ObjectMeta{}, string(d.FileSource), objects...)
+	return entity.NewDefaultPod(kube.ObjectMeta{GenerateName: "spread"}, string(d.FileSource), objects...)
 }
 
-func (d fileInput) buildEntity(parent entity.Entity) error {
+func (d *fileInput) buildEntity(parent entity.Entity) error {
 	if parent == nil {
 		return errors.New("parent can't be nil")
 	}
@@ -75,7 +82,8 @@ func (d fileInput) buildEntity(parent entity.Entity) error {
 
 	// increment type number
 	for typNum := int(parent.Type()) + 1; typNum <= int(entity.EntityImage); typNum++ {
-		entities, err := d.Entities(entity.Type(typNum))
+		typ := entity.Type(typNum)
+		entities, err := d.Entities(typ)
 		if err != nil {
 			return err
 		}
@@ -83,7 +91,7 @@ func (d fileInput) buildEntity(parent entity.Entity) error {
 		for _, e := range entities {
 			err = parent.Attach(e)
 			if err != nil {
-				return fmt.Errorf("could not attach '%v' to '%v': %v", e.Type(), parent.Type(), err)
+				return fmt.Errorf("could not attach '%s' to '%s': %v", e.Type().String(), parent.Type().String(), err)
 			}
 
 			err = d.buildEntity(e)
