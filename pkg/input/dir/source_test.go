@@ -119,6 +119,10 @@ func TestSourceEntitiesNoFile(t *testing.T) {
 	containers, err := fs.Entities(entity.EntityContainer)
 	assert.NoError(t, err)
 	assert.Len(t, containers, 0)
+
+	images, err := fs.Entities(entity.EntityImage)
+	assert.NoError(t, err)
+	assert.Len(t, images, 0)
 }
 
 func TestSourceEntitiesEmptyFile(t *testing.T) {
@@ -151,6 +155,10 @@ func TestSourceEntitiesEmptyFile(t *testing.T) {
 	containers, err := fs.Entities(entity.EntityContainer)
 	assert.NoError(t, err, "should be okay")
 	assert.Len(t, containers, 0, "should not have any containers")
+
+	images, err := fs.Entities(entity.EntityImage)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, images, 0, "should not have any images")
 }
 
 func TestSourceRCs(t *testing.T) {
@@ -214,18 +222,62 @@ func TestSourceRCs(t *testing.T) {
 	expected, err := entity.NewReplicationController(expectedKubeRC, kube.ObjectMeta{}, rcFile)
 
 	actual := rcs[0]
-	assert.Equal(t, expected.Source(), actual.Source(), "spurces should match")
-	assert.Equal(t, expected.DefaultMeta(), actual.DefaultMeta())
-	assert.Equal(t, expected.Images(), actual.Images())
 
-	expectedDeploy, err := expected.Deployment()
-	assert.NoError(t, err)
-	actualDeploy, err := actual.Deployment()
-	assert.NoError(t, err)
+	testCompareEntity(t, expected, actual)
+}
 
-	if !assert.True(t, expectedDeploy.Equal(actualDeploy)) {
-		t.Log(expectedDeploy.Diff(actualDeploy))
+func TestSourcePods(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	podFile := path.Join(string(fs), PodFile)
+
+	terminationPeriod := int64(30)
+	kubePod := &kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
+			Name:      "example-pod",
+			Namespace: kube.NamespaceDefault,
+		},
+		TypeMeta: unversioned.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
+				kube.Container{
+					Name:                   "wiki",
+					Image:                  "mediawiki",
+					ImagePullPolicy:        kube.PullAlways,
+					TerminationMessagePath: kube.TerminationMessagePathDefault,
+				},
+				kube.Container{
+					Name:                   "db",
+					Image:                  "postgres",
+					ImagePullPolicy:        kube.PullAlways,
+					TerminationMessagePath: kube.TerminationMessagePathDefault,
+				},
+			},
+			SecurityContext:               &kube.PodSecurityContext{},
+			RestartPolicy:                 kube.RestartPolicyAlways,
+			DNSPolicy:                     kube.DNSDefault,
+			TerminationGracePeriodSeconds: &terminationPeriod,
+		},
 	}
+
+	testWriteYAMLToFile(t, podFile, kubePod)
+
+	pods, err := fs.Entities(entity.EntityPod)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, pods, 1, "should have single pod")
+
+	expectedKubePod := kubePod
+	testClearTypeInfo(expectedKubePod)
+
+	expected, err := entity.NewPod(expectedKubePod, kube.ObjectMeta{}, podFile)
+
+	actual := pods[0]
+
+	testCompareEntity(t, expected, actual)
 }
 
 func testWriteYAMLToFile(t *testing.T, filename string, typ interface{}) {
@@ -300,4 +352,19 @@ func randomString(strlen int) string {
 
 func testClearTypeInfo(obj deploy.KubeObject) {
 	obj.GetObjectKind().SetGroupVersionKind(nil)
+}
+
+func testCompareEntity(t *testing.T, expected, actual entity.Entity) {
+	assert.Equal(t, expected.Source(), actual.Source(), "spurces should match")
+	assert.Equal(t, expected.DefaultMeta(), actual.DefaultMeta())
+	assert.Equal(t, expected.Images(), actual.Images())
+
+	expectedDeploy, err := expected.Deployment()
+	assert.NoError(t, err)
+	actualDeploy, err := actual.Deployment()
+	assert.NoError(t, err)
+
+	if !assert.True(t, expectedDeploy.Equal(actualDeploy)) {
+		t.Log(expectedDeploy.Diff(actualDeploy))
+	}
 }
