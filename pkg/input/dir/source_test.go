@@ -1,7 +1,6 @@
 package dir
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -11,7 +10,9 @@ import (
 	"time"
 
 	"rsprd.com/spread/pkg/deploy"
+	"rsprd.com/spread/pkg/entity"
 
+	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
@@ -84,7 +85,7 @@ func TestSourceObjectsKubeDir(t *testing.T) {
 	expected := testRandomObjects(numObjects)
 	for _, v := range expected {
 		filename := path.Join(string(fs), ObjectsDir, v.GetObjectMeta().GetName()+".json")
-		testWriteJSONToFile(t, filename, v)
+		testWriteYAMLToFile(t, filename, v)
 	}
 
 	actual, err := fs.Objects()
@@ -94,7 +95,8 @@ func TestSourceObjectsKubeDir(t *testing.T) {
 		found := false
 		for _, actualObj := range actual {
 			if expectedObj.GetObjectMeta().GetName() == actualObj.GetObjectMeta().GetName() {
-				found = true
+				testClearTypeInfo(expectedObj)
+				found = kube.Semantic.DeepEqual(expectedObj, actualObj)
 				break
 			}
 		}
@@ -102,8 +104,132 @@ func TestSourceObjectsKubeDir(t *testing.T) {
 	}
 }
 
-func testWriteJSONToFile(t *testing.T, filename string, typ interface{}) {
-	jsonBytes, err := json.MarshalIndent(typ, "", "\t")
+func TestSourceEntitiesNoFile(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	rcs, err := fs.Entities(entity.EntityReplicationController)
+	assert.NoError(t, err)
+	assert.Len(t, rcs, 0)
+
+	pods, err := fs.Entities(entity.EntityPod)
+	assert.NoError(t, err)
+	assert.Len(t, pods, 0)
+
+	containers, err := fs.Entities(entity.EntityContainer)
+	assert.NoError(t, err)
+	assert.Len(t, containers, 0)
+}
+
+func TestSourceEntitiesEmptyFile(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	entityFiles := []string{
+		path.Join(string(fs), RCFile),
+		path.Join(string(fs), PodFile),
+		path.Join(string(fs), "cassandra."+ContainerExtension),
+		path.Join(string(fs), "app."+ContainerExtension),
+	}
+
+	// create files
+	for _, file := range entityFiles {
+		_, err := os.Create(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	rcs, err := fs.Entities(entity.EntityReplicationController)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, rcs, 0, "should not have any rcs")
+
+	pods, err := fs.Entities(entity.EntityPod)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, pods, 0, "should not have any pods")
+
+	containers, err := fs.Entities(entity.EntityContainer)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, containers, 0, "should not have any containers")
+}
+
+func TestSourceRCs(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	rcFile := path.Join(string(fs), RCFile)
+
+	selector := map[string]string{"app": "example"}
+
+	terminationPeriod := int64(30)
+	kubeRC := &kube.ReplicationController{
+		ObjectMeta: kube.ObjectMeta{
+			Name:      "example-rc",
+			Namespace: kube.NamespaceDefault,
+		},
+		TypeMeta: unversioned.TypeMeta{
+			Kind:       "ReplicationController",
+			APIVersion: "v1",
+		},
+		Spec: kube.ReplicationControllerSpec{
+			Selector: selector,
+			Replicas: 2,
+			Template: &kube.PodTemplateSpec{
+				ObjectMeta: kube.ObjectMeta{
+					Labels: selector,
+				},
+				Spec: kube.PodSpec{
+					Containers: []kube.Container{
+						kube.Container{
+							Name:                   "example",
+							Image:                  "hello-world",
+							ImagePullPolicy:        kube.PullAlways,
+							TerminationMessagePath: kube.TerminationMessagePathDefault,
+						},
+						kube.Container{
+							Name:                   "cache",
+							Image:                  "redis",
+							ImagePullPolicy:        kube.PullAlways,
+							TerminationMessagePath: kube.TerminationMessagePathDefault,
+						},
+					},
+					SecurityContext:               &kube.PodSecurityContext{},
+					RestartPolicy:                 kube.RestartPolicyAlways,
+					DNSPolicy:                     kube.DNSDefault,
+					TerminationGracePeriodSeconds: &terminationPeriod,
+				},
+			},
+		},
+	}
+
+	testWriteYAMLToFile(t, rcFile, kubeRC)
+
+	rcs, err := fs.Entities(entity.EntityReplicationController)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, rcs, 1, "should have single rc")
+
+	expectedKubeRC := kubeRC
+	testClearTypeInfo(expectedKubeRC)
+	expectedKubeRC.Labels = selector
+	expected, err := entity.NewReplicationController(expectedKubeRC, kube.ObjectMeta{}, rcFile)
+
+	actual := rcs[0]
+	assert.Equal(t, expected.Source(), actual.Source(), "spurces should match")
+	assert.Equal(t, expected.DefaultMeta(), actual.DefaultMeta())
+	assert.Equal(t, expected.Images(), actual.Images())
+
+	expectedDeploy, err := expected.Deployment()
+	assert.NoError(t, err)
+	actualDeploy, err := actual.Deployment()
+	assert.NoError(t, err)
+
+	if !assert.True(t, expectedDeploy.Equal(actualDeploy)) {
+		t.Log(expectedDeploy.Diff(actualDeploy))
+	}
+}
+
+func testWriteYAMLToFile(t *testing.T, filename string, typ interface{}) {
+	jsonBytes, err := yaml.Marshal(typ)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +260,7 @@ func testTempDir(t *testing.T) string {
 func createSecret(name string) *kube.Secret {
 	return &kube.Secret{
 		ObjectMeta: kube.ObjectMeta{Name: name},
-		TypeMeta:   unversioned.TypeMeta{Kind: "ReplicationController", APIVersion: "v1"},
+		TypeMeta:   unversioned.TypeMeta{Kind: "Secret", APIVersion: "v1"},
 
 		Type: kube.SecretTypeOpaque,
 		Data: map[string][]byte{randomString(10): []byte(randomString(80))},
@@ -170,4 +296,8 @@ func randomString(strlen int) string {
 		result[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+func testClearTypeInfo(obj deploy.KubeObject) {
+	obj.GetObjectKind().SetGroupVersionKind(nil)
 }

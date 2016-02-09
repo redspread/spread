@@ -97,6 +97,11 @@ func (fs fileSource) getRCs() (rcs []entity.Entity, err error) {
 		rcs = append(rcs, rc)
 		return nil
 	})
+
+	if checkErrPathDoesNotExist(err) {
+		// it's okay if directory doesn't exit
+		err = nil
+	}
 	return
 }
 
@@ -118,6 +123,11 @@ func (fs fileSource) getPods() (pods []entity.Entity, err error) {
 		pods = append(pods, pod)
 		return nil
 	})
+
+	if checkErrPathDoesNotExist(err) {
+		// it's okay if directory doesn't exit
+		err = nil
+	}
 	return
 }
 
@@ -156,12 +166,21 @@ func walkPathForObjects(path string, fn resource.VisitorFunc) error {
 }
 
 func checkErrNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
 	return strings.HasPrefix(err.Error(), "you must provide one or more resources")
+}
+
+func checkErrPathDoesNotExist(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.HasSuffix(err.Error(), " does not exist")
 }
 
 var (
 	// ErrInvalidType is returned when the entity.Type is unknown
-	ErrInvalidType        = errors.New("passed invalid type")
-	ErrTypeMismatch       = errors.New("was expecting a KubeObject")
-	ErrEntityPathNotFound = errors.New("the path being searched doesn't exist")
+	ErrInvalidType  = errors.New("passed invalid type")
+	ErrTypeMismatch = errors.New("was expecting a KubeObject")
 )
