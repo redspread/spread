@@ -104,6 +104,18 @@ func TestSourceObjectsKubeDir(t *testing.T) {
 	}
 }
 
+// TODO: Add tests for entities in wrong folders
+
+func TestSourceInvalidEntity(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	// create an invalid entity.Type
+	invalidEntityType := entity.Type(42)
+	_, err := fs.Entities(invalidEntityType)
+	assert.EqualError(t, err, ErrInvalidType.Error(), "should error for invalid entity types")
+}
+
 func TestSourceEntitiesNoFile(t *testing.T) {
 	fs := testTempFileSource(t)
 	defer os.RemoveAll(string(fs))
@@ -132,8 +144,6 @@ func TestSourceEntitiesEmptyFile(t *testing.T) {
 	entityFiles := []string{
 		path.Join(string(fs), RCFile),
 		path.Join(string(fs), PodFile),
-		path.Join(string(fs), "cassandra."+ContainerExtension),
-		path.Join(string(fs), "app."+ContainerExtension),
 	}
 
 	// create files
@@ -280,6 +290,50 @@ func TestSourcePods(t *testing.T) {
 	testCompareEntity(t, expected, actual)
 }
 
+func TestSourceContainersDir(t *testing.T) {
+	fs := testTempFileSource(t)
+	defer os.RemoveAll(string(fs))
+
+	expected := []*entity.Container{}
+
+	for i := 0; i < 15+rand.Intn(100); i++ {
+		name := randomString(8)
+
+		kubeContainer := kube.Container{
+			Name:            name,
+			Image:           randomString(6),
+			ImagePullPolicy: kube.PullAlways,
+		}
+		filename := path.Join(string(fs), name+ContainerExtension)
+
+		container, err := entity.NewContainer(kubeContainer, kube.ObjectMeta{}, filename)
+		assert.NoError(t, err)
+
+		expected = append(expected, container)
+
+		testWriteYAMLToFile(t, filename, &kubeContainer)
+	}
+
+	actual, err := fs.Entities(entity.EntityContainer)
+	assert.NoError(t, err, "should be okay")
+	assert.Len(t, actual, len(expected), "should have same number of containers as start")
+
+	for _, expectedContainer := range expected {
+		found := false
+		for _, actualContainer := range actual {
+			if expectedContainer.Source() == actualContainer.Source() {
+				found = testCompareEntity(t, expectedContainer, actualContainer)
+				if found {
+					break
+				}
+			}
+		}
+		assert.True(t, found, "should have found container")
+	}
+}
+
+// TODO: Add test for file
+
 func testWriteYAMLToFile(t *testing.T, filename string, typ interface{}) {
 	jsonBytes, err := yaml.Marshal(typ)
 	if err != nil {
@@ -354,7 +408,7 @@ func testClearTypeInfo(obj deploy.KubeObject) {
 	obj.GetObjectKind().SetGroupVersionKind(nil)
 }
 
-func testCompareEntity(t *testing.T, expected, actual entity.Entity) {
+func testCompareEntity(t *testing.T, expected, actual entity.Entity) bool {
 	assert.Equal(t, expected.Source(), actual.Source(), "spurces should match")
 	assert.Equal(t, expected.DefaultMeta(), actual.DefaultMeta())
 	assert.Equal(t, expected.Images(), actual.Images())
@@ -366,5 +420,7 @@ func testCompareEntity(t *testing.T, expected, actual entity.Entity) {
 
 	if !assert.True(t, expectedDeploy.Equal(actualDeploy)) {
 		t.Log(expectedDeploy.Diff(actualDeploy))
+		return false
 	}
+	return true
 }

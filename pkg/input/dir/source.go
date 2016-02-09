@@ -3,13 +3,16 @@ package dir
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/entity"
 
+	"github.com/ghodss/yaml"
 	kube "k8s.io/kubernetes/pkg/api"
 	kubectl "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"k8s.io/kubernetes/pkg/kubectl/resource"
@@ -132,8 +135,58 @@ func (fs FileSource) pods() (pods []entity.Entity, err error) {
 }
 
 // containers creates entities from files with the ContainerExtension
-func (fs FileSource) containers() ([]entity.Entity, error) {
-	return []entity.Entity{}, nil
+func (fs FileSource) containers() (containers []entity.Entity, err error) {
+	info, err := os.Stat(string(fs))
+	if err != nil {
+		return
+	}
+
+	// check if file
+	if !info.IsDir() {
+		kubeCtr, err := unmarshalContainer(string(fs))
+		if err != nil {
+			return nil, err
+		}
+
+		ctr, err := entity.NewContainer(kubeCtr, kube.ObjectMeta{}, string(fs))
+		if err != nil {
+			return nil, err
+		}
+
+		return []entity.Entity{ctr}, nil
+	}
+
+	dir, err := os.Open(string(fs))
+	if err != nil {
+		return
+	}
+	defer dir.Close()
+
+	files, err := dir.Readdir(-1)
+	if err != nil {
+		return
+	}
+
+	for _, file := range files {
+		if file.Mode().IsRegular() {
+			if filepath.Ext(file.Name()) == ContainerExtension {
+				filename := path.Join(string(fs), file.Name())
+
+				kubeCtr, err := unmarshalContainer(filename)
+				if err != nil {
+					return nil, err
+				}
+
+				ctr, err := entity.NewContainer(kubeCtr, kube.ObjectMeta{}, filename)
+				if err != nil {
+					return nil, err
+				}
+
+				containers = append(containers, ctr)
+			}
+		}
+	}
+	return containers, nil
 }
 
 func walkPathForObjects(path string, fn resource.VisitorFunc) error {
@@ -163,6 +216,16 @@ func walkPathForObjects(path string, fn resource.VisitorFunc) error {
 		return err
 	}
 	return nil
+}
+
+func unmarshalContainer(path string) (ctr kube.Container, err error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return
+	}
+
+	err = yaml.Unmarshal(data, &ctr)
+	return
 }
 
 func checkErrNotFound(err error) bool {
