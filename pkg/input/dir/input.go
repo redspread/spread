@@ -25,7 +25,7 @@ func NewFileInput(path string) (*fileInput, error) {
 	}, nil
 }
 
-// Build creates an Entity by merging by multiple entity types together.
+// Build creates an Entity by selecting the entity with the lowest type number and attaching higher objects recursively
 func (d *fileInput) Build() (entity.Entity, error) {
 	base, err := d.base()
 	if err != nil {
@@ -63,7 +63,7 @@ func (d *fileInput) base() (entity.Entity, error) {
 		return nil, err
 	} else if len(pods) > 1 {
 		return nil, ErrTooManyPods
-	} else if len(rcs) == 1 {
+	} else if len(pods) == 1 {
 		return pods[0], nil
 	}
 

@@ -34,7 +34,7 @@ func (c containers) Less(i, j int) bool {
 // Pod represents kube.Pod in the Redspread hierarchy.
 type Pod struct {
 	base
-	pod        *kube.Pod
+	pod *kube.Pod
 	containers
 }
 

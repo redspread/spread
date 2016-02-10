@@ -188,5 +188,4 @@ var (
 	ErrorMaxAttached = errors.New("no more entities can be attached")
 	// ErrorNilEntity is when an entity is nil
 	ErrorNilEntity = errors.New("entities cannot be nil")
-
 )
