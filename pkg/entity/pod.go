@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"sort"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
@@ -16,11 +17,25 @@ var DefaultPodSpec = kube.PodSpec{
 	DNSPolicy:     kube.DNSDefault,
 }
 
+type containers []*Container
+
+func (c containers) Len() int {
+	return len(c)
+}
+
+func (c containers) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c containers) Less(i, j int) bool {
+	return c[i].name() < c[j].name()
+}
+
 // Pod represents kube.Pod in the Redspread hierarchy.
 type Pod struct {
 	base
 	pod        *kube.Pod
-	containers []*Container
+	containers
 }
 
 // NewPod creates a Entity for a corresponding *kube.Pod. Pod must be valid.
@@ -54,6 +69,8 @@ func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects 
 	if err := validatePod(kubePod, true); err != nil {
 		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
 	}
+
+	sort.Sort(pod.containers)
 
 	pod.pod = kubePod
 	return &pod, nil
@@ -126,6 +143,7 @@ func (c *Pod) Attach(curEntity Entity) error {
 			break
 		case *Container:
 			c.containers = append(c.containers, e)
+			sort.Sort(c.containers)
 			return nil
 		default:
 			panic("Unexpected type")

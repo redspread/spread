@@ -370,9 +370,9 @@ func createSecret(name string) *kube.Secret {
 }
 
 // testRandomObjects returns a slice of randomly generated objects. If it is called with an object
-// count of 0, a random number of slices (with an upper bound of 100) will be generated.
+// count of < 0 a random number of slices (with an upper bound of 100) will be generated.
 func testRandomObjects(num int) (objects []deploy.KubeObject) {
-	if num == 0 {
+	if num < 0 {
 		num = rand.Intn(100)
 	}
 
@@ -407,7 +407,20 @@ func testClearTypeInfo(obj deploy.KubeObject) {
 func testCompareEntity(t *testing.T, expected, actual entity.Entity) bool {
 	assert.Equal(t, expected.Source(), actual.Source(), "spurces should match")
 	assert.Equal(t, expected.DefaultMeta(), actual.DefaultMeta())
-	assert.Equal(t, expected.Images(), actual.Images())
+
+	actualImages := actual.Images()
+	expectedImages := expected.Images()
+	assert.Len(t, actualImages, len(expectedImages))
+	for _, expectImage := range expectedImages {
+		found := false
+		for _, actualImage := range actualImages {
+			found = expectImage.Equal(actualImage)
+			if found {
+				break
+			}
+		}
+		assert.True(t, found, "should have found image")
+	}
 
 	expectedDeploy, err := expected.Deployment()
 	assert.NoError(t, err)
