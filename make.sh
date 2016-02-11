@@ -8,7 +8,7 @@ rm -rf $GOPATH
 mkdir -p $GOPATH/src/rsprd.com
 
 # link source to GOPATH
-ln -sf $(pwd) $GOPATH/src/rsprd.com
+cp -r pkg,cmd,cli $GOPATH/src/rsprd.com/spread/
 
 # Copy in dependencies to get around Kube import check
 cp -r ./vendor/* $GOPATH/src
