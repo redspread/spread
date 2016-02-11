@@ -1,4 +1,4 @@
-![logo](../public/images/Redspread_Logo.png)
+<img src="https://redspread.com/images/logo.svg" alt="logo" width= "200"/>
 
 [![release](https://img.shields.io/badge/release-v0.0.1-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]()
 
