@@ -1,4 +1,4 @@
-![logo](../public/images/Redspread_Logo.png)
+<img src="https://redspread.com/images/logo.svg" alt="logo" width= "200"/>
 
 [![release](https://img.shields.io/badge/release-v0.0.1-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]()
 
@@ -10,7 +10,7 @@
 
 **spread is the fastest, simplest way to deploy Docker projects to Kubernetes clusters.** 
 
-spread is a versioned container deployment workflow. It is under open, active development. New features will be added every two weeks over the next few months - explore our roadmap to see what will be built next and send us pull requests for any features you’d like to see added. 
+spread is a versioned container deployment workflow. It is under open, active development. New features will be added every two weeks over the next few months - explore our <a href="https://github.com/redspread/spread/blob/master/roadmap">roadmap</a> to see what will be built next and send us pull requests for any features you’d like to see added. 
 
 The first feature is `spread deploy`, which enables users to deploy Docker to Kubernetes in one command. 
 
@@ -62,7 +62,7 @@ type: kubernetes.io/dockercfg</code></pre>
 * `spread log`: returns logs for any pod, automatic trying until logs are accessible
 * `spread build`: builds Docker context and pushes to a local Kubernetes cluster
 
-See more of our roadmap here!
+See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap">roadmap</a> here!
 
 ###Contributing
 
