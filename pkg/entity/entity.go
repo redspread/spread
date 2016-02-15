@@ -88,6 +88,9 @@ func (base base) Type() Type {
 // validAttach checks object types to see if the attach is allowed. Objects can
 // only be attached to objects higher in the hierarchy. However, to the nature of iota Application is 0, RC is 1, ...
 func (base base) validAttach(e Entity) error {
+	if e == nil {
+		return ErrorNilEntity
+	}
 	if e.Type() > EntityImage {
 		return ErrorInvalidAttachType
 	} else if base.Type() > e.Type() {

@@ -80,14 +80,22 @@ func (d *fileInput) buildEntity(parent entity.Entity) error {
 		return nil
 	}
 
+	childTypeNum := int(parent.Type()) + 1
+
 	// increment type number
-	for typNum := int(parent.Type()) + 1; typNum <= int(entity.EntityImage); typNum++ {
+	for typNum := childTypeNum; typNum <= int(entity.EntityImage); typNum++ {
 		typ := entity.Type(typNum)
 		entities, err := d.Entities(typ)
 		if err != nil {
 			return err
 		}
 
+		// if none, check next Entity type
+		if len(entities) == 0 {
+			continue
+		}
+
+		// attach any Entities matching type
 		for _, e := range entities {
 			err = parent.Attach(e)
 			if err != nil {
@@ -99,6 +107,9 @@ func (d *fileInput) buildEntity(parent entity.Entity) error {
 				return err
 			}
 		}
+
+		// stop on Entity attach
+		return nil
 	}
 	return nil
 }

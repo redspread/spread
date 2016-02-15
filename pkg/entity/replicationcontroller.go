@@ -177,5 +177,13 @@ func validateRC(rc *kube.ReplicationController) error {
 			return e.Error() == "spec.template: Required value"
 		},
 	)
+
+	meta := rc.GetObjectMeta()
+	if len(meta.GetName()) == 0 && len(meta.GetGenerateName()) > 0 {
+		errList = errList.Filter(func(e error) bool {
+			return e.Error() == "metadata.name: Required value: name or generateName is required"
+		})
+	}
+
 	return errList.ToAggregate()
 }

@@ -22,23 +22,21 @@ func TestInputContainersOnly(t *testing.T) {
 	expected, err := entity.NewDefaultPod(kube.ObjectMeta{GenerateName: "spread"}, input.Path(), objects...)
 	assert.NoError(t, err)
 
-	for i := 0; i < 10; i++ {
-		name := randomString(8)
+	numCtrs := 10
+	testWriteAndAttachRandomContainers(t, numCtrs, input.Path(), expected)
 
-		kubeContainer := kube.Container{
-			Name:            name,
-			Image:           randomString(6),
-			ImagePullPolicy: kube.PullAlways,
+	dep, err := expected.Deployment()
+	assert.NoError(t, err)
+
+	found := false
+	for _, obj := range dep.Objects() {
+		switch pod := obj.(type) {
+		case *kube.Pod:
+			found = true
+			assert.Len(t, pod.Spec.Containers, numCtrs, "should have same number of containers as created")
 		}
-		filename := path.Join(input.Path(), name+ContainerExtension)
-
-		container, err := entity.NewContainer(kubeContainer, kube.ObjectMeta{}, filename)
-		assert.NoError(t, err)
-
-		testWriteYAMLToFile(t, filename, &kubeContainer)
-
-		assert.NoError(t, expected.Attach(container), "should be able to attach container to pod")
 	}
+	assert.True(t, found, "should of found a pod")
 
 	actual, err := input.Build()
 	assert.NoError(t, err, "should have built entity successfully")
@@ -50,31 +48,7 @@ func TestInputPodwithContainers(t *testing.T) {
 	input := testTempFileInput(t)
 	defer os.RemoveAll(input.Path())
 
-	terminationPeriod := int64(30)
-	kubePod := &kube.Pod{
-		ObjectMeta: kube.ObjectMeta{
-			GenerateName: "spread",
-			Namespace:    kube.NamespaceDefault,
-		},
-		TypeMeta: unversioned.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		Spec: kube.PodSpec{
-			Containers: []kube.Container{
-				kube.Container{
-					Name:                   "wiki",
-					Image:                  "mediawiki",
-					ImagePullPolicy:        kube.PullAlways,
-					TerminationMessagePath: kube.TerminationMessagePathDefault,
-				},
-			},
-			RestartPolicy:                 kube.RestartPolicyAlways,
-			DNSPolicy:                     kube.DNSDefault,
-			TerminationGracePeriodSeconds: &terminationPeriod,
-			SecurityContext:               &kube.PodSecurityContext{},
-		},
-	}
+	kubePod := testKubePod()
 
 	podFile := path.Join(input.Path(), PodFile)
 	testWriteYAMLToFile(t, podFile, kubePod)
@@ -86,24 +60,51 @@ func TestInputPodwithContainers(t *testing.T) {
 	expected, err := entity.NewPod(kubePod, kube.ObjectMeta{}, podFile, objects...)
 	assert.NoError(t, err)
 
-	for i := 0; i < 10; i++ {
-		name := randomString(8)
+	testWriteAndAttachRandomContainers(t, 10, input.Path(), expected)
 
-		kubeContainer := kube.Container{
-			Name:                   name,
-			Image:                  randomString(6),
-			ImagePullPolicy:        kube.PullAlways,
-			TerminationMessagePath: kube.TerminationMessagePathDefault,
-		}
-		filename := path.Join(input.Path(), name+ContainerExtension)
+	actual, err := input.Build()
+	assert.NoError(t, err, "should have built entity successfully")
 
-		container, err := entity.NewContainer(kubeContainer, kube.ObjectMeta{}, filename)
-		assert.NoError(t, err)
+	testCompareEntity(t, expected, actual)
+}
 
-		testWriteYAMLToFile(t, filename, &kubeContainer)
+func TestInputRCWithPodWithContainers(t *testing.T) {
+	input := testTempFileInput(t)
+	defer os.RemoveAll(input.Path())
 
-		assert.NoError(t, expected.Attach(container), "should be able to attach container to pod")
+	// setup pod
+	kubePod := testKubePod()
+	podFile := path.Join(input.Path(), PodFile)
+	testWriteYAMLToFile(t, podFile, kubePod)
+	testClearTypeInfo(kubePod)
+	pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, podFile)
+	assert.NoError(t, err)
+	testWriteAndAttachRandomContainers(t, 10, input.Path(), pod)
+
+	// setup rc
+	objects := testWriteRandomObjects(t, input.Path(), 5)
+	kubeRC := &kube.ReplicationController{
+		ObjectMeta: kube.ObjectMeta{
+			GenerateName: "spread",
+			Namespace:    kube.NamespaceDefault,
+		},
+		TypeMeta: unversioned.TypeMeta{
+			Kind:       "ReplicationController",
+			APIVersion: "v1",
+		},
+		Spec: kube.ReplicationControllerSpec{
+			Selector: map[string]string{"valid": "selector"},
+		},
 	}
+	rcFile := path.Join(input.Path(), RCFile)
+	testWriteYAMLToFile(t, rcFile, kubeRC)
+	testClearTypeInfo(kubeRC)
+	expected, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, rcFile, objects...)
+	assert.NoError(t, err)
+
+	// attach pod to rc
+	err = expected.Attach(pod)
+	assert.NoError(t, err)
 
 	actual, err := input.Build()
 	assert.NoError(t, err, "should have built entity successfully")
@@ -140,4 +141,53 @@ func testWriteRandomObjects(t *testing.T, dir string, count int) []deploy.KubeOb
 	}
 
 	return objects
+}
+
+func testKubePod() *kube.Pod {
+	terminationPeriod := int64(30)
+	return &kube.Pod{
+		ObjectMeta: kube.ObjectMeta{
+			GenerateName: "spread",
+			Namespace:    kube.NamespaceDefault,
+		},
+		TypeMeta: unversioned.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Spec: kube.PodSpec{
+			Containers: []kube.Container{
+				kube.Container{
+					Name:                   "wiki",
+					Image:                  "mediawiki",
+					ImagePullPolicy:        kube.PullAlways,
+					TerminationMessagePath: kube.TerminationMessagePathDefault,
+				},
+			},
+			RestartPolicy:                 kube.RestartPolicyAlways,
+			DNSPolicy:                     kube.DNSDefault,
+			TerminationGracePeriodSeconds: &terminationPeriod,
+			SecurityContext:               &kube.PodSecurityContext{},
+		},
+	}
+}
+
+func testWriteAndAttachRandomContainers(t *testing.T, num int, dir string, parent entity.Entity) {
+	for i := 0; i < num; i++ {
+		name := randomString(8)
+
+		kubeContainer := kube.Container{
+			Name:                   name,
+			Image:                  randomString(6),
+			ImagePullPolicy:        kube.PullAlways,
+			TerminationMessagePath: kube.TerminationMessagePathDefault,
+		}
+		filename := path.Join(dir, name+ContainerExtension)
+
+		container, err := entity.NewContainer(kubeContainer, kube.ObjectMeta{}, filename)
+		assert.NoError(t, err)
+
+		testWriteYAMLToFile(t, filename, &kubeContainer)
+
+		assert.NoError(t, parent.Attach(container), "should be able to attach container to pod")
+	}
 }
