@@ -79,7 +79,7 @@ func (fs FileSource) Objects() (objects []deploy.KubeObject, err error) {
 	})
 
 	// don't throw error if simply didn't find anything
-	if err != nil && !checkErrNotFound(err) && !checkErrPathDoesNotExist(err) {
+	if err != nil && !checkErrNoResources(err) && !checkErrPathDoesNotExist(err) {
 		return nil, err
 	}
 	return objects, nil
@@ -210,7 +210,7 @@ func walkPathForObjects(path string, fn resource.VisitorFunc) error {
 		Do()
 
 	err = result.Err()
-	if err != nil && !checkErrNotFound(err) {
+	if err != nil && !checkErrNoResources(err) {
 		return err
 	}
 
@@ -231,7 +231,7 @@ func unmarshalContainer(path string) (ctr kube.Container, err error) {
 	return
 }
 
-func checkErrNotFound(err error) bool {
+func checkErrNoResources(err error) bool {
 	if err == nil {
 		return false
 	}

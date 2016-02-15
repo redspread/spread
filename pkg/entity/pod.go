@@ -17,25 +17,11 @@ var DefaultPodSpec = kube.PodSpec{
 	DNSPolicy:     kube.DNSDefault,
 }
 
-type containers []*Container
-
-func (c containers) Len() int {
-	return len(c)
-}
-
-func (c containers) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
-}
-
-func (c containers) Less(i, j int) bool {
-	return c[i].name() < c[j].name()
-}
-
 // Pod represents kube.Pod in the Redspread hierarchy.
 type Pod struct {
 	base
-	pod *kube.Pod
-	containers
+	pod        *kube.Pod
+	containers containers
 }
 
 // NewPod creates a Entity for a corresponding *kube.Pod. Pod must be valid.
@@ -125,13 +111,10 @@ func (c *Pod) Images() (images []*image.Image) {
 
 // Attach appends Images and Containers.
 func (c *Pod) Attach(curEntity Entity) error {
-	if curEntity == nil {
-		return ErrorNilEntity
-	}
-
 	if err := c.validAttach(curEntity); err != nil {
 		return err
 	}
+
 	for {
 		switch e := curEntity.(type) {
 		case *Image:
@@ -190,6 +173,21 @@ func (c *Pod) data() (pod *kube.Pod, objects deploy.Deployment, err error) {
 
 	pod.Spec.Containers = containers
 	return pod, objects, nil
+}
+
+// containers implements sort.Interface
+type containers []*Container
+
+func (c containers) Len() int {
+	return len(c)
+}
+
+func (c containers) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c containers) Less(i, j int) bool {
+	return c[i].name() < c[j].name()
 }
 
 func copyPod(pod *kube.Pod) (*kube.Pod, error) {
