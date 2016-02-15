@@ -32,6 +32,9 @@ const (
 	ObjectsDir = ".k2e"
 )
 
+// FileSource provides access to Entities stored according to the Redspread file convention.
+// Under this convention RC's are looked for in RCFile, Pods are looked for in PodFile, and anything with the extension
+// ContainerExtension is considered a container.
 type FileSource string
 
 // NewFileSource returns a source for the path to a file or directory. Path must be valid.

@@ -9,24 +9,25 @@ import (
 	kube "k8s.io/kubernetes/pkg/api"
 )
 
-type fileInput struct {
+// FileInput produces Entities from objects stored at a given path of the filesystem using the Redspread convention.
+type FileInput struct {
 	FileSource
 }
 
 // NewFileInput returns an Input based on a file system
-func NewFileInput(path string) (*fileInput, error) {
+func NewFileInput(path string) (*FileInput, error) {
 	src, err := NewFileSource(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return &fileInput{
+	return &FileInput{
 		FileSource: src,
 	}, nil
 }
 
 // Build creates an Entity by selecting the entity with the lowest type number and attaching higher objects recursively
-func (d *fileInput) Build() (entity.Entity, error) {
+func (d *FileInput) Build() (entity.Entity, error) {
 	base, err := d.base()
 	if err != nil {
 		return nil, err
@@ -37,11 +38,11 @@ func (d *fileInput) Build() (entity.Entity, error) {
 }
 
 // Path returns the location the fileInput was created
-func (d fileInput) Path() string {
+func (d FileInput) Path() string {
 	return string(d.FileSource)
 }
 
-func (d *fileInput) base() (entity.Entity, error) {
+func (d *FileInput) base() (entity.Entity, error) {
 	objects, err := d.Objects()
 	if err != nil {
 		return nil, err
@@ -70,7 +71,7 @@ func (d *fileInput) base() (entity.Entity, error) {
 	return entity.NewDefaultPod(kube.ObjectMeta{GenerateName: "spread"}, string(d.FileSource), objects...)
 }
 
-func (d *fileInput) buildEntity(parent entity.Entity) error {
+func (d *FileInput) buildEntity(parent entity.Entity) error {
 	if parent == nil {
 		return errors.New("parent can't be nil")
 	}

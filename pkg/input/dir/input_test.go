@@ -112,7 +112,7 @@ func TestInputRCWithPodWithContainers(t *testing.T) {
 	testCompareEntity(t, expected, actual)
 }
 
-func testTempFileInput(t *testing.T) *fileInput {
+func testTempFileInput(t *testing.T) *FileInput {
 	dir := testTempDir(t)
 	input, err := NewFileInput(dir)
 	if err != nil {

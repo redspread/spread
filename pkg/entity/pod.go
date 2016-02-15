@@ -85,6 +85,8 @@ func NewPodFromPodSpec(meta kube.ObjectMeta, podSpec kube.PodSpec, defaults kube
 	return NewPod(&pod, defaults, source, objects...)
 }
 
+// NewDefaultPod creates a Pod using spreads defaults without any containers attached. Containers must be attached
+// before this Pod can be deployed.
 func NewDefaultPod(meta kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
 	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source, objects...)
 }
