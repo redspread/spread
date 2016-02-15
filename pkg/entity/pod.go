@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"sort"
 
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/image"
@@ -20,7 +21,7 @@ var DefaultPodSpec = kube.PodSpec{
 type Pod struct {
 	base
 	pod        *kube.Pod
-	containers []*Container
+	containers containers
 }
 
 // NewPod creates a Entity for a corresponding *kube.Pod. Pod must be valid.
@@ -55,6 +56,8 @@ func NewPod(kubePod *kube.Pod, defaults kube.ObjectMeta, source string, objects 
 		return nil, fmt.Errorf("could not create Pod from `%s`: %v", source, err)
 	}
 
+	sort.Sort(pod.containers)
+
 	pod.pod = kubePod
 	return &pod, nil
 }
@@ -68,8 +71,10 @@ func NewPodFromPodSpec(meta kube.ObjectMeta, podSpec kube.PodSpec, defaults kube
 	return NewPod(&pod, defaults, source, objects...)
 }
 
-func newDefaultPod(meta kube.ObjectMeta, source string) (*Pod, error) {
-	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source)
+// NewDefaultPod creates a Pod using spreads defaults without any containers attached. Containers must be attached
+// before this Pod can be deployed.
+func NewDefaultPod(meta kube.ObjectMeta, source string, objects ...deploy.KubeObject) (*Pod, error) {
+	return NewPodFromPodSpec(meta, DefaultPodSpec, kube.ObjectMeta{}, source, objects...)
 }
 
 // Deployment is created containing Pod with attached Containers.
@@ -109,6 +114,7 @@ func (c *Pod) Attach(curEntity Entity) error {
 	if err := c.validAttach(curEntity); err != nil {
 		return err
 	}
+
 	for {
 		switch e := curEntity.(type) {
 		case *Image:
@@ -122,6 +128,7 @@ func (c *Pod) Attach(curEntity Entity) error {
 			break
 		case *Container:
 			c.containers = append(c.containers, e)
+			sort.Sort(c.containers)
 			return nil
 		default:
 			panic("Unexpected type")
@@ -168,6 +175,21 @@ func (c *Pod) data() (pod *kube.Pod, objects deploy.Deployment, err error) {
 	return pod, objects, nil
 }
 
+// containers implements sort.Interface
+type containers []*Container
+
+func (c containers) Len() int {
+	return len(c)
+}
+
+func (c containers) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c containers) Less(i, j int) bool {
+	return c[i].name() < c[j].name()
+}
+
 func copyPod(pod *kube.Pod) (*kube.Pod, error) {
 	copy, err := kube.Scheme.DeepCopy(pod)
 	if err != nil {
@@ -198,7 +220,7 @@ func validatePod(pod *kube.Pod, ignoreContainers bool) error {
 }
 
 func deployWithPod(meta kube.ObjectMeta, attached Entity) (*deploy.Deployment, error) {
-	pod, err := newDefaultPod(meta, attached.Source())
+	pod, err := NewDefaultPod(meta, attached.Source())
 	if err != nil {
 		return nil, err
 	}

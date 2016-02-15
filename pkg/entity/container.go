@@ -81,12 +81,12 @@ func (c *Container) Images() []*image.Image {
 
 // Attach is only possible for images.
 func (c *Container) Attach(e Entity) error {
-	if c.image != nil {
-		return ErrorMaxAttached
-	}
-
 	if err := c.validAttach(e); err != nil {
 		return err
+	}
+
+	if c.image != nil {
+		return ErrorMaxAttached
 	}
 
 	// entity must be image

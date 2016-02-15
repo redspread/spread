@@ -88,21 +88,25 @@ func (c *ReplicationController) Images() (images []*image.Image) {
 
 // Attach allows Pods, Containers, and Images to be attached.
 func (c *ReplicationController) Attach(e Entity) error {
-	if c.pod != nil {
-		return ErrorMaxAttached
-	}
-
 	if err := c.validAttach(e); err != nil {
 		return err
 	}
 
 	switch e := e.(type) {
 	case *Pod:
+		if c.pod != nil {
+			return ErrorMaxAttached
+		}
+
 		c.pod = e
 		return nil
 	default:
+		if c.pod != nil {
+			return c.pod.Attach(e)
+		}
+
 		meta := kube.ObjectMeta{Name: e.name()}
-		pod, err := newDefaultPod(meta, e.Source())
+		pod, err := NewDefaultPod(meta, e.Source())
 		if err != nil {
 			return err
 		}
@@ -169,5 +173,13 @@ func validateRC(rc *kube.ReplicationController) error {
 			return e.Error() == "spec.template: Required value"
 		},
 	)
+
+	meta := rc.GetObjectMeta()
+	if len(meta.GetName()) == 0 && len(meta.GetGenerateName()) > 0 {
+		errList = errList.Filter(func(e error) bool {
+			return e.Error() == "metadata.name: Required value: name or generateName is required"
+		})
+	}
+
 	return errList.ToAggregate()
 }

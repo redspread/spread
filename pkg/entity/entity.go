@@ -88,6 +88,9 @@ func (base base) Type() Type {
 // validAttach checks object types to see if the attach is allowed. Objects can
 // only be attached to objects higher in the hierarchy. However, to the nature of iota Application is 0, RC is 1, ...
 func (base base) validAttach(e Entity) error {
+	if e == nil {
+		return ErrorNilEntity
+	}
 	if e.Type() > EntityImage {
 		return ErrorInvalidAttachType
 	} else if base.Type() > e.Type() {
@@ -116,6 +119,24 @@ const (
 	// EntityImage is for Image
 	EntityImage
 )
+
+// String prints the name of the type
+func (t Type) String() string {
+	switch t {
+	case EntityApplication:
+		return "Application"
+	case EntityReplicationController:
+		return "ReplicationController"
+	case EntityPod:
+		return "Pod"
+	case EntityContainer:
+		return "Container"
+	case EntityImage:
+		return "Image"
+	default:
+		return ""
+	}
+}
 
 // metaDefaults applies a set of defaults on a KubeObject. Non-empty fields on object override defaults.
 func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
@@ -168,4 +189,6 @@ var (
 	ErrorBadAttachOrder = errors.New("entities cannot attach to entities of a lower type")
 	// ErrorMaxAttached is when an Entity cannot support more Entities attaching
 	ErrorMaxAttached = errors.New("no more entities can be attached")
+	// ErrorNilEntity is when an entity is nil
+	ErrorNilEntity = errors.New("entities cannot be nil")
 )

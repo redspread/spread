@@ -238,8 +238,8 @@ func testCreateKubePodSourcegraph(name string) *kube.Pod {
 				},
 			},
 			Containers: []kube.Container{
-				testKubeContainerSourcegraph,
 				testKubeContainerPostgres,
+				testKubeContainerSourcegraph,
 			},
 		},
 	}

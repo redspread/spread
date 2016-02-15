@@ -56,6 +56,32 @@ func (i Image) PushOptions(out io.Writer, json bool) docker.PushImageOptions {
 	return opts
 }
 
+// Equal returns if one image is the same as another
+func (i *Image) Equal(other *Image) bool {
+	if other == nil {
+		return false
+	}
+
+	if i.tag != other.tag {
+		return false
+	}
+
+	if i.image.String() != other.image.String() {
+		return false
+	}
+
+	if i.Build == nil && other.Build != nil {
+		return false
+	}
+
+	if i.Build != nil {
+		if !i.Build.Equal(other.Build) {
+			return false
+		}
+	}
+	return true
+}
+
 // FromString creates an Image using a string representation
 func FromString(str string) (*Image, error) {
 	named, err := reference.ParseNamed(str)
