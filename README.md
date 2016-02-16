@@ -1,32 +1,61 @@
-<img src="https://redspread.com/images/logo.svg" alt="logo" width= "200"/>
+<center><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/>
 
-[![release](https://img.shields.io/badge/release-v0.0.1-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]()
+[![Build Status](https://travis-ci.org/redspread/spread.svg?branch=master)](https://travis-ci.org/redspread/spread) [![release](https://img.shields.io/badge/release-v0.0.1-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]() [![](https://godoc.org/rsprd.com/spread?status.svg)](http://godoc.org/rsprd.com/spread)</center>
+
+<center>[Website](https://redspread.com) | [Slack](http://redspread.slack.com) | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></center>
+
+#Docker to Kubernetes in one command
+
+`spread` is a command line tool that builds and deploys a [Docker](docker/docker) project to a [Kubernetes](kubernetes/kubernetes) cluster in one command. The project's goals are to:
+
+* Enable rapid iteration with Kubernetes
+* Be the fastest, simplest way to deploy Docker to production
+* Work well for a single developer or an entire team (no more broken bash scripts!)
 
 
+Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap) to see what will be built next and send us pull requests for any features you’d like to see added. 
 
-#spread: git for Docker deployment
+##What's been done so far
+ 
+* `spread deploy`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
+	* Reads context of directory and builds Kubernetes deployment hierarchy.
+	* Updates all Kubernetes objects on a Kubernetes cluster.
+	* Returns a public IP address, if type Load Balancer is specified. 
+* Established an implicit hierarchy of Kubernetes objects
+* Multi-container deployment
 
-###What is spread?
+##What's being worked on now
 
-**spread is the fastest, simplest way to deploy Docker projects to Kubernetes clusters.** 
+* Building functionality for `spread deploy` so it also builds any images indicated to be built and pushes those images to the indicated Docker registry.
+* `spread deploy -p`: Pushes all images to registry, even those not built by `spread deploy`.
+* Support for Linux and Windows
+* Inner-app linking
+* `spread logs`: Returns logs for any deployment, automatic trying until logs are accessible.
+* `spread build`: Builds Docker context and pushes to a local Kubernetes cluster.
+* `spread rewind`: Quickly rollback to a previous deployment.
 
-spread is a versioned container deployment workflow. It is under open, active development. New features will be added every two weeks over the next few months - explore our <a href="https://github.com/redspread/spread/blob/master/roadmap">roadmap</a> to see what will be built next and send us pull requests for any features you’d like to see added. 
+See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap">roadmap</a> here!
 
-The first feature is `spread deploy`, which enables users to deploy Docker to Kubernetes in one command. 
+##Future Goals
+* Develop workflow for container versioning (containers = image + config)
+* Introduce paramaterization for container configuration
 
-###Requirements
+##Requirements
+* Mac OS X
 * <a href="https://docs.docker.com/engine/installation/">docker</a>
 * <a href="https://docs.docker.com/machine/get-started/">docker-machine</a>
 * <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">Kubernetes cluster with kubectl installed</a>
 
-###Installation
+##Installation
 
 `$ brew tap redspread/homebrew-spread`  
 `$ brew install spread`
+	
+##FAQ
 
-###Directory Structure
+**How are clusters selected?** Remote clusters are selected from the current kubectl context. Later, we will add functionality to explicitly state kubectl arguments. 
 
-spread requires a specific project directory structure, as it builds from a hierarchy of entities:
+**How should I set up my directory?** Spread requires a specific project directory structure, as it builds from a hierarchy of entities:
 
 * `Dockerfile`
 * `*.ctr` - optional container file, there can be any number
@@ -34,13 +63,15 @@ spread requires a specific project directory structure, as it builds from a hier
 * `rc.yaml` - replication controller file, there can be only one per directory
 * `/.k2e` - holds arbitrary Kubernetes objects, such as services and secrets
 
-**Note:** The .ctr file is in .yaml format. Containers can still be placed in pods or replication controllers, but encouraging separate container files enables users to eventually reuse containers across an application.
+**What is the *.ctr file?** The .ctr file is the container struct usually found in the pod.yaml or rc.yaml. Containers can still be placed in pods or replication controllers, but we're encouraging separate container files because it enables users to eventually reuse containers across an application.
 
-###Hello World
+**Can I deploy a project with just a Dockerfile and *.ctr?** Yes. Spread implicitly infers the rest of the app hierarchy.
+
+##Hello World
 
 This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">running Kubernetes cluster</a> and <a href="https://docs.docker.com/machine/get-started/">docker-machine</a> installed.
 
-1. Install spread with `$ brew tap redspread/homebrew-spread` then `$ brew install spread` 
+1. Install Spread with `$ brew tap redspread/homebrew-spread` then `$ brew install spread` 
 2. Clone example project `$ git clone http://github.com/redspread/mvp-ex`
 3. Start a docker machine `$ docker machine start <name>` or <a href="https://docs.docker.com/machine/get-started/">create a new machine</a>
 4. Enter in your Docker registry configuration in the correct fields in .k2e/secret.yaml:
@@ -55,27 +86,18 @@ type: kubernetes.io/dockercfg</code></pre>
 5. Build and deploy your project to Kubernetes: `$ spread deploy`
 6. Grab the public IP and put it in your browser to see your website!
 
-###Roadmap
+##Contributing
 
-* `spread status`: prints information about the state of Kubernetes objects and other entities 
-* `spread debug`: returns info useful for debugging purposes
-* `spread log`: returns logs for any pod, automatic trying until logs are accessible
-* `spread build`: builds Docker context and pushes to a local Kubernetes cluster
+We'd love to see your contributions - please see the CONTRIBUTING file for guidelines on how to contribute.
 
-See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap">roadmap</a> here!
+##Reporting bugs
+If you haven't already, it's worth going through <a href="http://fantasai.inkedblade.net/style/talks/filing-good-bugs/">Elika Etemad's guide</a> for good bug reporting. In one sentence, good bug reports should be both *reproducible* and *specific*.
 
-###Contributing
-
-We'd love to see your contributions - please see CONTRIBUTING for guidelines on how to contribute.
-
-###Contact
-Founders: founders@redspread.com  
-Slack: redspread.slack.com  
+##Contact
+Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>   
+Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>  
 Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>  
 Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
 
-###Reporting bugs
-If you haven't already, it's worth going through <a href="http://fantasai.inkedblade.net/style/talks/filing-good-bugs/">Elika Etemad's guide</a> for good bug reporting.
-
-###License
-spread is under the Apache 2.0 license. See the LICENSE file for details.
+##License
+Spread is under the Apache 2.0 license. See the LICENSE file for details.
