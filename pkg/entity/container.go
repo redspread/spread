@@ -158,5 +158,6 @@ func validateContainer(c kube.Container) error {
 }
 
 var (
+	// ErrMissingImage is where the Container is being used in a context where it must be valid and doesn't have an Image.
 	ErrMissingImage = errors.New("container must have an image to be deployed")
 )
