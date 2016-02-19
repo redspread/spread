@@ -13,7 +13,9 @@
 * Work well for a single developer or an entire team (no more broken bash scripts!)
 
 
-Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added. 
+Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
+
+See our [philosophy](./philosophy.md) for more on our mission and values. 
 
 ##What's been done so far
  
