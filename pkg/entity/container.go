@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -106,7 +107,7 @@ func (c *Container) children() []Entity {
 
 func (c *Container) data() (container kube.Container, objects deploy.Deployment, err error) {
 	if c.image == nil {
-		return kube.Container{}, deploy.Deployment{}, ErrorEntityNotReady
+		return kube.Container{}, deploy.Deployment{}, ErrMissingImage
 	}
 
 	// if image exists should always return valid result
@@ -155,3 +156,7 @@ func validateContainer(c kube.Container) error {
 		return e.Error() == NoImageErrStr
 	}).ToAggregate()
 }
+
+var (
+	ErrMissingImage = errors.New("container must have an image to be deployed")
+)

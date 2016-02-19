@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 
@@ -160,7 +161,7 @@ func (c *Pod) data() (pod *kube.Pod, objects deploy.Deployment, err error) {
 	}
 
 	if len(containers) == 0 {
-		return nil, objects, ErrorEntityNotReady
+		return nil, objects, ErrMissingContainer
 	}
 
 	// add own objects
@@ -232,3 +233,7 @@ func deployWithPod(meta kube.ObjectMeta, attached Entity) (*deploy.Deployment, e
 
 	return pod.Deployment()
 }
+
+var (
+	ErrMissingContainer = errors.New("pod must have containers to be deployed")
+)
