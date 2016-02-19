@@ -14,17 +14,24 @@ import (
 	"k8s.io/kubernetes/pkg/util/strategicpatch"
 )
 
-// KubeCluster is able to deploy to Kubernetes clusters.
+const DefaultContext = "default"
+
+// KubeCluster is able to deploy to Kubernetes clusters. This is a very simple implementation with no error recovery.
 type KubeCluster struct {
-	client *kubecli.Client
+	client  *kubecli.Client
+	context string
 }
 
 // NewKubeClusterFromContext creates a KubeCluster using a Kubernetes client with the configuration of the given context.
 // If the context name is empty, the default context will be used
 func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
 	rules := defaultLoadingRules()
-	overrides := &clientcmd.ConfigOverrides{
-		CurrentContext: name,
+
+	overrides := &clientcmd.ConfigOverrides{}
+	if len(name) != 0 {
+		overrides.CurrentContext = name
+	} else {
+		name = DefaultContext
 	}
 
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
@@ -39,15 +46,22 @@ func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
 
 	client, err := kubecli.New(clientConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not create Kubernetes client: %v", err)
 	}
 
 	return &KubeCluster{
-		client: client,
+		client:  client,
+		context: name,
 	}, nil
 }
 
-// Deploy runs the Deployable remotely.
+// Context returns the kubectl context being used
+func (c *KubeCluster) Context() string {
+	return c.context
+}
+
+// Deploy creates/updates the Deployment's objects on the Kubernetes cluster. If update is not set, will error if objects exist.
+// Currently no error recovery is implemented; if there is an error the deployment process will immediately halt and return the error.
 func (c *KubeCluster) Deploy(dep *Deployment, update bool) error {
 	if c.client == nil {
 		return errors.New("client not setup (was nil)")
@@ -63,6 +77,11 @@ func (c *KubeCluster) Deploy(dep *Deployment, update bool) error {
 
 	// TODO: add continue on error and error lists
 	for _, obj := range dep.Objects() {
+		// don't create namespaces again
+		if _, isNamespace := obj.(*kube.Namespace); isNamespace {
+			continue
+		}
+
 		err := c.deploy(obj, update)
 		if err != nil {
 			return err
@@ -96,7 +115,11 @@ func (c *KubeCluster) deploy(obj KubeObject, update bool) error {
 
 // update replaces the currently deployed version with a new one. If the objects already match then nothing is done.
 func (c *KubeCluster) update(obj KubeObject, create bool) (runtime.Object, error) {
-	meta, mapping := obj.GetObjectMeta(), mapping(obj)
+	meta := obj.GetObjectMeta()
+	mapping, err := mapping(obj)
+	if err != nil {
+		return nil, err
+	}
 
 	deployedVersion, err := c.get(meta.GetNamespace(), meta.GetName(), true, mapping)
 	if doesNotExist(err) && create {
@@ -138,7 +161,13 @@ func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RES
 // create adds the object to the cluster
 func (c *KubeCluster) create(obj KubeObject) (runtime.Object, error) {
 	req := c.client.RESTClient.Post().Body(obj)
-	setRequestObjectInfo(req, obj.GetObjectMeta().GetNamespace(), mapping(obj))
+
+	mapping, err := mapping(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	setRequestObjectInfo(req, obj.GetObjectMeta().GetNamespace(), mapping)
 	return req.Do().Get()
 }
 
@@ -170,14 +199,17 @@ func doesNotExist(err error) bool {
 }
 
 // mapping returns the appropriate RESTMapping for the object
-func mapping(obj KubeObject) *meta.RESTMapping {
-	gvk := obj.GetObjectKind().GroupVersionKind()
+func mapping(obj KubeObject) (*meta.RESTMapping, error) {
+	gvk, err := kube.Scheme.ObjectKind(obj)
+	if err != nil {
+		return nil, err
+	}
+
 	mapping, err := kube.RESTMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
-		fatalMsg := fmt.Errorf("could not create RESTMapping for %s: %v", gvk, err)
-		panic(fatalMsg)
+		return nil, fmt.Errorf("could not create RESTMapping for %s: %v", gvk, err)
 	}
-	return mapping
+	return mapping, nil
 }
 
 // isNamespaceScoped returns if the mapping is scoped by Namespace
@@ -196,19 +228,15 @@ func defaultLoadingRules() *clientcmd.ClientConfigLoadingRules {
 
 // diff creates a patch
 func diff(original, modified runtime.Object) (patch []byte, err error) {
-	origBytes, err := objToJSONBytes(original)
+	origBytes, err := json.Marshal(original)
 	if err != nil {
 		return nil, err
 	}
 
-	modBytes, err := objToJSONBytes(modified)
+	modBytes, err := json.Marshal(modified)
 	if err != nil {
 		return nil, err
 	}
 
 	return strategicpatch.CreateTwoWayMergePatch(origBytes, modBytes, original)
-}
-
-func objToJSONBytes(obj runtime.Object) ([]byte, error) {
-	return json.Marshal(obj)
 }
