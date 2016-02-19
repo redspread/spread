@@ -5,5 +5,5 @@ const (
 	Usage = "Quickly iterate with Kubernetes"
 
 	// Version is the current version number
-	Version = "0.0.1"
+	Version = "0.0.3"
 )
