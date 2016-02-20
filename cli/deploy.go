@@ -10,7 +10,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-// Version returns the current spread version
+// Deploy allows the creation of deploy.Deployments remotely
 func (s SpreadCli) Deploy() *cli.Command {
 	return &cli.Command{
 		Name:        "deploy",
@@ -20,18 +20,18 @@ func (s SpreadCli) Deploy() *cli.Command {
 		Action: func(c *cli.Context) {
 			srcDir := c.Args().First()
 			if len(srcDir) == 0 {
-				s.fatal("A directory to deploy from must be specified")
+				s.fatalf("A directory to deploy from must be specified")
 			}
 
 			input, err := dir.NewFileInput(srcDir)
 			if err != nil {
-				s.fatal(inputError(srcDir, err))
+				s.fatalf(inputError(srcDir, err))
 			}
 
 			e, err := input.Build()
 			if err != nil {
 				println("build")
-				s.fatal(inputError(srcDir, err))
+				s.fatalf(inputError(srcDir, err))
 			}
 
 			dep, err := e.Deployment()
@@ -39,32 +39,32 @@ func (s SpreadCli) Deploy() *cli.Command {
 				// check if has pod; if not deploy objects
 				pods, _ := input.Entities(entity.EntityPod)
 				if len(pods) != 0 {
-					s.fatal("Failed to deploy: %v", err)
+					s.fatalf("Failed to deploy: %v", err)
 				}
 
 				objects, err := input.Objects()
 				if err != nil {
-					s.fatal(inputError(srcDir, err))
+					s.fatalf(inputError(srcDir, err))
 				} else if len(objects) == 0 {
-					s.fatal("Couldn't find objects to deploy in '%s'", srcDir)
+					s.fatalf("Couldn't find objects to deploy in '%s'", srcDir)
 				}
 
 				dep = new(deploy.Deployment)
 				for _, obj := range objects {
 					err = dep.Add(obj)
 					if err != nil {
-						s.fatal(inputError(srcDir, err))
+						s.fatalf(inputError(srcDir, err))
 					}
 				}
 			} else if err != nil {
 				println("deploy")
-				s.fatal(inputError(srcDir, err))
+				s.fatalf(inputError(srcDir, err))
 			}
 
 			context := c.Args().Get(1)
 			cluster, err := deploy.NewKubeClusterFromContext(context)
 			if err != nil {
-				s.fatal("Failed to deploy: %v", err)
+				s.fatalf("Failed to deploy: %v", err)
 			}
 
 			s.printf("Deploying %d objects using the %s.", dep.Len(), displayContext(context))
@@ -73,7 +73,7 @@ func (s SpreadCli) Deploy() *cli.Command {
 			err = cluster.Deploy(dep, update)
 			if err != nil {
 				//TODO: make better error messages (one to indicate a deployment already existed; another one if a deployment did not exist but some other error was thrown
-				s.fatal("Did not deploy.: %v", err)
+				s.fatalf("Did not deploy.: %v", err)
 			}
 
 			s.printf("Deployment successful!")

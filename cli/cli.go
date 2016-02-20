@@ -40,7 +40,7 @@ func (c SpreadCli) printf(message string, data ...interface{}) {
 	fmt.Fprintf(c.out, message, data...)
 }
 
-func (c SpreadCli) fatal(message string, data ...interface{}) {
+func (c SpreadCli) fatalf(message string, data ...interface{}) {
 	c.printf(message, data...)
 	os.Exit(1)
 }
