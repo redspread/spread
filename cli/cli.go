@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"fmt"
 	"io"
+	"os"
+	"strings"
 )
 
 // SpreadCli is the spread command line client.
@@ -27,4 +30,17 @@ func NewSpreadCli(in io.ReadCloser, out, err io.Writer, version string) *SpreadC
 		err:     err,
 		version: version,
 	}
+}
+
+func (c SpreadCli) printf(message string, data ...interface{}) {
+	// add newline if doesn't have one
+	if !strings.HasSuffix(message, "\n") {
+		message = message + "\n"
+	}
+	fmt.Fprintf(c.out, message, data...)
+}
+
+func (c SpreadCli) fatalf(message string, data ...interface{}) {
+	c.printf(message, data...)
+	os.Exit(1)
 }

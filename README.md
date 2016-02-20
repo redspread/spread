@@ -13,11 +13,13 @@
 * Work well for a single developer or an entire team (no more broken bash scripts!)
 
 
-Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap) to see what will be built next and send us pull requests for any features you’d like to see added. 
+Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
+
+See our [philosophy](./philosophy.md) for more on our mission and values. 
 
 ##What's been done so far
  
-* `spread deploy`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
+* `spread deploy [-s] PATH [kubectl context]`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
 	* Reads context of directory and builds Kubernetes deployment hierarchy.
 	* Updates all Kubernetes objects on a Kubernetes cluster.
 	* Returns a public IP address, if type Load Balancer is specified. 
@@ -26,7 +28,7 @@ Spread is under open, active development. New features will be added regularly o
 
 ##What's being worked on now
 
-* Building functionality for `spread deploy` so it also builds any images indicated to be built and pushes those images to the indicated Docker registry.
+* Build functionality for `spread deploy` so it also builds any images indicated to be built and pushes those images to the indicated Docker registry.
 * `spread deploy -p`: Pushes all images to registry, even those not built by `spread deploy`.
 * Support for Linux and Windows
 * Inner-app linking
@@ -34,7 +36,7 @@ Spread is under open, active development. New features will be added regularly o
 * `spread build`: Builds Docker context and pushes to a local Kubernetes cluster.
 * `spread rewind`: Quickly rollback to a previous deployment.
 
-See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap">roadmap</a> here!
+See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a> here!
 
 ##Future Goals
 * Develop workflow for container versioning (containers = image + config)
@@ -48,7 +50,7 @@ See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap
 
 ##Installation
 
-`$ brew tap redspread/homebrew-spread`  
+`$ brew tap redspread/spread`  
 `$ brew install spread`
 	
 ##FAQ
@@ -71,7 +73,7 @@ See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap
 
 This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">running Kubernetes cluster</a> and <a href="https://docs.docker.com/machine/get-started/">docker-machine</a> installed.
 
-1. Install Spread with `$ brew tap redspread/homebrew-spread` then `$ brew install spread` 
+1. Install Spread with `$ brew tap redspread/spread` then `$ brew install spread` 
 2. Clone example project `$ git clone http://github.com/redspread/mvp-ex`
 3. Start a docker machine `$ docker machine start <name>` or <a href="https://docs.docker.com/machine/get-started/">create a new machine</a>
 4. Enter in your Docker registry configuration in the correct fields in .k2e/secret.yaml:
