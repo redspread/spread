@@ -186,5 +186,6 @@ func validateRC(rc *kube.ReplicationController) error {
 }
 
 var (
+	// ErrMissingPod is when the RC is being used in a context where it must be valid and doesn't have a Pod.
 	ErrMissingPod = errors.New("replication controller must have pod to be deployed")
 )

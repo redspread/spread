@@ -235,5 +235,6 @@ func deployWithPod(meta kube.ObjectMeta, attached Entity) (*deploy.Deployment, e
 }
 
 var (
+	// ErrMissingContainer is where the Pod is being used in a context where it must be valid and doesn't have a Container.
 	ErrMissingContainer = errors.New("pod must have containers to be deployed")
 )
