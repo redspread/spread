@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -132,7 +133,7 @@ func (c *ReplicationController) children() []Entity {
 
 func (c *ReplicationController) data() (*kube.ReplicationController, deploy.Deployment, error) {
 	if c.pod == nil {
-		return nil, deploy.Deployment{}, ErrorEntityNotReady
+		return nil, deploy.Deployment{}, ErrMissingPod
 	}
 
 	rc := c.rc
@@ -183,3 +184,8 @@ func validateRC(rc *kube.ReplicationController) error {
 
 	return errList.ToAggregate()
 }
+
+var (
+	// ErrMissingPod is when the RC is being used in a context where it must be valid and doesn't have a Pod.
+	ErrMissingPod = errors.New("replication controller must have pod to be deployed")
+)

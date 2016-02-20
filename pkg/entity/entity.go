@@ -179,8 +179,6 @@ func setMetaDefaults(obj deploy.KubeObject, defaults kube.ObjectMeta) {
 }
 
 var (
-	// ErrorEntityNotReady is when Entity is not in a valid state to be deployed.
-	ErrorEntityNotReady = errors.New("entity not ready to be deployed")
 	// ErrorNilObject is when a deploy.KubeObject is null.
 	ErrorNilObject = errors.New("an object was nil, this is not allowed")
 	// ErrorInvalidAttachType is when the Type of the attached object in invalid.
