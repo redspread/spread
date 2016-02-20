@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
@@ -128,6 +129,8 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 	deployedVersion := deployed.GetObjectMeta().GetResourceVersion()
 	meta.SetResourceVersion(deployedVersion)
 
+	copyImmutables(deployed, obj)
+
 	// if local matches deployed, do nothing
 	if kube.Semantic.DeepEqual(obj, deployed) {
 		return deployed, nil
@@ -193,22 +196,20 @@ func setRequestObjectInfo(req *kubecli.Request, namespace string, mapping *meta.
 	req.Resource(mapping.Resource)
 }
 
-// TODO: implement
 // alreadyExists checks if the error is for a resource already existing
 func alreadyExists(err error) bool {
 	if err == nil {
 		return false
 	}
-	return false
+	return strings.HasSuffix(err.Error(), "already exists")
 }
 
-// TODO: implement
 // doesNotExist checks if the error is for a non-existent resource
 func doesNotExist(err error) bool {
 	if err == nil {
 		return false
 	}
-	return false
+	return strings.HasSuffix(err.Error(), "not found")
 }
 
 // mapping returns the appropriate RESTMapping for the object
@@ -269,4 +270,18 @@ func resourceError(action, namespace, name string, mapping *meta.RESTMapping, er
 	}
 	gvk := mapping.GroupVersionKind
 	return fmt.Errorf("could not %s '%s/%s' (%s): %v", action, namespace, name, gvk.Kind, err)
+}
+
+// copyImmutables sets any immutable fields from src on dst. Will panic if objects not of same type.
+func copyImmutables(src, dst KubeObject) {
+	if src == nil || dst == nil {
+		return
+	}
+
+	// each type has specific fields that must be copied
+	switch src := src.(type) {
+	case *kube.Service:
+		dst := dst.(*kube.Service)
+		dst.Spec.ClusterIP = src.Spec.ClusterIP
+	}
 }
