@@ -13,10 +13,10 @@ import (
 // Version returns the current spread version
 func (s SpreadCli) Deploy() *cli.Command {
 	return &cli.Command{
-		Name:       "deploy",
-		Usage:      "spread deploy [-s] PATH [kubectl context]",
-		Description:  "Deploys a Dockerfile to a remote Kubernetes cluster.",
-		ArgsUsage:  "-s will deploy only if no other deployment found (otherwise fails)",
+		Name:        "deploy",
+		Usage:       "spread deploy [-s] PATH [kubectl context]",
+		Description: "Deploys a Dockerfile to a remote Kubernetes cluster.",
+		ArgsUsage:   "-s will deploy only if no other deployment found (otherwise fails)",
 		Action: func(c *cli.Context) {
 			srcDir := c.Args().First()
 			if len(srcDir) == 0 {
@@ -73,10 +73,10 @@ func (s SpreadCli) Deploy() *cli.Command {
 			err = cluster.Deploy(dep, update)
 			if err != nil {
 				//TODO: make better error messages (one to indicate a deployment already existed; another one if a deployment did not exist but some other error was thrown
-				s.fatal("Deployment found. Did not deploy.: %v", err)
+				s.fatal("Did not deploy.: %v", err)
 			}
 
-			s.printf("No previous deployment found. Deployment successful!")
+			s.printf("Deployment successful!")
 		},
 	}
 }
