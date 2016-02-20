@@ -1,6 +1,6 @@
 <center><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/>
 
-[![Build Status](https://travis-ci.org/redspread/spread.svg?branch=master)](https://travis-ci.org/redspread/spread) [![release](https://img.shields.io/badge/release-v0.0.1-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]() [![](https://godoc.org/rsprd.com/spread?status.svg)](http://godoc.org/rsprd.com/spread)</center>
+[![Build Status](https://travis-ci.org/redspread/spread.svg?branch=master)](https://travis-ci.org/redspread/spread) [![release](https://img.shields.io/badge/release-v0.0.3-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]() [![](https://godoc.org/rsprd.com/spread?status.svg)](http://godoc.org/rsprd.com/spread)</center>
 
 <center>[Website](https://redspread.com) | [Slack](http://redspread.slack.com) | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></center>
 
@@ -43,9 +43,6 @@ See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap
 * Introduce paramaterization for container configuration
 
 ##Requirements
-* Mac OS X
-* <a href="https://docs.docker.com/engine/installation/">docker</a>
-* <a href="https://docs.docker.com/machine/get-started/">docker-machine</a>
 * <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">Kubernetes cluster with kubectl installed</a>
 
 ##Installation
@@ -69,24 +66,16 @@ See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap
 
 **Can I deploy a project with just a Dockerfile and *.ctr?** Yes. Spread implicitly infers the rest of the app hierarchy.
 
-##Hello World
+##Quickstart
 
-This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">running Kubernetes cluster</a> and <a href="https://docs.docker.com/machine/get-started/">docker-machine</a> installed.
+This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">running Kubernetes cluster</a>.
 
 1. Install Spread with `$ brew tap redspread/spread` then `$ brew install spread` 
-2. Clone example project `$ git clone http://github.com/redspread/mvp-ex`
-3. Start a docker machine `$ docker machine start <name>` or <a href="https://docs.docker.com/machine/get-started/">create a new machine</a>
-4. Enter in your Docker registry configuration in the correct fields in .k2e/secret.yaml:
-<pre><code>apiVersion: v1
-kind: Secret
-metadata:
-  name: NAME
-  namespace: NAMESPACE
-data:
-  .dockercfg: KEY
-type: kubernetes.io/dockercfg</code></pre>
-5. Build and deploy your project to Kubernetes: `$ spread deploy`
-6. Grab the public IP and put it in your browser to see your website!
+2. Clone Mattermost `$ git clone http://github.com/redspread/kube-mattermost`
+5. Deploy Mattermost to Kubernetes: `$ spread deploy .`
+6. Grab the public IP and put it in your browser to see your self-hosted app!
+
+For a more detailed walkthrough, see the full <a href="https://github.com/redspread/kube-mattermost">guide</a>.
 
 ##Contributing
 
