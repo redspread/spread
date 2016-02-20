@@ -1,21 +1,31 @@
 language: go
 sudo: false
 go:
-  - 1.5
+  - 1.6
 env:
   - SPREAD="./pkg/... ./cli/... ./cmd/..."
 
 go_import_path: rsprd.com/spread
 
+cache:
+  directories:
+    - /home/travis/gopath
+
+before_cache:
+  - rm -rf $TRAVIS_BUILD_DIR
+
 install:
-  # install vendor deps
-  - cp -r ./vendor/* $GOPATH/src
   # install golint
-  - go get -u github.com/golang/lint/golint
+  - go get github.com/golang/lint/golint
+  # install godep
+  - go get github.com/tools/godep
 
 before_script:
   # Fix to get around issue with Kubernetes not
   # loading types from rewritten imports
+  - export GO15VENDOREXPERIMENT=0
+  - godep restore -v
+
   - go vet $SPREAD
 
 script:
