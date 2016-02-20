@@ -1,7 +1,7 @@
 language: go
 sudo: false
 go:
-  - 1.5
+  - 1.6
 env:
   - SPREAD="./pkg/... ./cli/... ./cmd/..."
 
