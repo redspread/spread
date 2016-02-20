@@ -24,7 +24,7 @@ type KubeCluster struct {
 }
 
 // NewKubeClusterFromContext creates a KubeCluster using a Kubernetes client with the configuration of the given context.
-// If the context name is empty, the default context will be used
+// If the context name is empty, the default context will be used.
 func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
 	rules := defaultLoadingRules()
 
@@ -152,10 +152,10 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 		return nil, resourceError("update", meta.GetNamespace(), meta.GetName(), mapping, err)
 	}
 
-	return getResultWithKubeObject(runtimeObj)
+	return asKubeObject(runtimeObj)
 }
 
-// get retrieves the object from the cluster
+// get retrieves the object from the cluster.
 func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RESTMapping) (KubeObject, error) {
 	req := c.client.RESTClient.Get().Name(name)
 	setRequestObjectInfo(req, namespace, mapping)
@@ -169,10 +169,10 @@ func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RES
 		return nil, resourceError("get", namespace, name, mapping, err)
 	}
 
-	return getResultWithKubeObject(runtimeObj)
+	return asKubeObject(runtimeObj)
 }
 
-// create adds the object to the cluster
+// create adds the object to the cluster.
 func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObject, error) {
 	meta := obj.GetObjectMeta()
 	req := c.client.RESTClient.Post().Body(obj)
@@ -184,10 +184,10 @@ func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObj
 		return nil, resourceError("create", meta.GetName(), meta.GetNamespace(), mapping, err)
 	}
 
-	return getResultWithKubeObject(runtimeObj)
+	return asKubeObject(runtimeObj)
 }
 
-// setRequestObjectInfo adds necessary type information to requests
+// setRequestObjectInfo adds necessary type information to requests.
 func setRequestObjectInfo(req *kubecli.Request, namespace string, mapping *meta.RESTMapping) {
 	// if namespace scoped resource, set namespace
 	req.NamespaceIfScoped(namespace, isNamespaceScoped(mapping))
@@ -196,7 +196,7 @@ func setRequestObjectInfo(req *kubecli.Request, namespace string, mapping *meta.
 	req.Resource(mapping.Resource)
 }
 
-// alreadyExists checks if the error is for a resource already existing
+// alreadyExists checks if the error is for a resource already existing.
 func alreadyExists(err error) bool {
 	if err == nil {
 		return false
@@ -204,7 +204,7 @@ func alreadyExists(err error) bool {
 	return strings.HasSuffix(err.Error(), "already exists")
 }
 
-// doesNotExist checks if the error is for a non-existent resource
+// doesNotExist checks if the error is for a non-existent resource.
 func doesNotExist(err error) bool {
 	if err == nil {
 		return false
@@ -212,7 +212,7 @@ func doesNotExist(err error) bool {
 	return strings.HasSuffix(err.Error(), "not found")
 }
 
-// mapping returns the appropriate RESTMapping for the object
+// mapping returns the appropriate RESTMapping for the object.
 func mapping(obj KubeObject) (*meta.RESTMapping, error) {
 	gvk, err := kube.Scheme.ObjectKind(obj)
 	if err != nil {
@@ -226,12 +226,12 @@ func mapping(obj KubeObject) (*meta.RESTMapping, error) {
 	return mapping, nil
 }
 
-// isNamespaceScoped returns if the mapping is scoped by Namespace
+// isNamespaceScoped returns if the mapping is scoped by Namespace.
 func isNamespaceScoped(mapping *meta.RESTMapping) bool {
 	return mapping.Scope.Name() == meta.RESTScopeNameNamespace
 }
 
-// defaultLoadingRules use the same rules (as of 2/17/16) as kubectl
+// defaultLoadingRules use the same rules (as of 2/17/16) as kubectl.
 func defaultLoadingRules() *clientcmd.ClientConfigLoadingRules {
 	opts := config.NewDefaultPathOptions()
 
@@ -240,7 +240,7 @@ func defaultLoadingRules() *clientcmd.ClientConfigLoadingRules {
 	return loadingRules
 }
 
-// diff creates a patch
+// diff creates a patch.
 func diff(original, modified runtime.Object) (patch []byte, err error) {
 	origBytes, err := json.Marshal(original)
 	if err != nil {
@@ -255,8 +255,8 @@ func diff(original, modified runtime.Object) (patch []byte, err error) {
 	return strategicpatch.CreateTwoWayMergePatch(origBytes, modBytes, original)
 }
 
-// kubeObjectOrErr attempts use the object as a KubeObject. It will return an error if not possible.
-func getResultWithKubeObject(runtimeObj runtime.Object) (KubeObject, error) {
+// asKubeObject attempts use the object as a KubeObject. It will return an error if not possible.
+func asKubeObject(runtimeObj runtime.Object) (KubeObject, error) {
 	kubeObj, ok := runtimeObj.(KubeObject)
 	if !ok {
 		return nil, errors.New("was unable to use runtime.Object as deploy.KubeObject")
