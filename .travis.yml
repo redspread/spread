@@ -3,7 +3,14 @@ sudo: false
 go:
   - 1.6
 env:
-  - SPREAD="./pkg/... ./cli/... ./cmd/..."
+  global:
+    - SPREAD="./pkg/... ./cli/... ./cmd/..."
+    # Fix to get around issue with Kubernetes not
+    # loading types from rewritten imports
+    - GO15VENDOREXPERIMENT=0
+
+    # $COVERALLS_TOKEN
+    - secure: "oGnNJCxiDbMSi16x0V8zdDzxLBroKRVfdMLMVaKuIxezs4cZV3IRNh8JNX3aEC8kbj6k/IHlEp8XTMcyvaYxf8CEj2ADTPXuLaS5aNhe5WvVx2RjjUseJK5oRs/mhYzkenE5dyLvLkrXF/dtjnadY8KDnIa7Rs5EJdBVmeQuLdgFCEwQZEiStOtntXftHxsga8yUer4rPFueXjRlWpl0fOpMN5h89dsvq9TmDxKCCDpFDODwtjLR3qN+uJPiR6w4jnlC0Yb1L02hxIgXGfUX6p+sinSLZhvVZPbxrNwvuR6FvW7G+yENwiZU3iIvBs7gjqKps80lxSZgdn0SpSnax2jqO9LjkQZGgea8zsUTHr/wqCxqaDUZfl8XfG4mCZo99DP5+P3YWvP2zIXwvVCn0XxUUPf0z5ecXpDqGPPiRumm1StsOhh2eNeaBiJBJ7e7qQ/yrjAe+nbLAN3I4Qj7+HTk/1qj7JbJre7kEtVum0ABnbtjvd9mnjRHTPEmQoHNlMPhhl5XYWJosW8A8D/ZcOHJ8cN2EC5PeO3Pocf7gwP4rCAOr0caIdQ0i48lZq3bbDF2/wuQD/J0bgdNVD7yi/Hus4JXwD2uLHdO3Ym08OauidRgYi8b0oXcnUICVihtQvv4E94nxGaWfx8JSuOdHzdt1Qkcra9qO1AG9ZNdeq0="
 
 go_import_path: rsprd.com/spread
 
@@ -12,15 +19,14 @@ install:
   - go get -u github.com/golang/lint/golint
 
 before_script:
-  # Fix to get around issue with Kubernetes not
-  # loading types from rewritten imports
-  - export GO15VENDOREXPERIMENT=0
+  # copy vendored dependencies into GOPATH
   - cp -r ./vendor/* $GOPATH/src
 
   - go vet $SPREAD
 
 script:
-  - go test -v $SPREAD
+  - go test -v -covermode=count -coverprofile=coverage.out $SPREAD
+  - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 
 after_success:
   - |
