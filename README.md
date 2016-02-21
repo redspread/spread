@@ -15,21 +15,21 @@
 
 Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
 
-See our [philosophy](./philosophy.md) for more on our mission and values. 
+See our [philosophy](./philosophy.md) for more on our mission and values.
 
 ##Requirements
 * <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">Kubernetes cluster with kubectl installed</a>
 
 ##Installation
 
-`$ brew tap redspread/spread`  
+`$ brew tap redspread/spread`
 `$ brew install spread`
 
 ##Quickstart
 
 This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">running Kubernetes cluster</a>.
 
-1. Install Spread with `$ brew tap redspread/spread` then `$ brew install spread` 
+1. Install Spread with `$ brew tap redspread/spread` then `$ brew install spread`
 2. Clone <a href="http://mattermost.com">Mattermost</a>, the open source Slack `$ git clone http://github.com/redspread/kube-mattermost`
 5. Deploy Mattermost to Kubernetes: `$ spread deploy .`
 6. Grab the public IP and put it in your browser to see your self-hosted app!
@@ -37,11 +37,11 @@ This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-co
 For a more detailed walkthrough, see the full <a href="https://github.com/redspread/kube-mattermost">guide</a>.
 
 ##What's been done so far
- 
+
 * `spread deploy [-s] PATH [kubectl context]`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
 	* Reads context of directory and builds Kubernetes deployment hierarchy.
 	* Updates all Kubernetes objects on a Kubernetes cluster.
-	* Returns a public IP address, if type Load Balancer is specified. 
+	* Returns a public IP address, if type Load Balancer is specified.
 * Established an implicit hierarchy of Kubernetes objects
 * Multi-container deployment
 
@@ -63,7 +63,7 @@ See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap
 
 ##FAQ
 
-**How are clusters selected?** Remote clusters are selected from the current kubectl context. Later, we will add functionality to explicitly state kubectl arguments. 
+**How are clusters selected?** Remote clusters are selected from the current kubectl context. Later, we will add functionality to explicitly state kubectl arguments.
 
 **How should I set up my directory?** Spread requires a specific project directory structure, as it builds from a hierarchy of entities:
 
@@ -85,9 +85,9 @@ We'd love to see your contributions - please see the CONTRIBUTING file for guide
 If you haven't already, it's worth going through <a href="http://fantasai.inkedblade.net/style/talks/filing-good-bugs/">Elika Etemad's guide</a> for good bug reporting. In one sentence, good bug reports should be both *reproducible* and *specific*.
 
 ##Contact
-Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>   
-Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>  
-Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>  
+Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>
+Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>
+Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>
 Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
 
 ##License
