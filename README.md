@@ -89,11 +89,8 @@ Please use our [issue template](https://github.com/redspread/spread/blob/master/
 
 ## Contact
 Founders: [founders@redspread.com](mailto:founders@redspread.com)
-
 Slack: [redspread.slack.com](http://redspread.slack.com)
-
 Planning/roadmap: [roadmap](http://github.com/redspread/spread/roadmap.md)
-
 Bugs: [issues](https://github.com/redspread/spread/issues)
 
 ## License
