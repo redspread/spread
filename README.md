@@ -88,10 +88,10 @@ We'd love to see your contributions - please see the CONTRIBUTING file for guide
 Please use our [issue template](https://github.com/redspread/spread/blob/master/ISSUE_TEMPLATE.md).
 
 ## Contact
-Founders: [founders@redspread.com](mailto:founders@redspread.com)
-Slack: [redspread.slack.com](http://redspread.slack.com)
-Planning/roadmap: [roadmap](http://github.com/redspread/spread/roadmap.md)
-Bugs: [issues](https://github.com/redspread/spread/issues)
+Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>
+Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>
+Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>
+Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
 
 ## License
 [Spread is under the Apache 2.0 license.](https://github.com/redspread/spread/blob/master/LICENSE)
