@@ -21,11 +21,9 @@ See our [philosophy](./philosophy.md) for more on our mission and values.
 * [Kubernetes cluster with kubectl installed](https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/)
 
 ## Installation
-
 For OSX
-`$ brew tap redspread/spread`
-`$ brew install spread`
-
+* `$ brew tap redspread/spread`
+* `$ brew install spread`
 
 ## Quickstart
 
@@ -41,9 +39,9 @@ For a more detailed walkthrough, see the full [guide](https://github.com/redspre
 ## What's been done so far
 
 * `$ spread deploy [-s] PATH [kubectl context]`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
-	* Reads context of directory and builds Kubernetes deployment hierarchy.
-	* Updates all Kubernetes objects on a Kubernetes cluster.
-	* Returns a public IP address, if type Load Balancer is specified.
+  * Reads context of directory and builds Kubernetes deployment hierarchy.
+  * Updates all Kubernetes objects on a Kubernetes cluster.
+  * Returns a public IP address, if type Load Balancer is specified.
 * Established an implicit hierarchy of Kubernetes objects
 * Multi-container deployment
 
@@ -88,10 +86,10 @@ We'd love to see your contributions - please see the CONTRIBUTING file for guide
 Please use our [issue template](https://github.com/redspread/spread/blob/master/ISSUE_TEMPLATE.md).
 
 ## Contact
-Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>
-Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>
-Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>
-Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
+* Founders: [founders@redspread.com](mailto:founders@redspread.com)
+* Slack: [founders@redspread.com](http://redspread.slack.com)
+* Planning: [Roadmap](http://github.com/redspread/spread/roadmap.md)
+* Bugs: [Issues](https://github.com/redspread/spread/issues)
 
 ## License
 [Spread is under the Apache 2.0 license.](https://github.com/redspread/spread/blob/master/LICENSE)
