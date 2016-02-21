@@ -1,20 +1,10 @@
-<center>
-<img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/>
-[![Build Status](https://travis-ci.org/redspread/spread.svg?branch=master)](https://travis-ci.org/redspread/spread)
-[![release](https://img.shields.io/badge/release-v0.0.3-red.svg)]()
-[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]()
-[![](https://godoc.org/rsprd.com/spread?status.svg)](http://godoc.org/rsprd.com/spread)
-</center>
+<center><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/>
 
-<center>
-[Website](https://redspread.com) |
-[Slack](http://redspread.slack.com) |
-<a href="mailto:founders@redspread.com">Email</a> |
-<a href="http://twitter.com/redspread">Twitter</a> |
-<a href="http://facebook.com/GetRedspread">Facebook</a>
-</center>
+[![Build Status](https://travis-ci.org/redspread/spread.svg?branch=master)](https://travis-ci.org/redspread/spread) [![release](https://img.shields.io/badge/release-v0.0.3-red.svg)]() [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]() [![](https://godoc.org/rsprd.com/spread?status.svg)](http://godoc.org/rsprd.com/spread)</center>
 
-# Docker to Kubernetes in one command
+<center>[Website](https://redspread.com) | [Slack](http://redspread.slack.com) | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></center>
+
+#Docker to Kubernetes in one command
 
 `spread` is a command line tool that builds and deploys a [Docker](https://github.com/docker/docker) project to a [Kubernetes](https://github.com/kubernetes/kubernetes) cluster in one command. The project's goals are to:
 
@@ -99,8 +89,11 @@ Please use our [issue template](https://github.com/redspread/spread/blob/master/
 
 ## Contact
 Founders: [founders@redspread.com](mailto:founders@redspread.com)
+
 Slack: [redspread.slack.com](http://redspread.slack.com)
+
 Planning/roadmap: [roadmap](http://github.com/redspread/spread/roadmap.md)
+
 Bugs: [issues](https://github.com/redspread/spread/issues)
 
 ## License
