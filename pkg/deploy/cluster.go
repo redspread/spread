@@ -86,6 +86,8 @@ func (c *KubeCluster) Deploy(dep *Deployment, update bool) error {
 		}
 	}
 
+	printLoadBalancers(c.client, dep.services)
+
 	// deployed successfully
 	return nil
 }
@@ -283,5 +285,50 @@ func copyImmutables(src, dst KubeObject) {
 	case *kube.Service:
 		dst := dst.(*kube.Service)
 		dst.Spec.ClusterIP = src.Spec.ClusterIP
+	}
+}
+
+func printLoadBalancers(client *kubecli.Client, services []*kube.Service) {
+	if len(services) == 0 {
+		return
+	}
+
+	first := true
+	completed := map[string]bool{}
+
+	// checks when we've seen every service
+	done := func () bool {
+		for _, s := range services {
+			if s.Spec.Type == kube.ServiceTypeLoadBalancer && !completed[s.Name] {
+				return false
+			}
+		}
+		return true
+	}
+
+	for {
+		if done() {
+			return
+		}
+
+		if first {
+			fmt.Println("Waiting for load balancer deployment...")
+			first = false
+		}
+
+		for _, s := range services {
+			if s.Spec.Type == kube.ServiceTypeLoadBalancer && !completed[s.Name] {
+				clusterVers, err := client.Services(s.Namespace).Get(s.Name)
+				if err != nil {
+					fmt.Printf("Error getting service `%s`: %v\n", s.Name, err)
+				}
+
+				loadBalancers := clusterVers.Status.LoadBalancer.Ingress
+				if len (loadBalancers) == 1 {
+					completed[s.Name] = true
+					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name,loadBalancers[0].IP)
+				}
+			}
+		}
 	}
 }
