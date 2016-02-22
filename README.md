@@ -87,7 +87,7 @@ If you haven't already, it's worth going through <a href="http://fantasai.inkedb
 ##Contact
 Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>   
 Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>  
-Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>  
+Planning/roadmap: <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a>  
 Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
 
 ##License
