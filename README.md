@@ -1,6 +1,6 @@
 <center><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/></center>
 
-<p align="center"><a href="https://travis-ci.org/redspread/spread"><img alt="Build Status" src="https://travis-ci.org/redspread/spread.svg?branch=master" /></a> <a href="https://github.com/redspread/spread"><img alt="Release" src="https://img.shields.io/badge/release-v0.0.3-red.svg" /></a> <a href="https://github.com/redspread/spread/blob/master/LICENSE"><img alt="Hex.pm" src="https://img.shields.io/hexpm/l/plug.svg" /></a> <a href="http://godoc.org/rsprd.com/spread"><img alt="GoDoc Status" src="https://godoc.org/rsprd.com/spread?status.svg" /></a></p>
+<p align="center"><a href="https://travis-ci.org/redspread/spread"><img alt="Build Status" src="https://travis-ci.org/redspread/spread.svg?branch=master" /></a> <a href="https://github.com/redspread/spread"><img alt="Release" src="https://img.shields.io/badge/release-v0.0.4-red.svg" /></a> <a href="https://github.com/redspread/spread/blob/master/LICENSE"><img alt="Hex.pm" src="https://img.shields.io/hexpm/l/plug.svg" /></a> <a href="http://godoc.org/rsprd.com/spread"><img alt="GoDoc Status" src="https://godoc.org/rsprd.com/spread?status.svg" /></a></p>
 
 <p align="center"><a href="https://redspread.com">Website</a> | <a href="http://redspread.slack.com">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
 
@@ -12,6 +12,9 @@
 * Be the fastest, simplest way to deploy Docker to production
 * Work well for a single developer or an entire team (no more broken bash scripts!)
 
+See how we deployed Mattermost (<a href="https://github.com/redspread/kube-mattermost">and you can too!</a>):
+
+<center><img src="http://i.imgur.com/Vohnd3e.gif" alt="logo" width= "400"/></center>
 
 Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
 
