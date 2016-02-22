@@ -94,4 +94,4 @@ Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadma
 Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
 
 ##License
-Spread is under the Apache 2.0 license. See the LICENSE file for details.
+Spread is under the [Apache 2.0 license](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)). See the LICENSE file for details.
