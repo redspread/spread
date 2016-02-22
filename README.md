@@ -1,4 +1,4 @@
-<center><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/></center>
+<p align="center"><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/></p>
 
 <p align="center"><a href="https://travis-ci.org/redspread/spread"><img alt="Build Status" src="https://travis-ci.org/redspread/spread.svg?branch=master" /></a> <a href="https://github.com/redspread/spread"><img alt="Release" src="https://img.shields.io/badge/release-v0.0.4-red.svg" /></a> <a href="https://github.com/redspread/spread/blob/master/LICENSE"><img alt="Hex.pm" src="https://img.shields.io/hexpm/l/plug.svg" /></a> <a href="http://godoc.org/rsprd.com/spread"><img alt="GoDoc Status" src="https://godoc.org/rsprd.com/spread?status.svg" /></a></p>
 
@@ -14,7 +14,7 @@
 
 See how we deployed Mattermost (<a href="https://github.com/redspread/kube-mattermost">and you can too!</a>):
 
-<center><img src="http://i.imgur.com/Vohnd3e.gif" alt="logo" width= "400"/></center>
+<p align="center"><img src="http://i.imgur.com/Vohnd3e.gif" alt="logo" width= "400"/></p>
 
 Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
 
@@ -90,8 +90,8 @@ If you haven't already, it's worth going through <a href="http://fantasai.inkedb
 ##Contact
 Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>   
 Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>  
-Planning/roadmap: <a href="http://github.com/redspread/spread/roadmap.md">roadmap</a>  
-Bugs: <a href="https://github.com/redspread/spread/issues">issues</a>
+Planning: <a href="https://github.com/redspread/spread/blob/master/roadmap.md">Roadmap</a>  
+Bugs: <a href="https://github.com/redspread/spread/issues">Issues</a>
 
 ##License
-Spread is under the Apache 2.0 license. See the LICENSE file for details.
+Spread is under the [Apache 2.0 license](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)). See the LICENSE file for details.
