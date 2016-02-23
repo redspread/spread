@@ -297,7 +297,7 @@ func printLoadBalancers(client *kubecli.Client, services []*kube.Service) {
 	completed := map[string]bool{}
 
 	// checks when we've seen every service
-	done := func () bool {
+	done := func() bool {
 		for _, s := range services {
 			if s.Spec.Type == kube.ServiceTypeLoadBalancer && !completed[s.Name] {
 				return false
@@ -324,9 +324,9 @@ func printLoadBalancers(client *kubecli.Client, services []*kube.Service) {
 				}
 
 				loadBalancers := clusterVers.Status.LoadBalancer.Ingress
-				if len (loadBalancers) == 1 {
+				if len(loadBalancers) == 1 {
 					completed[s.Name] = true
-					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name,loadBalancers[0].IP)
+					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name, loadBalancers[0].IP)
 				}
 			}
 		}
