@@ -36,12 +36,12 @@ func (s SpreadCli) Build() *cli.Command {
 			// TODO: This can be removed once application (#56) is implemented
 			if err == entity.ErrMissingContainer {
 				// check if has pod; if not deploy objects
-				pods, _ := input.Entities(entity.EntityPod)
-				if len(pods) != 0 {
+				pods, err := input.Entities(entity.EntityPod)
+				if err != nil && len(pods) != 0 {
 					s.fatalf("Failed to deploy: %v", err)
 				}
 
-				err := objectOnlyDeploy(input)
+				dep, err = objectOnlyDeploy(input)
 				if err != nil {
 					s.fatalf("Failed to deploy: %v", err)
 				}

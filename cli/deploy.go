@@ -40,12 +40,12 @@ func (s SpreadCli) Deploy() *cli.Command {
 			// TODO: This can be removed once application (#56) is implemented
 			if err == entity.ErrMissingContainer {
 				// check if has pod; if not deploy objects
-				pods, _ := input.Entities(entity.EntityPod)
-				if len(pods) != 0 {
+				pods, err := input.Entities(entity.EntityPod)
+				if err != nil && len(pods) != 0 {
 					s.fatalf("Failed to deploy: %v", err)
 				}
 
-				err := objectOnlyDeploy(input)
+				dep, err = objectOnlyDeploy(input)
 				if err != nil {
 					s.fatalf("Failed to deploy: %v", err)
 				}
@@ -75,22 +75,22 @@ func (s SpreadCli) Deploy() *cli.Command {
 	}
 }
 
-func objectOnlyDeploy(input *dir.FileInput) error {
+func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {
 	objects, err := input.Objects()
 	if err != nil {
-		return err
+		return nil, err
 	} else if len(objects) == 0 {
-		return ErrNothingDeployable
+		return nil, ErrNothingDeployable
 	}
 
 	deployment := new(deploy.Deployment)
 	for _, obj := range objects {
 		err = deployment.Add(obj)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return deployment, nil
 }
 
 func inputError(srcDir string, err error) string {
