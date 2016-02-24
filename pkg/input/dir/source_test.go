@@ -28,22 +28,6 @@ const (
 	TestFilePerms = 0777
 )
 
-func TestSourceNonexistentPath(t *testing.T) {
-	doesNotExist := "/dev/null/null"
-	_, err := NewFileSource(doesNotExist)
-	assert.Error(t, err, "should not create for nonexistent path")
-}
-
-func TestSourceValidPath(t *testing.T) {
-	exists := "/"
-	_, err := NewFileSource(exists)
-	assert.NoError(t, err, "valid path")
-
-	relative := "."
-	_, err = NewFileSource(relative)
-	assert.NoError(t, err, "valid path")
-}
-
 func TestSourceObjectsNoKubeDir(t *testing.T) {
 	fs := testTempFileSource(t)
 	defer os.RemoveAll(string(fs))
@@ -344,11 +328,7 @@ func testWriteYAMLToFile(t *testing.T, filename string, typ interface{}) {
 
 func testTempFileSource(t *testing.T) FileSource {
 	dir := testTempDir(t)
-	fs, err := NewFileSource(dir)
-	if err != nil {
-		t.Error(err)
-	}
-	return fs
+	return FileSource(dir)
 }
 
 func testTempDir(t *testing.T) string {

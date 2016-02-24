@@ -37,14 +37,6 @@ const (
 // ContainerExtension is considered a container.
 type FileSource string
 
-// NewFileSource returns a source for the path to a file or directory. Path must be valid.
-func NewFileSource(path string) (FileSource, error) {
-	if _, err := os.Stat(path); err != nil {
-		return FileSource(""), fmt.Errorf("could not create fileSource: %v", err)
-	}
-	return FileSource(path), nil
-}
-
 // Entities returns the entities of the requested type from the source. Errors if any invalid entities.
 func (fs FileSource) Entities(t entity.Type, objects ...deploy.KubeObject) ([]entity.Entity, error) {
 	switch t {

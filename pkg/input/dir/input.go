@@ -3,6 +3,7 @@ package dir
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"rsprd.com/spread/pkg/entity"
 
@@ -16,13 +17,12 @@ type FileInput struct {
 
 // NewFileInput returns an Input based on a file system
 func NewFileInput(path string) (*FileInput, error) {
-	src, err := NewFileSource(path)
-	if err != nil {
+	if _, err := os.Stat(path); err != nil {
 		return nil, err
 	}
 
 	return &FileInput{
-		FileSource: src,
+		FileSource: FileSource(path),
 	}, nil
 }
 
