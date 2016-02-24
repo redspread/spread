@@ -11,6 +11,7 @@ import (
 	kubecli "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	"k8s.io/kubernetes/pkg/kubectl/cmd/config"
+	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util/strategicpatch"
 )
@@ -58,9 +59,10 @@ func (c *KubeCluster) Context() string {
 	return c.context
 }
 
-// Deploy creates/updates the Deployment's objects on the Kubernetes cluster. If update is not set, will error if objects exist.
+// Deploy creates/updates the Deployment's objects on the Kubernetes cluster.
 // Currently no error recovery is implemented; if there is an error the deployment process will immediately halt and return the error.
-func (c *KubeCluster) Deploy(dep *Deployment, update bool) error {
+// If update is not set, will error if objects exist. If deleteModifiedPods is set, pods of modified RCs will be deleted.
+func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) error {
 	if c.client == nil {
 		return errors.New("client not setup (was nil)")
 	}
@@ -83,6 +85,13 @@ func (c *KubeCluster) Deploy(dep *Deployment, update bool) error {
 		err := c.deploy(obj, update)
 		if err != nil {
 			return err
+		}
+
+		if rc, isRC := obj.(*kube.ReplicationController); isRC && deleteModifiedPods {
+			err = c.deletePods(rc)
+			if err != nil {
+				return fmt.Errorf("could not delete pods for rc `%s/%s`: %v", rc.Namespace, rc.Name, err)
+			}
 		}
 	}
 
@@ -187,6 +196,30 @@ func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObj
 	}
 
 	return asKubeObject(runtimeObj)
+}
+
+func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
+	if rc == nil {
+		return errors.New("rc was nil")
+	}
+
+	// list pods
+	opts := kube.ListOptions{
+		LabelSelector: labels.Set(rc.Spec.Selector).AsSelector(),
+	}
+	podList, err := c.client.Pods(rc.Namespace).List(opts)
+	if err != nil {
+		return err
+	}
+
+	// delete pods
+	for _, pod := range podList.Items {
+		err := c.client.Pods(pod.Namespace).Delete(pod.Name, nil)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // setRequestObjectInfo adds necessary type information to requests.
