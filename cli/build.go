@@ -1,9 +1,6 @@
 package cli
 
 import (
-	"errors"
-	"fmt"
-
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/entity"
 	"rsprd.com/spread/pkg/input/dir"
@@ -11,13 +8,12 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-// Deploy allows the creation of deploy.Deployments remotely
-func (s SpreadCli) Deploy() *cli.Command {
+// Build is used for rapid iteration with Kubernetes
+func (s SpreadCli) Build() *cli.Command {
 	return &cli.Command{
-		Name:        "deploy",
-		Usage:       "spread deploy [-s] PATH [kubectl context]",
-		Description: "Deploys objects to a remote Kubernetes cluster.",
-		ArgsUsage:   "-s will deploy only if no other deployment found (otherwise fails)",
+		Name:        "build",
+		Usage:       "spread build PATH [kubectl context]",
+		Description: "Immediately deploy objects to a remote Kubernetes cluster. In the future will also build a Dockerfile and push the resulting image",
 		Action: func(c *cli.Context) {
 			srcDir := c.Args().First()
 			if len(srcDir) == 0 {
@@ -61,49 +57,15 @@ func (s SpreadCli) Deploy() *cli.Command {
 				s.fatalf("Failed to deploy: %v", err)
 			}
 
-			s.printf("Deploying %d objects using the %s.", dep.Len(), displayContext(context))
+			s.printf("Updating %d objects using the %s.", dep.Len(), displayContext(context))
 
-			update := !c.Bool("s")
-			err = cluster.Deploy(dep, update, false)
+			err = cluster.Deploy(dep, true, true)
 			if err != nil {
 				//TODO: make better error messages (one to indicate a deployment already existed; another one if a deployment did not exist but some other error was thrown
 				s.fatalf("Did not deploy.: %v", err)
 			}
 
-			s.printf("Deployment successful!")
+			s.printf("Build successful!")
 		},
 	}
 }
-
-func objectOnlyDeploy(input *dir.FileInput) error {
-	objects, err := input.Objects()
-	if err != nil {
-		return err
-	} else if len(objects) == 0 {
-		return ErrNothingDeployable
-	}
-
-	deployment := new(deploy.Deployment)
-	for _, obj := range objects {
-		err = deployment.Add(obj)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func inputError(srcDir string, err error) string {
-	return fmt.Sprintf("Error using `%s`: %v", srcDir, err)
-}
-
-func displayContext(name string) string {
-	if name == deploy.DefaultContext {
-		return "default context"
-	}
-	return fmt.Sprintf("context '%s'", name)
-}
-
-var (
-	ErrNothingDeployable = errors.New("there is nothing deployable")
-)
