@@ -16,7 +16,7 @@ See how we deployed Mattermost (<a href="https://github.com/redspread/kube-matte
 
 <p align="center"><img src="http://i.imgur.com/Vohnd3e.gif" alt="logo" width= "800"/></p>
 
-Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
+Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be build next and send us pull requests for any features you’d like to see added.
 
 See our [philosophy](./philosophy.md) for more on our mission and values. 
 
