@@ -8,6 +8,7 @@ import (
 
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
+	rest "k8s.io/kubernetes/pkg/client/restclient"
 	kubecli "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	"k8s.io/kubernetes/pkg/kubectl/cmd/config"
@@ -223,7 +224,7 @@ func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
 }
 
 // setRequestObjectInfo adds necessary type information to requests.
-func setRequestObjectInfo(req *kubecli.Request, namespace string, mapping *meta.RESTMapping) {
+func setRequestObjectInfo(req *rest.Request, namespace string, mapping *meta.RESTMapping) {
 	// if namespace scoped resource, set namespace
 	req.NamespaceIfScoped(namespace, isNamespaceScoped(mapping))
 
