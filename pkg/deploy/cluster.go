@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
@@ -364,5 +365,8 @@ func printLoadBalancers(client *kubecli.Client, services []*kube.Service) {
 				}
 			}
 		}
+
+		// prevents warning about throttling
+		time.Sleep(250 * time.Millisecond)
 	}
 }
