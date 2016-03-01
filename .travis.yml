@@ -12,11 +12,6 @@ install:
   - go get -u github.com/golang/lint/golint
 
 before_script:
-  # Fix to get around issue with Kubernetes not
-  # loading types from rewritten imports
-  - export GO15VENDOREXPERIMENT=0
-  - cp -r ./vendor/* $GOPATH/src
-
   - go vet $SPREAD
 
 script:

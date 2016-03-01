@@ -7,10 +7,10 @@ export GOPATH="$(pwd)/.gopath"
 rm -rf $GOPATH
 mkdir -p $GOPATH/src/rsprd.com/spread
 
+# Ensure vendoring is enabled (for 1.5)
+export GO15VENDOREXPERIMENT=1
+
 # link source to GOPATH
-cp -r {pkg,cmd,cli} $GOPATH/src/rsprd.com/spread/
+cp -r * $GOPATH/src/rsprd.com/spread/
 
-# Copy in dependencies to get around Kube import check
-cp -r ./vendor/* $GOPATH/src
-
-go build rsprd.com/spread/cmd/spread
+go build -v rsprd.com/spread/cmd/spread
