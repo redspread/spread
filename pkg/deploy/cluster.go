@@ -29,23 +29,32 @@ type KubeCluster struct {
 // NewKubeClusterFromContext creates a KubeCluster using a Kubernetes client with the configuration of the given context.
 // If the context name is empty, the default context will be used.
 func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
-	rules := defaultLoadingRules()
-
-	overrides := &clientcmd.ConfigOverrides{
-		CurrentContext: name,
-	}
-
-	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
-
-	clientConfig, err := config.ClientConfig()
+	rulesConfig, err := defaultLoadingRules().Load()
 	if err != nil {
-		if len(name) == 0 {
-			return nil, fmt.Errorf("could not use default context: %v", err)
-		}
-		return nil, fmt.Errorf("could not use context `%s`: %v", name, err)
+		return nil, fmt.Errorf("could not load rules: %v", err)
 	}
 
-	client, err := kubecli.New(clientConfig)
+	clientConfig := clientcmd.NewNonInteractiveClientConfig(*rulesConfig, name, &clientcmd.ConfigOverrides{})
+
+	rawConfig, err := clientConfig.RawConfig()
+	if err != nil || rawConfig.Contexts == nil {
+		return nil, fmt.Errorf("could not access kubectl config: %v", err)
+	}
+
+	if name == DefaultContext {
+		name = rawConfig.CurrentContext
+	}
+
+	if rawConfig.Contexts[name] == nil {
+		return nil, fmt.Errorf("context '%s' does not exist", name)
+	}
+
+	restClientConfig, err := clientConfig.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf("could not get ClientConfig: %v", err)
+	}
+
+	client, err := kubecli.New(restClientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not create Kubernetes client: %v", err)
 	}
