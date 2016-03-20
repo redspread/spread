@@ -79,3 +79,11 @@ clean:
 	rm -vf .gox-* .golint-*
 	rm -rfv ./build 
 	$(GO) clean $(PKGS) || true
+
+.PHONY: godep
+godep:
+	go get -u -v github.com/tools/godep
+	@echo "Recalculating godeps, removing Godeps and vendor if not canceled in 5 seconds"
+	@sleep 5
+	rm -rf Godeps vendor
+	GO15VENDOREXPERIMENT="1" godep save -v ./pkg/... ./cli/... ./cmd/...
