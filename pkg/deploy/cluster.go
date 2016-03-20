@@ -22,8 +22,9 @@ const DefaultContext = ""
 
 // KubeCluster is able to deploy to Kubernetes clusters. This is a very simple implementation with no error recovery.
 type KubeCluster struct {
-	client  *kubecli.Client
-	context string
+	client    *kubecli.Client
+	context   string
+	localkube bool
 }
 
 // NewKubeClusterFromContext creates a KubeCluster using a Kubernetes client with the configuration of the given context.
@@ -60,8 +61,9 @@ func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
 	}
 
 	return &KubeCluster{
-		client:  client,
-		context: name,
+		client:    client,
+		context:   name,
+		localkube: name == "localkube",
 	}, nil
 }
 
@@ -106,7 +108,7 @@ func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) e
 		}
 	}
 
-	printLoadBalancers(c.client, dep.services)
+	printLoadBalancers(c.client, dep.services, c.localkube)
 
 	// deployed successfully
 	return nil
@@ -332,7 +334,7 @@ func copyImmutables(src, dst KubeObject) {
 	}
 }
 
-func printLoadBalancers(client *kubecli.Client, services []*kube.Service) {
+func printLoadBalancers(client *kubecli.Client, services []*kube.Service, localkube bool) {
 	if len(services) == 0 {
 		return
 	}
@@ -365,6 +367,13 @@ func printLoadBalancers(client *kubecli.Client, services []*kube.Service) {
 				clusterVers, err := client.Services(s.Namespace).Get(s.Name)
 				if err != nil {
 					fmt.Printf("Error getting service `%s`: %v\n", s.Name, err)
+				}
+
+				if localkube {
+					completed[s.Name] = true
+					for _, port := range clusterVers.Spec.Ports {
+						fmt.Printf("'%s/%s' - %s available on localkube host port:\t %d\n", s.Namespace, s.Name, port.Name, port.NodePort)
+					}
 				}
 
 				loadBalancers := clusterVers.Status.LoadBalancer.Ingress

@@ -83,6 +83,7 @@ func (s SpreadCli) startLocalkube(c *cli.Context) {
 				s.fatalf("Failed to start container: %v", err)
 			}
 			s.startLocalkube(c)
+			return
 		}
 		s.fatalf("Failed to create localkube container: %v", err)
 
