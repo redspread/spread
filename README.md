@@ -25,19 +25,53 @@ See our [philosophy](./philosophy.md) for more on our mission and values.
 
 ##Installation
 
+**OS X**  
+
 `$ brew tap redspread/spread`  
 `$ brew install spread`
 
+**Linux/Windows**
+
+Make sure Go and Git are installed.
+
+`go get rsprd.com/spread/cmd/spread`
+
 ##Quickstart
 
-This assumes you have a <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">running Kubernetes cluster</a>.
+This assumes you have kubectl configured to a running Kubernetes cluster, whether [local](https://github.com/redspread/spread#localkube) or <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a>.
 
-1. Install Spread with `$ brew tap redspread/spread` then `$ brew install spread` 
+1. Install Spread
 2. Clone <a href="http://mattermost.com">Mattermost</a>, the open source Slack `$ git clone http://github.com/redspread/kube-mattermost`
-5. Deploy Mattermost to Kubernetes: `$ spread deploy .`
-6. Grab the public IP and put it in your browser to see your self-hosted app!
+5. Deploy Mattermost to Kubernetes: `$ spread build .` (local cluster) or `$ spread deploy .` (remote cluster)
+6. Copy the IP and put it in your browser to see your self-hosted app!
 
 For a more detailed walkthrough, see the full <a href="https://github.com/redspread/kube-mattermost">guide</a>.
+
+##Localkube
+
+Spread makes it easy to set up and iterate with [localkube](https://github.com/redspread/localkube), a local Kubernetes cluster streamlined for rapid development. 
+
+**Requirements:**
+
+- Make sure [Docker](https://docs.docker.com/mac/) is set up correctly, including starting `docker-machine` to bring up a VM. [1]
+
+**Getting started:**
+
+- Run `spread cluster start` to start localkube
+- Sanity check: `kubectl cluster-info`
+
+**Suggested workflow:**
+- `docker build` the image that you want to work with [2]
+- Create Kubernetes objects that use the image build above
+- Run `spread build .` to deploy to cluster [3]
+- Iterate on your application, updating image and objects running `spread build .` each time you want to deploy changes
+- When finished, run `spread cluster stop` to stop localkube
+
+[1] For now, we recommend everyone use a VM when working with localkube
+[2] `spread` will soon integrate building ([#59](https://github.com/redspread/spread/issues/59))  
+[3] Since `localkube` shares a Docker daemon with your host, there is no need to push images :)
+
+[See more](https://github.com/redspread/localkube) for our suggestions when developing code with Localkube.
 
 ##What's been done so far
  
@@ -47,12 +81,13 @@ For a more detailed walkthrough, see the full <a href="https://github.com/redspr
 	* Returns a public IP address, if type Load Balancer is specified. 
 * Established an implicit hierarchy of Kubernetes objects
 * Multi-container deployment
+* Support for Linux and Windows
+* [localkube](https://github.com/redspread/localkube): easy-to-setup local Kubernetes cluster for rapid development
 
 ##What's being worked on now
 
 * Build functionality for `spread deploy` so it also builds any images indicated to be built and pushes those images to the indicated Docker registry.
 * `spread deploy -p`: Pushes all images to registry, even those not built by `spread deploy`.
-* Support for Linux and Windows
 * Inner-app linking
 * `spread logs`: Returns logs for any deployment, automatic trying until logs are accessible.
 * `spread build`: Builds Docker context and pushes to a local Kubernetes cluster.
@@ -61,7 +96,8 @@ For a more detailed walkthrough, see the full <a href="https://github.com/redspr
 See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a> here!
 
 ##Future Goals
-* Develop workflow for container versioning (containers = image + config)
+* Peer-to-peer syncing between local and remote Kubernetes clusters
+* Develop workflow for application and deployment versioning
 * Introduce paramaterization for container configuration
 
 ##FAQ
@@ -89,7 +125,7 @@ If you haven't already, it's worth going through <a href="http://fantasai.inkedb
 
 ##Contact
 Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>   
-Slack: <a href="http://redspread.slack.com">redspread.slack.com</a>  
+Slack: <a href="http://slackin.redspread.com">slackin.redspread.com</a>  
 Planning: <a href="https://github.com/redspread/spread/blob/master/roadmap.md">Roadmap</a>  
 Bugs: <a href="https://github.com/redspread/spread/issues">Issues</a>
 
