@@ -56,8 +56,7 @@ lint: .golint-install
 .PHONY: checkgofmt
 checkgofmt:
 	# get all go files and run go fmt on them
-	$(GOFILES) | xargs $(GOFMT) -l
-	files=$$($(GOFILES) | xargs $(GOFMT) -l); echo "test $$files"; if [[ -n "$$files" ]]; then \
+	files=$$($(GOFILES) | xargs $(GOFMT) -l); if [[ -n "$$files" ]]; then \
 		  echo "Error: '$(GOFMT)' needs to be run on:"; \
 		  echo "$${files}"; \
 		  exit 1; \
@@ -80,3 +79,11 @@ clean:
 	rm -vf .gox-* .golint-*
 	rm -rfv ./build 
 	$(GO) clean $(PKGS) || true
+
+.PHONY: godep
+godep:
+	go get -u -v github.com/tools/godep
+	@echo "Recalculating godeps, removing Godeps and vendor if not canceled in 5 seconds"
+	@sleep 5
+	rm -rf Godeps vendor
+	GO15VENDOREXPERIMENT="1" godep save -v ./pkg/... ./cli/... ./cmd/...
