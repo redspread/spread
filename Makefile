@@ -26,7 +26,7 @@ GITLAB_CONTEXT ?= ./build/gitlab
 
 # image data
 ORG ?= redspreadapps
-NAME ?= spread-gitlab
+NAME ?= gitlabci
 TAG ?= latest
 
 GITLAB_IMAGE_NAME = "$(ORG)/$(NAME):$(TAG)"

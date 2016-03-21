@@ -30,15 +30,27 @@ Disable requirement that connections must pass TLS verification
 
 Path to a cert file for the certificate authority.
 
+`KUBECFG_CERTIFICATE_AUTHORITY_DATA`
+
+Certificate data
+
 ### User
 
 `KUBECFG_CLIENT_CERTIFICATE`
 
 Path to a client cert file for TLS
 
+`KUBECFG_CLIENT_CERTIFICATE_DATA`
+
+TLS client cert data
+
 `KUBECFG_CLIENT_KEY`
 
 Path to a client key file for TLS.
+
+`KUBECFG_CLIENT_KEY_DATA`
+
+Key data
 
 `KUBECFG_TOKEN`
 

@@ -1,13 +1,8 @@
-FROM gliderlabs/alpine:3.3
-
-RUN apk-install bash
-
-WORKDIR /opt/spread-gitlab
+FROM docker:git
 
 ADD spread-linux-static /usr/local/bin/spread
-ADD entrypoint.sh ./entrypoint.sh
+ADD entrypoint.sh /opt/spread-gitlab/entrypoint.sh
 
 ENV KUBECFG_INSECURE_SKIP_TLS_VERIFY="false"
-ENV DEPLOY_DIR="."
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/opt/spread-gitlab/entrypoint.sh"]
