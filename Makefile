@@ -49,7 +49,7 @@ validate: lint checkgofmt vet
 
 .PHONY: build
 build:
-	$(GO) install $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) $(EXEC_PKG)
+	$(GO) build $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) $(EXEC_PKG)
 
 build/spread-linux-static:
 	GOOS=linux $(GO) build -o $@ $(GOBUILD_FLAGS) $(STATIC_LDFLAGS) $(EXEC_PKG)
