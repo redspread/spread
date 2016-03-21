@@ -11,13 +11,25 @@ GO ?= go
 GOX ?= gox
 GOFMT ?= gofmt # eventually should add "-s"
 GOLINT ?= golint
+DOCKER ?= docker
 
 GOFILES := find . -name '*.go' -not -path "./vendor/*"
 
 GOBUILD_LDFLAGS ?=
-GOBUILD_FLAGS ?=
+GOBUILD_FLAGS ?= -i -v
 GOTEST_FLAGS ?= -v
 GOX_FLAGS ?= -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="${GOX_OS}" -arch="${GOX_ARCH}"
+
+STATIC_LDFLAGS ?=  --ldflags '-extldflags "-static" --s -w'
+
+GITLAB_CONTEXT ?= ./build/gitlab
+
+# image data
+ORG ?= redspreadapps
+NAME ?= spread-gitlab
+TAG ?= latest
+
+GITLAB_IMAGE_NAME = "$(ORG)/$(NAME):$(TAG)"
 
 GOX_OS ?= linux darwin windows
 GOX_ARCH ?= amd64
@@ -39,9 +51,20 @@ validate: lint checkgofmt vet
 build:
 	$(GO) install $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) $(EXEC_PKG)
 
+build/spread-linux-static:
+	GOOS=linux $(GO) build -o $@ $(GOBUILD_FLAGS) $(STATIC_LDFLAGS) $(EXEC_PKG)
+	chmod +x $@
+
 .PHONY: crossbuild
 crossbuild: deps gox-setup
 	$(GOX) $(GOX_FLAGS) -gcflags="$(GOBUILD_FLAGS)" -ldflags="$(GOBUILD_LDFLAGS)" $(EXEC_PKG)
+
+.PHONY: build-gitlab
+build-gitlab: build/spread-linux-static
+	rm -rf $(GITLAB_CONTEXT)
+	cp -r ./images/gitlabci $(GITLAB_CONTEXT)
+	cp ./build/spread-linux-static $(GITLAB_CONTEXT)
+	$(DOCKER) build $(DOCKER_OPTS) -t $(GITLAB_IMAGE_NAME) $(GITLAB_CONTEXT)
 
 .PHONY: vet
 vet:
