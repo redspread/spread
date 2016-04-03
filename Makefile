@@ -41,11 +41,14 @@ all: clean validate test
 release: validate test integration crossbuild
 
 .PHONY: test
-test: build
+test: unit integration
+
+.PHONY: unit
+unit: build
 	$(GO) test $(GOTEST_FLAGS) $(PKGS)
 
 .PHONY: integration
-integration:
+integration: build
 	mkdir -p ./build
 	./test/mattermost-demo.sh
 
