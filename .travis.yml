@@ -1,9 +1,12 @@
 language: go
-sudo: false
+sudo: required
 go:
   - 1.6
 
 go_import_path: rsprd.com/spread
+
+services:
+  - docker
 
 install:
   # install build dependencies

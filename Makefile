@@ -38,7 +38,7 @@ GOX_ARCH ?= amd64
 all: clean validate test
 
 .PHONY: release
-release: validate test integration crossbuild
+release: validate test crossbuild
 
 .PHONY: test
 test: unit integration
@@ -56,8 +56,10 @@ integration: build
 validate: lint checkgofmt vet
 
 .PHONY: build
-build:
-	$(GO) build $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) $(EXEC_PKG)
+build: build/spread
+
+build/spread:
+	$(GO) build $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) -o $@ $(EXEC_PKG)
 
 build/spread-linux-static:
 	GOOS=linux $(GO) build -o $@ $(GOBUILD_FLAGS) $(STATIC_LDFLAGS) $(EXEC_PKG)

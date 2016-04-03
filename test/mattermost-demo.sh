@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 NODE_IP="127.0.0.1"
+SLEEP_TIME=10
 
 function retry() {
     COMMAND=$1
@@ -12,14 +13,18 @@ function retry() {
         RETRIES=$2
     fi
 
-    for i in {1..$RETRIES}; do eval "$COMMAND" && return || sleep 1; done
+    for i in `seq 1 $RETRIES`; do
+        PATH="$(pwd)/build:$PATH" eval "$COMMAND" && return
+        sleep $SLEEP_TIME
+    done
+
     echo "Failed to: $1"
-    exit 1
+    return 1
 }
 
 KUBECTL="./build/kubectl"
 MATTERMOST="./build/mattermost"
-export PATH="./build:$PATH"
+export PATH="$(pwd)/build:$PATH"
 
 if [ ! -f $KUBECTL ]; then
     echo "Installing kubectl..."
@@ -45,4 +50,5 @@ echo "Getting node port..."
 NODE_PORT=$(kubectl get services/mattermost-app --template='{{range .spec.ports}}{{printf "%g" .nodePort}}{{end}}')
 
 echo "Checking if started app successfully"
-retry "curl --fail http://$NODE_IP:$NODE_PORT" 10
+echo "waiting up to 100 seconds"
+retry "curl --fail http://$NODE_IP:$NODE_PORT" "10"
