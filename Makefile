@@ -38,11 +38,16 @@ GOX_ARCH ?= amd64
 all: clean validate test
 
 .PHONY: release
-release: validate test crossbuild
+release: validate test integration crossbuild
 
 .PHONY: test
 test: build
 	$(GO) test $(GOTEST_FLAGS) $(PKGS)
+
+.PHONY: integration
+integration:
+	mkdir -p ./build
+	./test/mattermost-demo.sh
 
 .PHONY: validate
 validate: lint checkgofmt vet
