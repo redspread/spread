@@ -32,9 +32,10 @@ See our [philosophy](./philosophy.md) for more on our mission and values.
 
 **Linux/Windows**
 
-Make sure Go and Git are installed.
+Make sure Go 1.5+ and Git are installed.
 
-`go get rsprd.com/spread/cmd/spread`
+Run:
+`GO15VENDOREXPERIMENT=1 go get rsprd.com/spread/cmd/spread`
 
 ##Quickstart
 
