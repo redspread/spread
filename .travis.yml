@@ -20,7 +20,7 @@ script:
 
 after_success:
   # If release then crosscompile
-  - if [ -n "$TRAVIS_TAG" ]; then make crossbuild; else echo "Skipping release build..."; fi
+  - if [ -n "$TRAVIS_TAG" ]; then SPREAD_VERSION=$TRAVIS_TAG make crossbuild; else echo "Skipping release build..."; fi
 
 deploy:
   provider: releases
