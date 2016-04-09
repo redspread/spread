@@ -32,6 +32,8 @@ if [ ! -f $KUBECTL ]; then
     chmod +x $KUBECTL
 fi
 
+spread
+
 echo "Starting up localkube server"
 spread cluster start
 

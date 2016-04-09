@@ -4,6 +4,11 @@ CMD_NAME := spread
 EXEC_PKG := $(BASE)/cmd/$(CMD_NAME)
 PKGS := ./pkg/... ./cli/... ./cmd/...
 
+# set spread version if not provided by environment
+ifndef SPREAD_VERSION
+	SPREAD_VERSION := v0.0.0
+endif
+
 GOX_OS ?= linux darwin windows
 GOX_ARCH ?= amd64
 
@@ -13,14 +18,16 @@ GOFMT ?= gofmt # eventually should add "-s"
 GOLINT ?= golint
 DOCKER ?= docker
 
+VERSION_LDFLAG := -X main.Version=$(SPREAD_VERSION)
+
 GOFILES := find . -name '*.go' -not -path "./vendor/*"
 
-GOBUILD_LDFLAGS ?=
+GOBUILD_LDFLAGS ?= $(VERSION_LDFLAG)
 GOBUILD_FLAGS ?= -i -v
 GOTEST_FLAGS ?= -v
 GOX_FLAGS ?= -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="${GOX_OS}" -arch="${GOX_ARCH}"
 
-STATIC_LDFLAGS ?=  --ldflags '-extldflags "-static" --s -w'
+STATIC_LDFLAGS ?= -extldflags "-static" --s -w
 
 GITLAB_CONTEXT ?= ./build/gitlab
 
@@ -59,15 +66,15 @@ validate: lint checkgofmt vet
 build: build/spread
 
 build/spread:
-	$(GO) build $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) -o $@ $(EXEC_PKG)
+	$(GO) build $(GOBUILD_FLAGS) -ldflags "$(GOBUILD_LDFLAGS)" -o $@ $(EXEC_PKG)
 
 build/spread-linux-static:
-	GOOS=linux $(GO) build -o $@ $(GOBUILD_FLAGS) $(STATIC_LDFLAGS) $(EXEC_PKG)
+	GOOS=linux $(GO) build -o $@ $(GOBUILD_FLAGS) -ldflags "$(GOBUILD_LDFLAGS) $(STATIC_LDFLAGS)" $(EXEC_PKG)
 	chmod +x $@
 
 .PHONY: crossbuild
 crossbuild: deps gox-setup
-	$(GOX) $(GOX_FLAGS) -gcflags="$(GOBUILD_FLAGS)" -ldflags="$(GOBUILD_LDFLAGS)" $(EXEC_PKG)
+	$(GOX) $(GOX_FLAGS) -gcflags="$(GOBUILD_FLAGS)" -ldflags="$(GOBUILD_LDFLAGS) $(STATIC_LDFLAGS)" $(EXEC_PKG)
 
 .PHONY: build-gitlab
 build-gitlab: build/spread-linux-static
