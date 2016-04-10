@@ -794,8 +794,8 @@
 		},
 		{
 			"ImportPath": "rsprd.com/localkube/pkg/localkubectl",
-			"Comment": "v1.2.0-v1-11-g89c7799",
-			"Rev": "89c779965c17ff8fb01886012c4432500a4de3c0"
+			"Comment": "v1.2.0-v1-19-g6474c5b",
+			"Rev": "6474c5bfa75d77f6a40054723d549eeed7bf2570"
 		},
 		{
 			"ImportPath": "speter.net/go/exp/math/dec/inf",

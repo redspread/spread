@@ -36,7 +36,13 @@ func Command(out io.Writer) *cli.Command {
 				Name:        "start",
 				Usage:       "spread cluster start [-t <tag>] [ClusterDataDirectory]",
 				Description: "Starts the localkube cluster",
-				ArgsUsage:   "-t specifies localkube image tag to use, default is latest",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name: "t",
+						Value: LocalkubeDefaultTag,
+						Usage: "specifies localkube image tag to use, default is latest",
+					},
+				},
 				Action: func(c *cli.Context) {
 					// create new Docker client
 					ctlr, err := NewControllerFromEnv(out)
@@ -85,7 +91,12 @@ func Command(out io.Writer) *cli.Command {
 				Name:        "stop",
 				Usage:       "spread cluster stop [-r]",
 				Description: "Stops the localkube cluster",
-				ArgsUsage:   "-r removes container",
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name: "r",
+						Usage: "removes container",
+					},
+				},
 				Action: func(c *cli.Context) {
 					ctlr, err := NewControllerFromEnv(out)
 					if err != nil {
@@ -125,9 +136,6 @@ func startCluster(ctlr *Controller, log *log.Logger, c *cli.Context) error {
 
 	// set tag
 	tag := c.String("t")
-	if len(tag) == 0 {
-		tag = LocalkubeDefaultTag
-	}
 
 	// check if localkube container exists
 	ctrId, running, err := ctlr.OnlyLocalkubeCtr()
