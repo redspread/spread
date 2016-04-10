@@ -3,6 +3,7 @@ set -e
 
 NODE_IP="127.0.0.1"
 SLEEP_TIME=10
+LOCALKUBE_TAG="v1.2.1-v1"
 
 function retry() {
     COMMAND=$1
@@ -35,7 +36,7 @@ fi
 spread
 
 echo "Starting up localkube server"
-spread cluster start
+spread cluster start -t $LOCALKUBE_TAG
 
 if [ ! -d "$MATTERMOST" ]; then
     echo "Cloning mattermost deployment repo"
