@@ -85,7 +85,7 @@ build-gitlab: build/spread-linux-static
 
 .PHONY: vet
 vet:
-	$(GO) vet $(PKGS) 
+	$(GO) vet $(PKGS)
 
 lint: .golint-install
 	for pkg in $(PKGS); do \
@@ -117,7 +117,7 @@ gox-setup: .gox-install
 .PHONY: clean
 clean:
 	rm -vf .gox-* .golint-*
-	rm -rfv ./build 
+	rm -rfv ./build
 	$(GO) clean $(PKGS) || true
 
 .PHONY: godep
