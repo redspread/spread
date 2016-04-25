@@ -96,7 +96,7 @@ lint: .golint-install
 .PHONY: checkgofmt
 checkgofmt:
 	# get all go files and run go fmt on them
-	files=$$($(GOFILES) | xargs $(GOFMT) -l); if [[ -n "$$files" ]]; then \
+	files=$$($(GOFILES) | xargs $(GOFMT) -l); if [ -n "$$files" ]; then \
 		  echo "Error: '$(GOFMT)' needs to be run on:"; \
 		  echo "$${files}"; \
 		  exit 1; \
