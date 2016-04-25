@@ -89,8 +89,8 @@ vet:
 
 lint: .golint-install
 	for pkg in $(PKGS); do \
-		echo "Running golint on $$i:"; \
-		golint $$i; \
+		echo "Running golint on $$pkg:"; \
+		golint $$pkg; \
 	done;
 
 .PHONY: checkgofmt
