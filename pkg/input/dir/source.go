@@ -137,7 +137,7 @@ func (fs FileSource) pods(objects []deploy.KubeObject) (pods []entity.Entity, er
 				return fmt.Errorf("expected type `Pod` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
 			}
 
-			pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, info.Source, objects...)
+			pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, filePath, objects...)
 			if err != nil {
 				return err
 			}

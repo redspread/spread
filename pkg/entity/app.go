@@ -33,6 +33,10 @@ func NewApp(entities []Entity, defaults kube.ObjectMeta, source string, objects 
 // Deployment is created using Deployments of child Entities
 func (c *App) Deployment() (*deploy.Deployment, error) {
 	d := new(deploy.Deployment)
+	err := d.AddDeployment(c.objects)
+	if err != nil {
+		return nil, err
+	}
 	for _, entity := range c.children() {
 		deploy, err := entity.Deployment()
 		if err != nil {
