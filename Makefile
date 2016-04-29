@@ -85,18 +85,18 @@ build-gitlab: build/spread-linux-static
 
 .PHONY: vet
 vet:
-	$(GO) vet $(PKGS) 
+	$(GO) vet $(PKGS)
 
 lint: .golint-install
 	for pkg in $(PKGS); do \
-		echo "Running golint on $$i:"; \
-		golint $$i; \
+		echo "Running golint on $$pkg:"; \
+		golint $$pkg; \
 	done;
 
 .PHONY: checkgofmt
 checkgofmt:
 	# get all go files and run go fmt on them
-	files=$$($(GOFILES) | xargs $(GOFMT) -l); if [[ -n "$$files" ]]; then \
+	files=$$($(GOFILES) | xargs $(GOFMT) -l); if [ -n "$$files" ]; then \
 		  echo "Error: '$(GOFMT)' needs to be run on:"; \
 		  echo "$${files}"; \
 		  exit 1; \
@@ -117,7 +117,7 @@ gox-setup: .gox-install
 .PHONY: clean
 clean:
 	rm -vf .gox-* .golint-*
-	rm -rfv ./build 
+	rm -rfv ./build
 	$(GO) clean $(PKGS) || true
 
 .PHONY: godep
