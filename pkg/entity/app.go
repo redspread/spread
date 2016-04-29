@@ -7,6 +7,9 @@ import (
 	kube "k8s.io/kubernetes/pkg/api"
 )
 
+// ensure implements Entity
+var _ Entity = new(App)
+
 // App is a new Spread construct that can group together sets of Entities.
 type App struct {
 	base
