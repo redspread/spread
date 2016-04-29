@@ -29,7 +29,7 @@ const (
 	ContainerExtension = ".ctr"
 
 	// ObjectsDir is the directory checked for arbitrary Kubernetes objects.
-	ObjectsDir = ".k2e"
+	ObjectsDir = "rs"
 )
 
 // FileSource provides access to Entities stored according to the Redspread file convention.
