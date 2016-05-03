@@ -122,8 +122,8 @@ func TestSourceEntitiesEmptyFile(t *testing.T) {
 	defer os.RemoveAll(string(fs))
 
 	entityFiles := []string{
-		path.Join(string(fs), RCFile),
-		path.Join(string(fs), PodFile),
+		path.Join(string(fs), "dogan.rc.yml"),
+		path.Join(string(fs), "hampshire.pod.json"),
 	}
 
 	// create files
@@ -155,7 +155,7 @@ func TestSourceRCs(t *testing.T) {
 	fs := testTempFileSource(t)
 	defer os.RemoveAll(string(fs))
 
-	rcFile := path.Join(string(fs), RCFile)
+	rcFile := path.Join(string(fs), "test.rc.json")
 
 	selector := map[string]string{"app": "example"}
 
@@ -220,7 +220,7 @@ func TestSourcePods(t *testing.T) {
 	fs := testTempFileSource(t)
 	defer os.RemoveAll(string(fs))
 
-	podFile := path.Join(string(fs), PodFile)
+	podFile := path.Join(string(fs), "test.pod.yaml")
 
 	terminationPeriod := int64(30)
 	kubePod := &kube.Pod{
@@ -380,12 +380,18 @@ func randomString(strlen int) string {
 	return string(result)
 }
 
+// testRandomExtension selects and returns one of the "ObjectExtensions" at random
+func testRandomExtension() string {
+	num := rand.Intn(len(ObjectExtensions))
+	return ObjectExtensions[num]
+}
+
 func testClearTypeInfo(obj deploy.KubeObject) {
 	obj.GetObjectKind().SetGroupVersionKind(nil)
 }
 
 func testCompareEntity(t *testing.T, expected, actual entity.Entity) bool {
-	assert.Equal(t, expected.Source(), actual.Source(), "spurces should match")
+	assert.Equal(t, expected.Source(), actual.Source(), "sources should match")
 	assert.Equal(t, expected.DefaultMeta(), actual.DefaultMeta())
 
 	actualImages := actual.Images()

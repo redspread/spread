@@ -19,17 +19,22 @@ import (
 )
 
 const (
-	// RCFile is the filename checked for Replication Controllers.
-	RCFile = "rc.yml"
-
-	// PodFile is the filename checked for Pods.
-	PodFile = "pod.yml"
-
 	// ContainerExtension is the file extension checked for Containers.
 	ContainerExtension = ".ctr"
 
 	// ObjectsDir is the directory checked for arbitrary Kubernetes objects.
-	ObjectsDir = ".k2e"
+	ObjectsDir = "rs"
+)
+
+var (
+	// RCExtension is the partial extension checked for RCs
+	RCExtension = "rc"
+
+	// PodExtension is the partial extension checked for Pods.
+	PodExtension = "pod"
+
+	// ObjectExtensions are the file extensions that objects should be checked for in
+	ObjectExtensions = []string{"json", "yml", "yaml"}
 )
 
 // FileSource provides access to Entities stored according to the Redspread file convention.
@@ -79,52 +84,76 @@ func (fs FileSource) Objects() (objects []deploy.KubeObject, err error) {
 
 // rcs returns entities for the rcs in the RCFile
 func (fs FileSource) rcs(objects []deploy.KubeObject) (rcs []entity.Entity, err error) {
-	filePath := path.Join(string(fs), RCFile)
+	pattern := fmt.Sprintf("%s/*%s", fs, RCExtension)
 
-	err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
-		kubeRC, ok := info.Object.(*kube.ReplicationController)
-		if !ok {
-			return fmt.Errorf("expected type `ReplicationController` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
+	patternExts := withExtensions(pattern)
+	paths, err := multiGlob(patternExts...)
+	if err != nil {
+		return rcs, err
+	}
+
+	for _, filePath := range paths {
+		err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
+			kubeRC, ok := info.Object.(*kube.ReplicationController)
+			if !ok {
+				return fmt.Errorf("expected type `ReplicationController` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
+			}
+
+			rc, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, info.Source, objects...)
+			if err != nil {
+				return err
+			}
+
+			rcs = append(rcs, rc)
+			return nil
+		})
+
+		if checkErrPathDoesNotExist(err) {
+			// it's okay if directory doesn't exit
+			err = nil
 		}
 
-		rc, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, info.Source, objects...)
 		if err != nil {
-			return err
+			return
 		}
-
-		rcs = append(rcs, rc)
-		return nil
-	})
-
-	if checkErrPathDoesNotExist(err) {
-		// it's okay if directory doesn't exit
-		err = nil
 	}
 	return
 }
 
 // pods returns Pods for the rcs in the PodFile
 func (fs FileSource) pods(objects []deploy.KubeObject) (pods []entity.Entity, err error) {
-	filePath := path.Join(string(fs), PodFile)
+	pattern := fmt.Sprintf("%s/*%s", fs, PodExtension)
 
-	err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
-		kubePod, ok := info.Object.(*kube.Pod)
-		if !ok {
-			return fmt.Errorf("expected type `Pod` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
+	patternExts := withExtensions(pattern)
+	paths, err := multiGlob(patternExts...)
+	if err != nil {
+		return pods, err
+	}
+
+	for _, filePath := range paths {
+		err = walkPathForObjects(filePath, func(info *resource.Info, err error) error {
+			kubePod, ok := info.Object.(*kube.Pod)
+			if !ok {
+				return fmt.Errorf("expected type `Pod` but found `%s`", info.Object.GetObjectKind().GroupVersionKind().Kind)
+			}
+
+			pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, filePath, objects...)
+			if err != nil {
+				return err
+			}
+
+			pods = append(pods, pod)
+			return nil
+		})
+
+		if checkErrPathDoesNotExist(err) {
+			// it's okay if directory doesn't exist
+			err = nil
 		}
 
-		pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, info.Source, objects...)
 		if err != nil {
-			return err
+			return
 		}
-
-		pods = append(pods, pod)
-		return nil
-	})
-
-	if checkErrPathDoesNotExist(err) {
-		// it's okay if directory doesn't exit
-		err = nil
 	}
 	return
 }
@@ -211,6 +240,31 @@ func walkPathForObjects(path string, fn resource.VisitorFunc) error {
 		return err
 	}
 	return nil
+}
+
+// withExtensions returns the inputted string with the supported file extensions appended to it
+func withExtensions(begin string) []string {
+	if len(ObjectExtensions) == 0 {
+		return []string{begin}
+	}
+	var paths []string
+	for _, ext := range ObjectExtensions {
+		path := fmt.Sprintf("%s.%s", begin, ext)
+		paths = append(paths, path)
+	}
+	return paths
+}
+
+// multiGlob returns the result of multiple Globs into a single slice.
+func multiGlob(patterns ...string) (results []string, err error) {
+	for _, pattern := range patterns {
+		r, err := filepath.Glob(pattern)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, r...)
+	}
+	return results, err
 }
 
 func unmarshalContainer(path string) (ctr kube.Container, err error) {
