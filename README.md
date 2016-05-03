@@ -4,9 +4,9 @@
 
 <p align="center"><a href="https://redspread.com">Website</a> | <a href="http://slackin.redspread.com/">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
 
-#Docker to Kubernetes in one command
+#Spread: Docker to Kubernetes in one command
 
-`spread` is a command line tool that builds and deploys a [Docker](https://github.com/docker/docker) project to a [Kubernetes](https://github.com/kubernetes/kubernetes) cluster in one command. The project's goals are to:
+`spread` is a command line tool that makes it easy to version Kubernetes objects (see: [Kit](https://github.com/redspread/kit)), set up a local Kubernetes cluster (see: [localkube](https://github.com/redspread/localkube)), and deploy to Kubernetes clusters in one command. The project's goals are to:
 
 * Enable rapid iteration with Kubernetes
 * Be the fastest, simplest way to deploy Docker to production
@@ -21,58 +21,53 @@ Spread is under open, active development. New features will be added regularly o
 See our [philosophy](./philosophy.md) for more on our mission and values. 
 
 ##Requirements
-* <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">Kubernetes cluster with kubectl installed</a>
+* Running Kubernetes cluster (<a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a> or <a href="https://github.com/redspread/localkube>local</a>)
+* [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [Go](https://golang.org/doc/install) (v 1.6)
 
 ##Installation
 
-**OS X**  
+Install with `go get`:
+
+`go get rsprd.com/spread/cmd/spread`
+
+Or, if you prefer using Homebrew (OS X only): 
 
 `$ brew tap redspread/spread`  
 `$ brew install spread`
 
-**Linux/Windows**
-
-Make sure Go 1.5+ and Git are installed.
-
-Run:
-`GO15VENDOREXPERIMENT=1 go get rsprd.com/spread/cmd/spread`
-
 ##Quickstart
 
-This assumes you have kubectl configured to a running Kubernetes cluster, whether [local](https://github.com/redspread/spread#localkube) or <a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a>.
-
-1. Install Spread
-2. Clone <a href="http://mattermost.com">Mattermost</a>, the open source Slack `$ git clone http://github.com/redspread/kube-mattermost`
-5. Deploy Mattermost to Kubernetes: `$ spread build .` (local cluster) or `$ spread deploy .` (remote cluster)
-6. Copy the IP and put it in your browser to see your self-hosted app!
-
-For a more detailed walkthrough, see the full <a href="https://github.com/redspread/kube-mattermost">guide</a>.
+Check out our <a href="https://redspread.readme.io/docs/getting-started">Getting Started Guide</a>.
 
 ##Localkube
 
 Spread makes it easy to set up and iterate with [localkube](https://github.com/redspread/localkube), a local Kubernetes cluster streamlined for rapid development. 
 
 **Requirements:**
+* [Docker](https://docs.docker.com/engine/installation/)
+* [docker-machine](https://docs.docker.com/machine/install-machine/)
+* [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 
-- Make sure [Docker](https://docs.docker.com/mac/) is set up correctly, including starting `docker-machine` to bring up a VM. [1]
+(Note: For Mac and Windows users, the fastest way to install everything above is [Docker Toolbox](https://www.docker.com/products/docker-toolbox).)
 
-**Getting started:**
-
-- Run `spread cluster start` to start localkube
-- Sanity check: `kubectl cluster-info` [2]
+**Get started:**
+1. Create a machine called dev: `docker-machine create --driver virtualbox dev`
+2. Start your docker-machine: `docker-machine start dev`
+3. Connect to the docker daemon: `eval "$(docker-machine env dev)"`
+4. Spin up a local cluster using [localkube](http://github.com/redspread/localkube): `spread cluster start`
+5. To stop the cluster: `spread cluster stop`
 
 **Suggested workflow:**
-- `docker build` the image that you want to work with [2]
+- `docker build` the image that you want to work with [1]
 - Create Kubernetes objects that use the image build above
-- Run `spread build .` to deploy to cluster [3]
-- Iterate on your application, updating image and objects running `spread build .` each time you want to deploy changes
-- To preview changes, grab the IP of your docker daemon and use `kubectl describe services/'SERVICE-NAME'` for the `NodePort`, then put the `IP:NodePort` in your browser
+- Run `spread deploy .` to deploy to cluster [2]
+- Iterate on your application, updating image and objects running `spread deploy .` each time you want to deploy changes
+- To preview changes, grab the IP of your docker daemon with `docker-machine env <NAME>`and the returned `NodePort`, then put `IP:NodePort` in your browser
 - When finished, run `spread cluster stop` to stop localkube
 
-[1] For now, we recommend everyone use a VM when working with `localkube`  
-[2] There will be a delay in returning info the first time you start localkube, as the Weave networking container needs to download. This pause will be fixed in future releases.  
-[3] `spread` will soon integrate building ([#59](https://github.com/redspread/spread/issues/59))    
-[4] Since `localkube` shares a Docker daemon with your host, there is no need to push images :)
+[1] `spread` will soon integrate building ([#59](https://github.com/redspread/spread/issues/59))    
+[2] Since `localkube` shares a Docker daemon with your host, there is no need to push images :)
 
 [See more](https://github.com/redspread/localkube) for our suggestions when developing code with `localkube`.
 
@@ -89,12 +84,8 @@ Spread makes it easy to set up and iterate with [localkube](https://github.com/r
 
 ##What's being worked on now
 
-* Build functionality for `spread deploy` so it also builds any images indicated to be built and pushes those images to the indicated Docker registry.
-* `spread deploy -p`: Pushes all images to registry, even those not built by `spread deploy`.
+* Version control for Kubernetes objects
 * Inner-app linking
-* `spread logs`: Returns logs for any deployment, automatic trying until logs are accessible.
-* `spread build`: Builds Docker context and pushes to a local Kubernetes cluster.
-* `spread rewind`: Quickly rollback to a previous deployment.
 
 See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a> here!
 
@@ -107,17 +98,25 @@ See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap
 
 **How are clusters selected?** Remote clusters are selected from the current kubectl context. Later, we will add functionality to explicitly state kubectl arguments. 
 
-**How should I set up my directory?** Spread requires a specific project directory structure, as it builds from a hierarchy of entities:
+**How should I set up my directory?** In order to take advantage of Spread's one-command deploy feature, `spread deploy`, you'll need to set up your directory with a few specific naming conventions:
 
-* `Dockerfile`
-* `*.ctr` - optional container file, there can be any number
-* `pod.yaml` - pod file, there can be only one per directory
-* `rc.yaml` - replication controller file, there can be only one per directory
-* `/.k2e` - holds arbitrary Kubernetes objects, such as services and secrets
+* All `ReplicationController` and `Pod` files should go in the root directory
+* Any `ReplicationController` files should end in `.rc.yaml` or `.rc.json`, depending on the respective file extension
+* Any `Pod` files should end in `.pod.yaml` or `.pod.json`, depending on the respective file extension
+* All other Kubernetes object files should go in a directory named `rs`
 
-**What is the *.ctr file?** The .ctr file is the container struct usually found in the pod.yaml or rc.yaml. Containers can still be placed in pods or replication controllers, but we're encouraging separate container files because it enables users to eventually reuse containers across an application.
+There is no limit to the number of `ReplicationController`s or `Pod`s in the root directory.
 
-**Can I deploy a project with just a Dockerfile and *.ctr?** Yes. Spread implicitly infers the rest of the app hierarchy.
+Here is an example directory with Spread's naming conventions:
+
+```Dockerfile
+app.rc.yaml
+database.rc.yaml
+rs
+ |_
+    service.yaml
+    secret.yaml
+ ```
 
 ##Contributing
 
