@@ -1,6 +1,7 @@
 package dir
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -13,54 +14,24 @@ import (
 	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
-func TestInputContainersOnly(t *testing.T) {
-	input := testTempFileInput(t)
-	defer os.RemoveAll(input.Path())
-
-	objects := testWriteRandomObjects(t, input.Path(), 5)
-
-	expected, err := entity.NewDefaultPod(kube.ObjectMeta{GenerateName: "spread"}, input.Path(), objects...)
-	assert.NoError(t, err)
-
-	numCtrs := 10
-	testWriteAndAttachRandomContainers(t, numCtrs, input.Path(), expected)
-
-	dep, err := expected.Deployment()
-	assert.NoError(t, err)
-
-	found := false
-	for _, obj := range dep.Objects() {
-		switch pod := obj.(type) {
-		case *kube.Pod:
-			found = true
-			assert.Len(t, pod.Spec.Containers, numCtrs, "should have same number of containers as created")
-		}
-	}
-	assert.True(t, found, "should of found a pod")
-
-	actual, err := input.Build()
-	assert.NoError(t, err, "should have built entity successfully")
-
-	testCompareEntity(t, expected, actual)
-}
-
-func TestInputPodwithContainers(t *testing.T) {
+func TestInputPod(t *testing.T) {
 	input := testTempFileInput(t)
 	defer os.RemoveAll(input.Path())
 
 	kubePod := testKubePod()
 
-	podFile := path.Join(input.Path(), PodFile)
-	testWriteYAMLToFile(t, podFile, kubePod)
+	podFile := fmt.Sprintf("test.%s.%s", PodExtension, testRandomExtension())
+	podPath := path.Join(input.Path(), podFile)
+	testWriteYAMLToFile(t, podPath, kubePod)
 
 	testClearTypeInfo(kubePod)
 
 	objects := testWriteRandomObjects(t, input.Path(), 5)
 
-	expected, err := entity.NewPod(kubePod, kube.ObjectMeta{}, podFile, objects...)
+	expectedPod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, podPath)
 	assert.NoError(t, err)
-
-	testWriteAndAttachRandomContainers(t, 10, input.Path(), expected)
+	expected, err := entity.NewApp([]entity.Entity{expectedPod}, kube.ObjectMeta{}, input.Path(), objects...)
+	assert.NoError(t, err)
 
 	actual, err := input.Build()
 	assert.NoError(t, err, "should have built entity successfully")
@@ -68,25 +39,26 @@ func TestInputPodwithContainers(t *testing.T) {
 	testCompareEntity(t, expected, actual)
 }
 
-func TestInputRCWithPodWithContainers(t *testing.T) {
+func TestInputRCAndPod(t *testing.T) {
 	input := testTempFileInput(t)
 	defer os.RemoveAll(input.Path())
 
 	// setup pod
 	kubePod := testKubePod()
-	podFile := path.Join(input.Path(), PodFile)
-	testWriteYAMLToFile(t, podFile, kubePod)
+
+	podFile := fmt.Sprintf("test.%s.%s", PodExtension, testRandomExtension())
+	podPath := path.Join(input.Path(), podFile)
+	testWriteYAMLToFile(t, podPath, kubePod)
 	testClearTypeInfo(kubePod)
-	pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, podFile)
+	pod, err := entity.NewPod(kubePod, kube.ObjectMeta{}, podPath)
 	assert.NoError(t, err)
-	testWriteAndAttachRandomContainers(t, 10, input.Path(), pod)
 
 	// setup rc
 	objects := testWriteRandomObjects(t, input.Path(), 5)
 	kubeRC := &kube.ReplicationController{
 		ObjectMeta: kube.ObjectMeta{
-			GenerateName: "spread",
-			Namespace:    kube.NamespaceDefault,
+			Name:      "spread",
+			Namespace: kube.NamespaceDefault,
 		},
 		TypeMeta: unversioned.TypeMeta{
 			Kind:       "ReplicationController",
@@ -94,18 +66,29 @@ func TestInputRCWithPodWithContainers(t *testing.T) {
 		},
 		Spec: kube.ReplicationControllerSpec{
 			Selector: map[string]string{"valid": "selector"},
+			Template: &kube.PodTemplateSpec{
+				Spec: kubePod.Spec,
+			},
 		},
 	}
-	rcFile := path.Join(input.Path(), RCFile)
-	testWriteYAMLToFile(t, rcFile, kubeRC)
+
+	rcFile := fmt.Sprintf("test.%s.%s", RCExtension, testRandomExtension())
+	rcPath := path.Join(input.Path(), rcFile)
+	testWriteYAMLToFile(t, rcPath, kubeRC)
 	testClearTypeInfo(kubeRC)
-	expected, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, rcFile, objects...)
+	rc, err := entity.NewReplicationController(kubeRC, kube.ObjectMeta{}, rcPath)
 	assert.NoError(t, err)
 
-	// attach pod to rc
+	expected, err := entity.NewApp(nil, kube.ObjectMeta{}, input.Path(), objects...)
+	assert.NoError(t, err)
+
+	// attach rc and pod
+	err = expected.Attach(rc)
+	assert.NoError(t, err)
 	err = expected.Attach(pod)
 	assert.NoError(t, err)
 
+	// generate entity
 	actual, err := input.Build()
 	assert.NoError(t, err, "should have built entity successfully")
 
