@@ -21,7 +21,7 @@ Spread is under open, active development. New features will be added regularly o
 See our [philosophy](./philosophy.md) for more on our mission and values. 
 
 ##Requirements
-* Running Kubernetes cluster (<a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a> or <a href="https://github.com/redspread/localkube>local</a>)
+* Running Kubernetes cluster (<a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a> or <a href="https://github.com/redspread/localkube">local</a>)
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Go](https://golang.org/doc/install) (v 1.6)
 
@@ -51,7 +51,8 @@ Spread makes it easy to set up and iterate with [localkube](https://github.com/r
 
 (Note: For Mac and Windows users, the fastest way to install everything above is [Docker Toolbox](https://www.docker.com/products/docker-toolbox).)
 
-**Get started:**
+**Get started:**  
+
 1. Create a machine called dev: `docker-machine create --driver virtualbox dev`
 2. Start your docker-machine: `docker-machine start dev`
 3. Connect to the docker daemon: `eval "$(docker-machine env dev)"`
