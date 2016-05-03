@@ -84,7 +84,7 @@ func (fs FileSource) Objects() (objects []deploy.KubeObject, err error) {
 
 // rcs returns entities for the rcs in the RCFile
 func (fs FileSource) rcs(objects []deploy.KubeObject) (rcs []entity.Entity, err error) {
-	pattern := fmt.Sprintf("%s/*.%s", fs, RCExtension)
+	pattern := fmt.Sprintf("%s/*%s", fs, RCExtension)
 
 	patternExts := withExtensions(pattern)
 	paths, err := multiGlob(patternExts...)
@@ -122,7 +122,7 @@ func (fs FileSource) rcs(objects []deploy.KubeObject) (rcs []entity.Entity, err 
 
 // pods returns Pods for the rcs in the PodFile
 func (fs FileSource) pods(objects []deploy.KubeObject) (pods []entity.Entity, err error) {
-	pattern := fmt.Sprintf("%s/*.%s", fs, PodExtension)
+	pattern := fmt.Sprintf("%s/*%s", fs, PodExtension)
 
 	patternExts := withExtensions(pattern)
 	paths, err := multiGlob(patternExts...)
@@ -147,7 +147,7 @@ func (fs FileSource) pods(objects []deploy.KubeObject) (pods []entity.Entity, er
 		})
 
 		if checkErrPathDoesNotExist(err) {
-			// it's okay if directory doesn't exit
+			// it's okay if directory doesn't exist
 			err = nil
 		}
 
