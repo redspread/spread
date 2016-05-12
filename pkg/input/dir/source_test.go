@@ -178,13 +178,13 @@ func TestSourceRCs(t *testing.T) {
 				},
 				Spec: kube.PodSpec{
 					Containers: []kube.Container{
-						kube.Container{
+						{
 							Name:                   "example",
 							Image:                  "hello-world",
 							ImagePullPolicy:        kube.PullAlways,
 							TerminationMessagePath: kube.TerminationMessagePathDefault,
 						},
-						kube.Container{
+						{
 							Name:                   "cache",
 							Image:                  "redis",
 							ImagePullPolicy:        kube.PullAlways,
@@ -234,13 +234,13 @@ func TestSourcePods(t *testing.T) {
 		},
 		Spec: kube.PodSpec{
 			Containers: []kube.Container{
-				kube.Container{
+				{
 					Name:                   "wiki",
 					Image:                  "mediawiki",
 					ImagePullPolicy:        kube.PullAlways,
 					TerminationMessagePath: kube.TerminationMessagePathDefault,
 				},
-				kube.Container{
+				{
 					Name:                   "db",
 					Image:                  "postgres",
 					ImagePullPolicy:        kube.PullAlways,

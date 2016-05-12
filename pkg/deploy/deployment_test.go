@@ -68,7 +68,7 @@ func TestDeploymentObjects(t *testing.T) {
 		},
 		Spec: kube.PodSpec{
 			Containers: []kube.Container{
-				kube.Container{
+				{
 					Name:            "container",
 					Image:           "redis",
 					ImagePullPolicy: kube.PullAlways,

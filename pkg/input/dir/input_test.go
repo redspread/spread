@@ -139,7 +139,7 @@ func testKubePod() *kube.Pod {
 		},
 		Spec: kube.PodSpec{
 			Containers: []kube.Container{
-				kube.Container{
+				{
 					Name:                   "wiki",
 					Image:                  "mediawiki",
 					ImagePullPolicy:        kube.PullAlways,
