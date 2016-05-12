@@ -103,6 +103,23 @@ func TestDeploymentObjects(t *testing.T) {
 
 		t.Errorf("'%s' did not match any, print: %s", objects[i].GetObjectMeta().GetName(), spew.Sdump(objects[i]))
 	}
+
+	secrets := deploy.ObjectsOfVersionKind("", "Secret")
+	assert.Len(t, secrets, 2)
+	for _, v := range secrets {
+		_, isSecret := v.(*kube.Secret)
+		assert.True(t, isSecret, "must be secret")
+	}
+
+	pods := deploy.ObjectsOfVersionKind("", "Pod")
+	assert.Len(t, pods, 1)
+	for _, v := range pods {
+		_, isPod := v.(*kube.Pod)
+		assert.True(t, isPod, "must be pod")
+	}
+
+	rcs := deploy.ObjectsOfVersionKind("", "ReplicationController")
+	assert.Len(t, rcs, 0)
 }
 
 func createSecret(name, data string) *kube.Secret {
