@@ -117,16 +117,15 @@ func (d Deployment) ObjectsOfVersionKind(version, kind string) (objs []KubeObjec
 	}
 
 	for _, val := range d.objects {
-		gvk := val.GetObjectKind().GroupVersionKind()
-		if gvk == nil {
+		gvk, err := objectKind(val)
+		if err != nil {
 			continue
 		}
-
 		if checkVersion(gvk.Version) && checkKind(gvk.Kind) {
 			objs = append(objs, val)
 		}
-
 	}
+
 	return objs
 }
 
