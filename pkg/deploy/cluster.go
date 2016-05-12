@@ -81,7 +81,8 @@ func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) e
 	}
 
 	// create namespaces before everything else
-	for _, ns := range dep.namespaces {
+	for _, nsObj := range dep.ObjectsOfVersionKind("", "Namespace") {
+		ns := nsObj.(*kube.Namespace)
 		_, err := c.client.Namespaces().Create(ns)
 		if err != nil && !alreadyExists(err) {
 			return err
@@ -108,7 +109,7 @@ func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) e
 		}
 	}
 
-	printLoadBalancers(c.client, dep.services, c.localkube)
+	printLoadBalancers(c.client, dep.ObjectsOfVersionKind("", "Service"), c.localkube)
 
 	// deployed successfully
 	return nil
@@ -334,7 +335,9 @@ func copyImmutables(src, dst KubeObject) {
 	}
 }
 
-func printLoadBalancers(client *kubecli.Client, services []*kube.Service, localkube bool) {
+// printLoadBalancers blocks until all Services of type LoadBalancer have been deployed, printing it's details as it becomes available.
+// Will panic if given something other than services
+func printLoadBalancers(client *kubecli.Client, services []KubeObject, localkube bool) {
 	if len(services) == 0 {
 		return
 	}
@@ -344,7 +347,8 @@ func printLoadBalancers(client *kubecli.Client, services []*kube.Service, localk
 
 	// checks when we've seen every service
 	done := func() bool {
-		for _, s := range services {
+		for _, svcObj := range services {
+			s := svcObj.(*kube.Service)
 			if s.Spec.Type == kube.ServiceTypeLoadBalancer && !completed[s.Name] {
 				return false
 			}
@@ -362,7 +366,8 @@ func printLoadBalancers(client *kubecli.Client, services []*kube.Service, localk
 			first = false
 		}
 
-		for _, s := range services {
+		for _, svcObj := range services {
+			s := svcObj.(*kube.Service)
 			if s.Spec.Type == kube.ServiceTypeLoadBalancer && !completed[s.Name] {
 				clusterVers, err := client.Services(s.Namespace).Get(s.Name)
 				if err != nil {

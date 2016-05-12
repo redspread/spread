@@ -15,9 +15,9 @@ type KubeObject interface {
 	runtime.Object
 }
 
-// FullObjectPath returns the full path of an object.
+// ObjectPath returns the full path of an object.
 // This uses the format "<apiVersion>/namespaces/<namespace>/<kind>/<name>"
-func FullObjectPath(obj KubeObject) (string, error) {
+func ObjectPath(obj KubeObject) (string, error) {
 	errText := "could not get object path"
 
 	// attempt to determine ObjectKind
