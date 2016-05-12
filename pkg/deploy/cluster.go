@@ -18,6 +18,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/strategicpatch"
 )
 
+// DefaultContext is the current kubectl context and is represented with an empty string.
 const DefaultContext = ""
 
 // KubeCluster is able to deploy to Kubernetes clusters. This is a very simple implementation with no error recovery.

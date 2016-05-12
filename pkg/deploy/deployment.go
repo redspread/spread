@@ -95,7 +95,7 @@ func (d Deployment) Objects() []KubeObject {
 	return objs
 }
 
-// ObjectsOfKind returns all objects matching the given Version and Kind. No ordering guarantees are given.
+// ObjectsOfVersionKind returns all objects matching the given Version and Kind. No ordering guarantees are given.
 // If an empty string is given for either selector, all options for that selector will be returned.
 func (d Deployment) ObjectsOfVersionKind(version, kind string) (objs []KubeObject) {
 	// checkVersion returns true if the version is matched or empty.
@@ -174,5 +174,6 @@ func deepCopy(obj KubeObject) (KubeObject, error) {
 }
 
 var (
+	// ErrorConflict is returned when an object with an identical path already exists in the Deployment.
 	ErrorConflict = errors.New("name/namespace combination already exists for type")
 )
