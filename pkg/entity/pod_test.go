@@ -45,7 +45,7 @@ func TestPodNoContainers(t *testing.T) {
 func TestPodNoImage(t *testing.T) {
 	kubePod := testNewKubePod("no-image-pod")
 	kubePod.Spec.Containers = []kube.Container{
-		kube.Container{
+		{
 			Name:            "no-image",
 			ImagePullPolicy: kube.PullIfNotPresent,
 		},
@@ -145,7 +145,7 @@ func TestPodAttachImage(t *testing.T) {
 
 	kubePod.Namespace = kube.NamespaceDefault
 	kubePod.Spec.Containers = []kube.Container{
-		kube.Container{
+		{
 			Name:            "nginxhttps",
 			Image:           "bprashanth/nginxhttps:1.0",
 			ImagePullPolicy: kube.PullAlways,
@@ -224,13 +224,13 @@ func testCreateKubePodSourcegraph(name string) *kube.Pod {
 			RestartPolicy: kube.RestartPolicyAlways,
 			DNSPolicy:     kube.DNSDefault,
 			Volumes: []kube.Volume{
-				kube.Volume{
+				{
 					Name: "config",
 					VolumeSource: kube.VolumeSource{
 						EmptyDir: &kube.EmptyDirVolumeSource{},
 					},
 				},
-				kube.Volume{
+				{
 					Name: "db",
 					VolumeSource: kube.VolumeSource{
 						EmptyDir: &kube.EmptyDirVolumeSource{},

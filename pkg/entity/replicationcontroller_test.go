@@ -145,7 +145,7 @@ func TestRCAttachImage(t *testing.T) {
 				},
 				Spec: kube.PodSpec{
 					Containers: []kube.Container{
-						kube.Container{
+						{
 							Name:            imageName,
 							Image:           imageName,
 							ImagePullPolicy: kube.PullAlways,

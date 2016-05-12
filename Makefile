@@ -14,7 +14,7 @@ GOX_ARCH ?= amd64
 
 GO ?= go
 GOX ?= gox
-GOFMT ?= gofmt # eventually should add "-s"
+GOFMT ?= gofmt "-s"
 GOLINT ?= golint
 DOCKER ?= docker
 

@@ -173,11 +173,11 @@ var (
 		Name:  "src",
 		Image: "sourcegraph/sourcegraph:latest",
 		VolumeMounts: []kube.VolumeMount{
-			kube.VolumeMount{Name: "config", MountPath: "/home/sourcegraph/.sourcegraph"},
+			{Name: "config", MountPath: "/home/sourcegraph/.sourcegraph"},
 		},
 		Ports: []kube.ContainerPort{
-			kube.ContainerPort{ContainerPort: 80, Protocol: kube.ProtocolTCP},
-			kube.ContainerPort{ContainerPort: 443, Protocol: kube.ProtocolTCP},
+			{ContainerPort: 80, Protocol: kube.ProtocolTCP},
+			{ContainerPort: 443, Protocol: kube.ProtocolTCP},
 		},
 		ImagePullPolicy: kube.PullAlways,
 	}
@@ -186,10 +186,10 @@ var (
 		Name:  "postgres",
 		Image: "postgres:9.5",
 		VolumeMounts: []kube.VolumeMount{
-			kube.VolumeMount{Name: "db", MountPath: "/var/lib/postgresql/data/pgdata"},
+			{Name: "db", MountPath: "/var/lib/postgresql/data/pgdata"},
 		},
 		Ports: []kube.ContainerPort{
-			kube.ContainerPort{ContainerPort: 5432, Protocol: kube.ProtocolTCP},
+			{ContainerPort: 5432, Protocol: kube.ProtocolTCP},
 		},
 		ImagePullPolicy: kube.PullAlways,
 	}
