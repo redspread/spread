@@ -2,7 +2,7 @@
 
 <p align="center"><a href="https://travis-ci.org/redspread/spread"><img alt="Build Status" src="https://travis-ci.org/redspread/spread.svg?branch=master" /></a> <a href="https://github.com/redspread/spread"><img alt="Release" src="https://img.shields.io/github/release/redspread/spread.svg" /></a> <a href="https://github.com/redspread/spread/blob/master/LICENSE"><img alt="Hex.pm" src="https://img.shields.io/hexpm/l/plug.svg" /></a> <a href="http://godoc.org/rsprd.com/spread"><img alt="GoDoc Status" src="https://godoc.org/rsprd.com/spread?status.svg" /></a></p>
 
-<p align="center"><a href="https://redspread.com">Website</a> | <a href="http://slackin.redspread.com/">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
+<p align="center"><a href="https://redspread.com">Website</a> | <a href="http://redspread.readme.io">Docs</a> | <a href="http://slackin.redspread.com/">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
 
 #Spread: Docker to Kubernetes in one command
 
@@ -127,7 +127,7 @@ We'd love to see your contributions - please see the CONTRIBUTING file for guide
 If you haven't already, it's worth going through <a href="http://fantasai.inkedblade.net/style/talks/filing-good-bugs/">Elika Etemad's guide</a> for good bug reporting. In one sentence, good bug reports should be both *reproducible* and *specific*.
 
 ##Contact
-Founders: <a href="mailto:founders@redspread.com">founders@redspread.com</a>   
+Team: <a href="mailto:hello@redspread.com">hello@redspread.com</a>   
 Slack: <a href="http://slackin.redspread.com">slackin.redspread.com</a>  
 Planning: <a href="https://github.com/redspread/spread/blob/master/roadmap.md">Roadmap</a>  
 Bugs: <a href="https://github.com/redspread/spread/issues">Issues</a>
