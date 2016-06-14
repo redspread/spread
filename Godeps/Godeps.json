@@ -1,7 +1,7 @@
 {
 	"ImportPath": "rsprd.com/spread",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v60",
+	"GodepVersion": "v62",
 	"Packages": [
 		"./pkg/...",
 		"./cli/...",
@@ -307,6 +307,10 @@
 		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "c2528b2dd8352441850638a8bb678c2ad056fd3e"
+		},
+		{
+			"ImportPath": "gopkg.in/libgit2/git2go.v23",
+			"Rev": "fa644d2fc9efa3baee93b525212d76dfa17a5db5"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

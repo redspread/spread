@@ -9,6 +9,8 @@ ifndef SPREAD_VERSION
 	SPREAD_VERSION := v0.0.0
 endif
 
+LIBGIT2_VERSION ?= v0.23.4
+
 GOX_OS ?= linux darwin windows
 GOX_ARCH ?= amd64
 
@@ -30,6 +32,7 @@ GOX_FLAGS ?= -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="${GOX_OS}" -arch="$
 STATIC_LDFLAGS ?= -extldflags "-static" --s -w
 
 GITLAB_CONTEXT ?= ./build/gitlab
+LIBGIT2_URL ?= https://github.com/libgit2/libgit2/archive/$(LIBGIT2_VERSION).tar.gz
 
 # image data
 ORG ?= redspreadapps
@@ -82,6 +85,16 @@ build-gitlab: build/spread-linux-static
 	cp -r ./images/gitlabci $(GITLAB_CONTEXT)
 	cp ./build/spread-linux-static $(GITLAB_CONTEXT)
 	$(DOCKER) build $(DOCKER_OPTS) -t $(GITLAB_IMAGE_NAME) $(GITLAB_CONTEXT)
+
+build-libgit2: vendor/libgit2/build/libgit2.a
+vendor/libgit2/build/libgit2.a: vendor/libgit2
+	./hack/build-libgit2.sh
+
+vendor/libgit2: vendor/libgit2.tar.gz
+	mkdir -p $@
+	tar -zxf $< -C $@ --strip-components=1
+vendor/libgit2.tar.gz:
+	curl -L -o $@ $(LIBGIT2_URL)
 
 .PHONY: vet
 vet:

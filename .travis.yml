@@ -11,6 +11,7 @@ services:
 install:
   # install build dependencies
   - make deps
+  - make build-libgit2
 
 before_script:
   - make validate
