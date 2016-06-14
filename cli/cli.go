@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+const (
+	// SpreadDirectory is the name of the directory that holds a Spread repository.
+	SpreadDirectory = ".spread"
+
+	// GitDirectory is the name of the directory holding the bare Git repository within the SpreadDirectory.
+	GitDirectory = "git"
+)
+
 // SpreadCli is the spread command line client.
 type SpreadCli struct {
 	// input stream (ie. stdin)

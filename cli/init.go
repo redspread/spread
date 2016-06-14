@@ -1,15 +1,13 @@
 package cli
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/codegangsta/cli"
-)
-
-const (
-	// SpreadDirectory is the name of the directory that holds a Spread repository.
-	SpreadDirectory = ".spread"
+	git "gopkg.in/libgit2/git2go.v23"
 )
 
 // Init sets up a Spread repository for versioning.
@@ -31,15 +29,28 @@ func (s SpreadCli) Init() *cli.Command {
 				s.fatalf("Could not resolve '%s': %v", target, err)
 			}
 
-			// Create .spread directory in target directory
-			if err = os.MkdirAll(target, 0755); os.IsNotExist(err) {
+			// Check if directory exists
+			if _, err = os.Stat(target); err == nil {
 				s.fatalf("Could not initialize repo: '%s' already exists", target)
-			} else if err != nil {
+			} else if !os.IsNotExist(err) {
+				s.fatalf("Could not stat repo directory: %v", err)
+			}
+
+			// Create .spread directory in target directory
+			if err = os.MkdirAll(target, 0755); err != nil {
 				s.fatalf("Could not create repo directory: %v", err)
 			}
 
 			// Create bare Git repository in .spread directory with the directory name "git"
+			gitDir := filepath.Join(target, GitDirectory)
+			if _, err = git.InitRepository(gitDir, true); err != nil {
+				s.fatalf("Could not create Object repository: %v", err)
+			}
+
 			// Create .gitignore file in directory ignoring Git repository
+			ignoreName := filepath.Join(SpreadDirectory, ".gitignore")
+			ignoreData := fmt.Sprintf("/%s", GitDirectory)
+			ioutil.WriteFile(ignoreName, []byte(ignoreData), 0755)
 		},
 	}
 }
