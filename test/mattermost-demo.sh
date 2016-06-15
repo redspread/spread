@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+PROJECT=${GOPATH}/src/rsprd.com/spread
+export LD_LIBRARY_PATH=${PROJECT}/vendor/libgit2/build
+
 NODE_IP="127.0.0.1"
 SLEEP_TIME=10
 LOCALKUBE_TAG="v1.2.1-v1"
@@ -23,9 +26,9 @@ function retry() {
     return 1
 }
 
-KUBECTL="./build/kubectl"
-MATTERMOST="./build/mattermost"
-export PATH="$(pwd)/build:$PATH"
+KUBECTL="${PROJECT}/build/kubectl"
+MATTERMOST="${PROJECT}/build/mattermost"
+export PATH="${PROJECT}/build:$PATH"
 
 if [ ! -f $KUBECTL ]; then
     echo "Installing kubectl..."

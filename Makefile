@@ -68,7 +68,7 @@ validate: lint checkgofmt vet
 .PHONY: build
 build: build/spread
 
-build/spread:
+build/spread: vendor/libgit2/build/libgit2.pc
 	$(GO) build $(GOBUILD_FLAGS) -ldflags "$(GOBUILD_LDFLAGS)" -o $@ $(EXEC_PKG)
 
 build/spread-linux-static:
@@ -86,8 +86,8 @@ build-gitlab: build/spread-linux-static
 	cp ./build/spread-linux-static $(GITLAB_CONTEXT)
 	$(DOCKER) build $(DOCKER_OPTS) -t $(GITLAB_IMAGE_NAME) $(GITLAB_CONTEXT)
 
-build-libgit2: vendor/libgit2/build/libgit2.a
-vendor/libgit2/build/libgit2.a: vendor/libgit2
+build-libgit2: vendor/libgit2/build/libgit2.pc
+vendor/libgit2/build/libgit2.pc: vendor/libgit2
 	./hack/build-libgit2.sh
 
 vendor/libgit2: vendor/libgit2.tar.gz
