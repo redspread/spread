@@ -10,4 +10,4 @@ mkdir -p build &&
 cmake -DTHREADSAFE=ON \
       -DBUILD_CLAR=OFF \
       . &&
-cmake --build . --target install
+sudo cmake --build . --target install
