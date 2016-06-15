@@ -1,13 +1,7 @@
 language: go
 sudo: required
-dist: trusty
 go:
   - 1.6
-
-addons:
-  apt:
-    packages:
-      - libgit2-dev
 
 go_import_path: rsprd.com/spread
 
@@ -17,6 +11,7 @@ services:
 install:
   # install build dependencies
   - make deps
+  - make build-libgit2
 
 before_script:
   - make validate
