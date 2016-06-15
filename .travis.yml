@@ -3,6 +3,8 @@ sudo: required
 go:
   - 1.6
 
+env: LD_LIBRARY_PATH=/usr/local/lib
+
 go_import_path: rsprd.com/spread
 
 services:
@@ -11,6 +13,7 @@ services:
 install:
   # install build dependencies
   - make deps
+  - make install-libgit2
 
 before_script:
   - make validate
