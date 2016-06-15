@@ -1,4 +1,5 @@
 BASE := rsprd.com/spread
+DIR := $(GOPATH)/src/$(BASE)
 CMD_NAME := spread
 
 EXEC_PKG := $(BASE)/cmd/$(CMD_NAME)
@@ -20,14 +21,31 @@ GOFMT ?= gofmt "-s"
 GOLINT ?= golint
 DOCKER ?= docker
 
+GOFILES := find . -name '*.go' -not -path "./vendor/*"
+
 VERSION_LDFLAG := -X main.Version=$(SPREAD_VERSION)
 
-GOFILES := find . -name '*.go' -not -path "./vendor/*"
+LIBGIT2_DIR := $(DIR)/vendor/libgit2
+LIBGIT2_BUILD := $(LIBGIT2_DIR)/build
+LIBGIT2_PKGCONFIG := $(LIBGIT2_BUILD)/libgit2.pc
+
+LIBGIT2_CGOFLAG := -I$(LIBGIT2_DIR)/include
+
+# Do not use sudo on OS X
+ifneq ($(OS),Windows_NT)
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		SUDO :=
+	else
+		SUDO := sudo
+	endif
+endif
 
 GOBUILD_LDFLAGS ?= $(VERSION_LDFLAG)
 GOBUILD_FLAGS ?= -i -v
 GOTEST_FLAGS ?= -v
 GOX_FLAGS ?= -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}" -os="${GOX_OS}" -arch="${GOX_ARCH}"
+CGO_ENV ?= CGO_CFLAGS="$(LIBGIT2_CGOFLAG)"
 
 STATIC_LDFLAGS ?= -extldflags "-static" --s -w
 
@@ -68,8 +86,8 @@ validate: lint checkgofmt vet
 .PHONY: build
 build: build/spread
 
-build/spread: vendor/libgit2/build/libgit2.pc
-	$(GO) build $(GOBUILD_FLAGS) -ldflags "$(GOBUILD_LDFLAGS)" -o $@ $(EXEC_PKG)
+build/spread:
+	$(CGO_ENV) $(GO) build $(GOBUILD_FLAGS) -ldflags "$(GOBUILD_LDFLAGS)" -o $@ $(EXEC_PKG)
 
 build/spread-linux-static:
 	GOOS=linux $(GO) build -o $@ $(GOBUILD_FLAGS) -ldflags "$(GOBUILD_LDFLAGS) $(STATIC_LDFLAGS)" $(EXEC_PKG)
@@ -86,8 +104,11 @@ build-gitlab: build/spread-linux-static
 	cp ./build/spread-linux-static $(GITLAB_CONTEXT)
 	$(DOCKER) build $(DOCKER_OPTS) -t $(GITLAB_IMAGE_NAME) $(GITLAB_CONTEXT)
 
-build-libgit2: vendor/libgit2/build/libgit2.pc
-vendor/libgit2/build/libgit2.pc: vendor/libgit2
+install-libgit2: build-libgit2
+	cd $(LIBGIT2_BUILD) && $(SUDO) make install
+
+build-libgit2: $(LIBGIT2_PKGCONFIG)
+$(LIBGIT2_PKGCONFIG): vendor/libgit2
 	./hack/build-libgit2.sh
 
 vendor/libgit2: vendor/libgit2.tar.gz

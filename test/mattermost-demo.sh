@@ -2,7 +2,6 @@
 set -e
 
 PROJECT=${GOPATH}/src/rsprd.com/spread
-export LD_LIBRARY_PATH=${PROJECT}/vendor/libgit2/build
 
 NODE_IP="127.0.0.1"
 SLEEP_TIME=10
