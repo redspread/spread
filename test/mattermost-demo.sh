@@ -56,4 +56,4 @@ NODE_PORT=$(kubectl get services/mattermost-app --template='{{range .spec.ports}
 
 echo "Checking if started app successfully"
 echo "waiting up to 100 seconds"
-retry "curl --fail http://$NODE_IP:$NODE_PORT" "10"
+retry "curl --fail http://$NODE_IP:$NODE_PORT" "15"
