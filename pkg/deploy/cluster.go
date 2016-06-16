@@ -9,6 +9,7 @@ import (
 
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	rest "k8s.io/kubernetes/pkg/client/restclient"
 	kubecli "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
@@ -23,7 +24,7 @@ const DefaultContext = ""
 
 // KubeCluster is able to deploy to Kubernetes clusters. This is a very simple implementation with no error recovery.
 type KubeCluster struct {
-	client    *kubecli.Client
+	Client    *kubecli.Client
 	context   string
 	localkube bool
 }
@@ -62,7 +63,7 @@ func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
 	}
 
 	return &KubeCluster{
-		client:    client,
+		Client:    client,
 		context:   name,
 		localkube: name == "localkube",
 	}, nil
@@ -77,14 +78,14 @@ func (c *KubeCluster) Context() string {
 // Currently no error recovery is implemented; if there is an error the deployment process will immediately halt and return the error.
 // If update is not set, will error if objects exist. If deleteModifiedPods is set, pods of modified RCs will be deleted.
 func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) error {
-	if c.client == nil {
+	if c.Client == nil {
 		return errors.New("client not setup (was nil)")
 	}
 
 	// create namespaces before everything else
 	for _, nsObj := range dep.ObjectsOfVersionKind("", "Namespace") {
 		ns := nsObj.(*kube.Namespace)
-		_, err := c.client.Namespaces().Create(ns)
+		_, err := c.Client.Namespaces().Create(ns)
 		if err != nil && !alreadyExists(err) {
 			return err
 		}
@@ -110,7 +111,7 @@ func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) e
 		}
 	}
 
-	printLoadBalancers(c.client, dep.ObjectsOfVersionKind("", "Service"), c.localkube)
+	printLoadBalancers(c.Client, dep.ObjectsOfVersionKind("", "Service"), c.localkube)
 
 	// deployed successfully
 	return nil
@@ -167,7 +168,7 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 		return nil, fmt.Errorf("could not create diff: %v", err)
 	}
 
-	req := c.client.RESTClient.Patch(kube.StrategicMergePatchType).
+	req := c.Client.RESTClient.Patch(kube.StrategicMergePatchType).
 		Name(meta.GetName()).
 		Body(patch)
 
@@ -178,12 +179,23 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 		return nil, resourceError("update", meta.GetNamespace(), meta.GetName(), mapping, err)
 	}
 
-	return asKubeObject(runtimeObj)
+	return AsKubeObject(runtimeObj)
+}
+
+// Get retrieves an objects from a cluster using it's namespace name and API version.
+func (c *KubeCluster) Get(kind, namespace, name, apiVersion string, export bool) (KubeObject, error) {
+	gv := unversioned.GroupKind{Kind: kind}
+	mapping, err := kube.RESTMapper.RESTMapping(gv)
+	if err != nil {
+		return nil, fmt.Errorf("could not create RESTMapping for %s: %v", gv, err)
+	}
+
+	return c.get(namespace, name, export, mapping)
 }
 
 // get retrieves the object from the cluster.
 func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RESTMapping) (KubeObject, error) {
-	req := c.client.RESTClient.Get().Name(name)
+	req := c.Client.RESTClient.Get().Name(name)
 	setRequestObjectInfo(req, namespace, mapping)
 
 	if export {
@@ -195,13 +207,13 @@ func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RES
 		return nil, resourceError("get", namespace, name, mapping, err)
 	}
 
-	return asKubeObject(runtimeObj)
+	return AsKubeObject(runtimeObj)
 }
 
 // create adds the object to the cluster.
 func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObject, error) {
 	meta := obj.GetObjectMeta()
-	req := c.client.RESTClient.Post().Body(obj)
+	req := c.Client.RESTClient.Post().Body(obj)
 
 	setRequestObjectInfo(req, meta.GetNamespace(), mapping)
 
@@ -210,7 +222,7 @@ func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObj
 		return nil, resourceError("create", meta.GetName(), meta.GetNamespace(), mapping, err)
 	}
 
-	return asKubeObject(runtimeObj)
+	return AsKubeObject(runtimeObj)
 }
 
 func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
@@ -222,14 +234,14 @@ func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
 	opts := kube.ListOptions{
 		LabelSelector: labels.Set(rc.Spec.Selector).AsSelector(),
 	}
-	podList, err := c.client.Pods(rc.Namespace).List(opts)
+	podList, err := c.Client.Pods(rc.Namespace).List(opts)
 	if err != nil {
 		return err
 	}
 
 	// delete pods
 	for _, pod := range podList.Items {
-		err := c.client.Pods(pod.Namespace).Delete(pod.Name, nil)
+		err := c.Client.Pods(pod.Namespace).Delete(pod.Name, nil)
 		if err != nil {
 			return err
 		}
@@ -306,7 +318,7 @@ func diff(original, modified runtime.Object) (patch []byte, err error) {
 }
 
 // asKubeObject attempts use the object as a KubeObject. It will return an error if not possible.
-func asKubeObject(runtimeObj runtime.Object) (KubeObject, error) {
+func AsKubeObject(runtimeObj runtime.Object) (KubeObject, error) {
 	kubeObj, ok := runtimeObj.(KubeObject)
 	if !ok {
 		return nil, errors.New("was unable to use runtime.Object as deploy.KubeObject")

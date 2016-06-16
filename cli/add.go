@@ -52,6 +52,7 @@ func (s SpreadCli) Add() *cli.Command {
 			}
 
 			kind, name := parts[0], parts[1]
+			kind = kubeShortForm(kind)
 			namespace := c.String("namespace")
 			export := !c.Bool("no-export")
 			req := cluster.Client.Get().Resource(kind).Namespace(namespace).Name(name)
