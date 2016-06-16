@@ -2,8 +2,8 @@ package project
 
 import (
 	"os"
-	"testing"
 	"path/filepath"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	git "gopkg.in/libgit2/git2go.v23"

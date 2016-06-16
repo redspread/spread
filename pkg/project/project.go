@@ -20,6 +20,7 @@ const (
 
 type Project struct {
 	Path string
+	repo *git.Repository
 }
 
 // InitProject creates a new Spread project including initializing a Git repository on disk.
@@ -27,7 +28,7 @@ type Project struct {
 func InitProject(target string) (*Project, error) {
 	// Check if path is specified
 	if len(target) == 0 {
-		return nil, errors.New("target must be specified")
+		return nil, ErrEmptyPath
 	}
 
 	// Get absolute path to directory
@@ -50,7 +51,8 @@ func InitProject(target string) (*Project, error) {
 
 	// Create bare Git repository in .spread directory with the directory name "git"
 	gitDir := filepath.Join(target, GitDirectory)
-	if _, err = git.InitRepository(gitDir, true); err != nil {
+	repo, err := git.InitRepository(gitDir, true)
+	if err != nil {
 		return nil, fmt.Errorf("Could not create Object repository: %v", err)
 	}
 
@@ -60,5 +62,40 @@ func InitProject(target string) (*Project, error) {
 	ioutil.WriteFile(ignoreName, []byte(ignoreData), 0755)
 	return &Project{
 		Path: target,
+		repo: repo,
 	}, nil
 }
+
+// OpenProject attempts to open the project at the given path.
+func OpenProject(target string) (*Project, error) {
+	// Check if path is specified
+	if len(target) == 0 {
+		return nil, ErrEmptyPath
+	}
+
+	// check that path exists and is dir
+	if fileInfo, err := os.Stat(target); err != nil {
+		return nil, err
+	} else if !fileInfo.IsDir() {
+		return nil, ErrPathNotDir
+	}
+
+	gitDir := filepath.Join(target, GitDirectory)
+	repo, err := git.OpenRepository(gitDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open Git repository: %v", err)
+	}
+
+	return &Project{
+		Path: target,
+		repo: repo,
+	}, nil
+}
+
+var (
+	// ErrEmptyPath is returned when a target string is empty.
+	ErrEmptyPath = errors.New("path must be specified")
+
+	// ErrPathNotDir is returned when a target is a file and is expected to be a directory.
+	ErrPathNotDir = errors.New("a directory must be specified")
+)
