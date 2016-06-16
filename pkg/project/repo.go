@@ -38,7 +38,12 @@ func (p *Project) AddObjectToIndex(obj *pb.Object) error {
 		return fmt.Errorf("could not retreive index: %v", err)
 	}
 
-	return index.Add(entry)
+	err = index.Add(entry)
+	if err != nil {
+		return err
+	}
+
+	return index.Write()
 }
 
 var (
