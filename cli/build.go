@@ -27,7 +27,6 @@ func (s SpreadCli) Build() *cli.Command {
 
 			e, err := input.Build()
 			if err != nil {
-				println("build")
 				s.fatalf(inputError(srcDir, err))
 			}
 
