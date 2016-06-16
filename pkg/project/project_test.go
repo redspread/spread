@@ -26,7 +26,7 @@ func TestInitProjectNoPath(t *testing.T) {
 
 func TestInitProjectRelative(t *testing.T) {
 	target := filepath.Join(testDir, "relativeTest")
-	//defer os.RemoveAll(target)
+	defer os.RemoveAll(target)
 
 	proj, err := InitProject(target)
 	assert.NoError(t, err)
@@ -40,7 +40,7 @@ func TestInitProjectAbsolute(t *testing.T) {
 	target, err := filepath.Abs(target)
 	assert.NoError(t, err)
 
-	//defer os.RemoveAll(target)
+	defer os.RemoveAll(target)
 
 	proj, err := InitProject(target)
 	assert.NoError(t, err)
