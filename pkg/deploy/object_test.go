@@ -19,7 +19,7 @@ func TestObjectPath(t *testing.T) {
 		},
 	}
 
-	expected := "v1/namespaces/default/ReplicationController/johnson"
+	expected := "v1/namespaces/default/replicationcontroller/johnson"
 	actual, err := ObjectPath(rc)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -35,7 +35,7 @@ func TestObjectPathNoNamespace(t *testing.T) {
 		},
 	}
 
-	expected := "v1/namespaces//ReplicationController/johnson"
+	expected := "v1/namespaces//replicationcontroller/johnson"
 	actual, err := ObjectPath(rc)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
