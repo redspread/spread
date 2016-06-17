@@ -9,7 +9,6 @@ import (
 
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
-	"k8s.io/kubernetes/pkg/api/unversioned"
 	rest "k8s.io/kubernetes/pkg/client/restclient"
 	kubecli "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
@@ -183,14 +182,26 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 }
 
 // Get retrieves an objects from a cluster using it's namespace name and API version.
-func (c *KubeCluster) Get(kind, namespace, name, apiVersion string, export bool) (KubeObject, error) {
-	gv := unversioned.GroupKind{Kind: kind}
-	mapping, err := kube.RESTMapper.RESTMapping(gv)
-	if err != nil {
-		return nil, fmt.Errorf("could not create RESTMapping for %s: %v", gv, err)
+func (c *KubeCluster) Get(kind, namespace, name string, export bool) (KubeObject, error) {
+	kind = KubeShortForm(kind)
+
+	req := c.Client.Get().Resource(kind).Namespace(namespace).Name(name)
+
+	if export {
+		req.Param("export", "true")
 	}
 
-	return c.get(namespace, name, export, mapping)
+	runObj, err := req.Do().Get()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve resource '%s/%s (namespace=%s)' from Kube API server: %v", kind, name, namespace, err)
+	}
+
+	kubeObj, err := AsKubeObject(runObj)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to change into KubeObject: %v", err)
+	}
+
+	return kubeObj, nil
 }
 
 // get retrieves the object from the cluster.
