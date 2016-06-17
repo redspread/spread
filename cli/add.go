@@ -9,7 +9,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 )
 
-// Init sets up a Spread repository for versioning.
+// Add sets up a Spread repository for versioning.
 func (s SpreadCli) Add() *cli.Command {
 	return &cli.Command{
 		Name:        "add",
@@ -76,11 +76,7 @@ func (s SpreadCli) Add() *cli.Command {
 				s.fatalf("failed to encode object: %v", err)
 			}
 
-			proj, err := s.project()
-			if err != nil {
-				s.fatalf("Not in a Spread project.")
-			}
-
+			proj := s.project()
 			err = proj.AddObjectToIndex(obj)
 			if err != nil {
 				s.fatalf("Failed to add object to Git index: %v", err)
