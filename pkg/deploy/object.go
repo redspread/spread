@@ -3,11 +3,15 @@ package deploy
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	kube "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
 	types "k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
+
+	"rsprd.com/spread/pkg/data"
+	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
 // A KubeObject is an alias for Kubernetes objects.
@@ -26,7 +30,8 @@ func ObjectPath(obj KubeObject) (string, error) {
 	}
 
 	meta := obj.GetObjectMeta()
-	return fmt.Sprintf("%s/namespaces/%s/%s/%s", obj.GetObjectKind().GroupVersionKind().Version, meta.GetNamespace(), gkv.Kind, meta.GetName()), nil
+	path := fmt.Sprintf("%s/namespaces/%s/%s/%s", obj.GetObjectKind().GroupVersionKind().Version, meta.GetNamespace(), gkv.Kind, meta.GetName())
+	return strings.ToLower(path), nil
 }
 
 // objectKind is a helper function which determines type information from given KubeObject.
@@ -39,4 +44,17 @@ func objectKind(obj KubeObject) (types.GroupVersionKind, error) {
 		return types.GroupVersionKind{}, errors.New("empty ObjectKind")
 	}
 	return gkv, nil
+}
+
+func KubeObjectFromObject(kind string, obj *pb.Object) (KubeObject, error) {
+	base := BaseObject(kind)
+	if base == nil {
+		return nil, fmt.Errorf("unable to find Kind for '%s'", kind)
+	}
+
+	err := data.Unmarshal(obj, &base)
+	if err != nil {
+		return nil, err
+	}
+	return base, nil
 }

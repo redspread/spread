@@ -21,8 +21,6 @@ func (s SpreadCli) Commit() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) {
-			// Download specified object from Kubernetes cluster
-			// example: spread add rc/mattermost
 			msg := c.String("m")
 			if len(msg) == 0 {
 				s.fatalf("All commits must have a message. Specify one with 'spread commit -m \"message\"'")
