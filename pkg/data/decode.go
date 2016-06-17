@@ -34,7 +34,7 @@ func decodeField(field *pb.Field) (interface{}, error) {
 func decodeMapField(root *pb.Field) (map[string]interface{}, error) {
 	fields := root.GetFields()
 	if fields == nil {
-		return nil, fmt.Errorf("field '%s' is a map with nil for Fields", root.Key)
+		return nil, nil
 	}
 
 	out := make(map[string]interface{}, len(fields))
@@ -51,7 +51,7 @@ func decodeMapField(root *pb.Field) (map[string]interface{}, error) {
 func decodeArrayField(root *pb.Field) ([]interface{}, error) {
 	fields := root.GetFields()
 	if fields == nil {
-		return nil, fmt.Errorf("field '%s' is a array with nil for Fields", root.Key)
+		return nil, nil
 	}
 
 	out := make([]interface{}, len(fields))

@@ -15,7 +15,7 @@ func (p *Project) getObject(oid *git.Oid) (*pb.Object, error) {
 		return nil, fmt.Errorf("failed to retrieve Object blob: %v", err)
 	}
 
-	var obj *pb.Object
+	obj := &pb.Object{}
 	err = proto.Unmarshal(blob.Contents(), obj)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal object protobuf: %v", err)
