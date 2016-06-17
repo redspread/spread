@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-	spread := cli.NewSpreadCli(os.Stdin, os.Stdout, os.Stderr, Version)
+	wd, _ := os.Getwd()
+	spread := cli.NewSpreadCli(os.Stdin, os.Stdout, os.Stderr, Version, wd)
 
 	app := app()
 	app.Commands = commands(spread)
