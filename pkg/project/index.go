@@ -62,17 +62,7 @@ func (p *Project) Index() (*deploy.Deployment, error) {
 			return nil, fmt.Errorf("failed to retrieve index entry: %v", err)
 		}
 
-		obj, err := p.getObject(entry.Id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read object from Git repository: %v", err)
-		}
-
-		kind, err := kindFromPath(entry.Path)
-		if err != nil {
-			return nil, err
-		}
-
-		kubeObj, err := deploy.KubeObjectFromObject(kind, obj)
+		kubeObj, err := p.getKubeObject(entry.Id, entry.Path)
 		if err != nil {
 			return nil, err
 		}
