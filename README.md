@@ -4,13 +4,13 @@
 
 <p align="center"><a href="https://redspread.com">Website</a> | <a href="http://redspread.readme.io">Docs</a> | <a href="http://slackin.redspread.com/">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
 
-#Spread: Docker to Kubernetes in one command
+#Spread: Git for Kubernetes
 
-`spread` is a command line tool that makes it easy to version Kubernetes objects (see: [Kit](https://github.com/redspread/kit)), set up a local Kubernetes cluster (see: [localkube](https://github.com/redspread/localkube)), and deploy to Kubernetes clusters in one command. The project's goals are to:
+`spread` is a command line tool that makes it easy to version Kubernetes clusters, deploy to Kubernetes clusters in one command, and set up a local Kubernetes cluster (see: [localkube](https://github.com/redspread/localkube)). The project's goals are to:
 
-* Enable rapid iteration with Kubernetes
+* Guarantee reproducible Kubernetes deployments
 * Be the fastest, simplest way to deploy Docker to production
-* Work well for a single developer or an entire team (no more broken bash scripts!)
+* Enable collaborative deployment workflows that work well for one person or an entire team
 
 See how we deployed Mattermost (<a href="https://github.com/redspread/kube-mattermost">and you can too!</a>):
 
@@ -27,16 +27,54 @@ See our [philosophy](./philosophy.md) for more on our mission and values.
 
 ##Installation
 
-Install with `go get`:
+Install with `go get` (-d is for download only):
 
-`go get rsprd.com/spread/cmd/spread`
+`go get -d rsprd.com/spread/cmd/spread`
+
+Go into the correct directory:
+
+`cd $GOPATH/src/rsprd.com/spread`
+
+If libgit2 is not installed:
+
+`make install-libgit2`
+
+Then:
+
+`make build/spread`
+
+If an error about libraries missing comes up, set up your library path like:
+
+`export LD_LIBRARY_PATH=/usr/local/lib:$ LD_LIBRARY_PATH`
 
 Or, if you prefer using Homebrew (OS X only): 
 
 `$ brew tap redspread/spread`  
-`$ brew install spread`
+`$ brew install spread-versioning`
 
-##Quickstart
+##Git for Kubernetes
+
+Spread versions your software environment (i.e. a Kubernetes cluster) like Git versions source code. Because Spread is built on top of libgit2, it takes advantage of Git's interface and functionality. This means after you deploy a Kubernetes object to a cluster, you can version the object by staging, commiting, and pushing it to a Spread repository. 
+
+To get started, initialize Spread and set up a local Spread repository:
+
+`spread init`
+
+Here is our suggested workflow for versioning with Spread:
+
+1. Create or edit your Kubernetes objects
+2. Deploy your objects to a local or remote Kubernetes cluster (make sure you've [set up your directory](https://github.com/redspread/spread/tree/versioning#faq) correctly): `spread deploy .`
+3. Stage an object: `spread add <objectType>/<objectName>`
+4. Repeat until all objects have been staged
+5. Commit your objects with a message: `spread commit -m "commit message"`
+6. Push your objects to a local Spread repository: `spread push remote local`
+7. Your environment is now reproducible as a commit.
+
+Spread versioning is highly experimental for the next few weeks. If you find any bugs or have any feature requests for Spread versioning, please file an issue, and know that the format for Spread may change! 
+
+For more details on Spread commands, [see our docs](https://redspread.readme.io/docs/spread-commands).
+
+##Spread Deploy Quickstart
 
 Check out our <a href="https://redspread.readme.io/docs/getting-started">Getting Started Guide</a>.
 
@@ -66,6 +104,7 @@ Spread makes it easy to set up and iterate with [localkube](https://github.com/r
 - Iterate on your application, updating image and objects running `spread deploy .` each time you want to deploy changes
 - To preview changes, grab the IP of your docker daemon with `docker-machine env <NAME>`and the returned `NodePort`, then put `IP:NodePort` in your browser
 - When finished, run `spread cluster stop` to stop localkube
+- To remove the container entirely, run `spread cluster stop -r`
 
 [1] `spread` will soon integrate building ([#59](https://github.com/redspread/spread/issues/59))    
 [2] Since `localkube` shares a Docker daemon with your host, there is no need to push images :)
@@ -74,26 +113,23 @@ Spread makes it easy to set up and iterate with [localkube](https://github.com/r
 
 ##What's been done so far
  
+* Spread versioning
 * `spread deploy [-s] PATH [kubectl context]`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
 	* Reads context of directory and builds Kubernetes deployment hierarchy.
 	* Updates all Kubernetes objects on a Kubernetes cluster.
 	* Returns a public IP address, if type Load Balancer is specified. 
-* Established an implicit hierarchy of Kubernetes objects
-* Multi-container deployment
-* Support for Linux and Windows
 * [localkube](https://github.com/redspread/localkube): easy-to-setup local Kubernetes cluster for rapid development
 
 ##What's being worked on now
 
-* Version control for Kubernetes objects
 * Inner-app linking
+* Parameterization
+* [Redspread](redspread.com) (hosted Spread repository)
 
 See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a> here!
 
 ##Future Goals
 * Peer-to-peer syncing between local and remote Kubernetes clusters
-* Develop workflow for application and deployment versioning
-* Introduce paramaterization for container configuration
 
 ##FAQ
 
@@ -118,6 +154,8 @@ rs
     service.yaml
     secret.yaml
  ```
+ 
+ **Why version objects instead of just files?** The object is the deterministic representation of state in Kubernetes. A useful analogy is "Kubernetes objects" are to "Docker images" like "Kubernetes object files" are to "Dockerfiles". By versioning the object itself, we can guarantee a 1:1 mapping with the Kubernetes cluster. This allows us to do things like diff two clusters and introduces future potential for linking between objects and repositories. 
 
 ##Contributing
 
