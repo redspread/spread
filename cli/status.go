@@ -19,6 +19,11 @@ func (s SpreadCli) Status() *cli.Command {
 				s.fatalf("Could not load Index: %v", err)
 			}
 
+			head, err := proj.Head()
+			if err != nil {
+				head = new(deploy.Deployment)
+			}
+
 			client, err := deploy.NewKubeClusterFromContext("")
 			if err != nil {
 				s.fatalf("Failed to connect to Kubernetes cluster: %v", err)
@@ -29,7 +34,50 @@ func (s SpreadCli) Status() *cli.Command {
 				s.fatalf("Could not load deployment from cluster: %v", err)
 			}
 
-			s.printf(index.Diff(cluster))
+			stat := deploy.Stat(index, head, cluster)
+			s.printStatus(stat)
 		},
+	}
+}
+
+func (s SpreadCli) printStatus(status deploy.DiffStat) {
+	s.printf("From Index:")
+	if len(status.ClusterNew) > 0 {
+		s.printf("%d untracked objects:", len(status.ClusterNew))
+		for _, path := range status.ClusterNew {
+			s.printf("- %s", path)
+		}
+	}
+	if len(status.ClusterModified) > 0 {
+		s.printf("%d modified objects:", len(status.ClusterModified))
+		for _, path := range status.ClusterModified {
+			s.printf("- %s", path)
+		}
+	}
+	if len(status.ClusterDeleted) > 0 {
+		s.printf("%d deleted objects:", len(status.ClusterDeleted))
+		for _, path := range status.ClusterDeleted {
+			s.printf("- %s", path)
+		}
+	}
+
+	s.printf("From HEAD:")
+	if len(status.IndexNew) > 0 {
+		s.printf("%d staged creations:", len(status.IndexNew))
+		for _, path := range status.IndexNew {
+			s.printf("- %s", path)
+		}
+	}
+	if len(status.IndexModified) > 0 {
+		s.printf("%d staged changes:", len(status.IndexModified))
+		for _, path := range status.IndexModified {
+			s.printf("- %s", path)
+		}
+	}
+	if len(status.IndexDeleted) > 0 {
+		s.printf("%d staged deletions:", len(status.IndexDeleted))
+		for _, path := range status.IndexDeleted {
+			s.printf("- %s", path)
+		}
 	}
 }

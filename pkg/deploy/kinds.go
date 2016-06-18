@@ -36,7 +36,7 @@ var kinds = map[string]KubeObject{
 	"configmap":       &kube.ConfigMap{},
 	"serviceaccount":  &kube.ServiceAccount{},
 	"componentstatus": &kube.ComponentStatus{},
-	"endpoint":        &kube.Endpoints{},
+	"endpoints":       &kube.Endpoints{},
 	"event":           &kube.Event{},
 	"limitrange":      &kube.LimitRange{},
 	"node":            &kube.Node{},
