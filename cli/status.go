@@ -6,19 +6,12 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 )
 
-// Diff shows the difference bettwen the cluster and the index.
-func (s SpreadCli) Diff() *cli.Command {
+// Status returns information about the current state of the project.
+func (s SpreadCli) Status() *cli.Command {
 	return &cli.Command{
-		Name:        "diff",
-		Usage:       "spread diff",
-		Description: "Diffs index against state of cluster",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "context",
-				Value: "",
-				Usage: "kubectl context to use for requests",
-			},
-		},
+		Name:        "status",
+		Usage:       "spread status",
+		Description: "Information about what's commited, changed, and staged.",
 		Action: func(c *cli.Context) {
 			proj := s.project()
 			index, err := proj.Index()
@@ -26,8 +19,7 @@ func (s SpreadCli) Diff() *cli.Command {
 				s.fatalf("Could not load Index: %v", err)
 			}
 
-			context := c.String("context")
-			client, err := deploy.NewKubeClusterFromContext(context)
+			client, err := deploy.NewKubeClusterFromContext("")
 			if err != nil {
 				s.fatalf("Failed to connect to Kubernetes cluster: %v", err)
 			}
