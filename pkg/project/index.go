@@ -3,10 +3,12 @@ package project
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	git "gopkg.in/libgit2/git2go.v23"
 
+	"rsprd.com/spread/pkg/deploy"
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
@@ -44,6 +46,41 @@ func (p *Project) AddObjectToIndex(obj *pb.Object) error {
 	}
 
 	return index.Write()
+}
+
+func (p *Project) Index() (*deploy.Deployment, error) {
+	index, err := p.repo.Index()
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve index: %v", err)
+	}
+
+	deployment := new(deploy.Deployment)
+	indexSize := int(index.EntryCount())
+	for i := 0; i < indexSize; i++ {
+		entry, err := index.EntryByIndex(uint(i))
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve index entry: %v", err)
+		}
+
+		kubeObj, err := p.getKubeObject(entry.Id, entry.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		err = deployment.Add(kubeObj)
+		if err != nil {
+			return nil, fmt.Errorf("could not add object to deployment: %v", err)
+		}
+	}
+	return deployment, nil
+}
+
+func kindFromPath(path string) (string, error) {
+	parts := strings.Split(path, "/")
+	if len(parts) != 4 {
+		return "", fmt.Errorf("path wrong length (is %d, expected 5)", len(parts))
+	}
+	return parts[2], nil
 }
 
 var (

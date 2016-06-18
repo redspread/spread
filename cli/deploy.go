@@ -15,44 +15,30 @@ import (
 func (s SpreadCli) Deploy() *cli.Command {
 	return &cli.Command{
 		Name:        "deploy",
-		Usage:       "spread deploy [-s] PATH [kubectl context]",
+		Usage:       "spread deploy [-s] PATH | COMMIT [kubectl context]",
 		Description: "Deploys objects to a remote Kubernetes cluster.",
 		ArgsUsage:   "-s will deploy only if no other deployment found (otherwise fails)",
 		Action: func(c *cli.Context) {
-			srcDir := c.Args().First()
-			if len(srcDir) == 0 {
-				s.fatalf("A directory to deploy from must be specified")
-			}
+			ref := c.Args().First()
+			var dep *deploy.Deployment
 
-			input, err := dir.NewFileInput(srcDir)
-			if err != nil {
-				s.fatalf(inputError(srcDir, err))
-			}
-
-			e, err := input.Build()
-			if err != nil {
-				println("build")
-				s.fatalf(inputError(srcDir, err))
-			}
-
-			dep, err := e.Deployment()
-
-			// TODO: This can be removed once application (#56) is implemented
-			if err == entity.ErrMissingContainer {
-				// check if has pod; if not deploy objects
-				pods, err := input.Entities(entity.EntityPod)
-				if err != nil && len(pods) != 0 {
-					s.fatalf("Failed to deploy: %v", err)
+			if proj, err := s.project(); err == nil {
+				if len(ref) == 0 {
+					s.printf("Deploying from index...")
+					index, err := proj.Index()
+					if err != nil {
+						s.fatalf("Error reading index: %v", err)
+					}
+					dep = index
+				} else {
+					if commit, err := proj.ResolveCommit(ref); err == nil {
+						dep = commit
+					} else {
+						dep = s.fileDeploy(ref)
+					}
 				}
-
-				dep, err = objectOnlyDeploy(input)
-				if err != nil {
-					s.fatalf("Failed to deploy: %v", err)
-				}
-
-			} else if err != nil {
-				println("deploy")
-				s.fatalf(inputError(srcDir, err))
+			} else {
+				dep = s.fileDeploy(ref)
 			}
 
 			context := c.Args().Get(1)
@@ -73,6 +59,40 @@ func (s SpreadCli) Deploy() *cli.Command {
 			s.printf("Deployment successful!")
 		},
 	}
+}
+
+func (s SpreadCli) fileDeploy(srcDir string) *deploy.Deployment {
+	input, err := dir.NewFileInput(srcDir)
+	if err != nil {
+		s.fatalf(inputError(srcDir, err))
+	}
+
+	e, err := input.Build()
+	if err != nil {
+		println("build")
+		s.fatalf(inputError(srcDir, err))
+	}
+
+	dep, err := e.Deployment()
+
+	// TODO: This can be removed once application (#56) is implemented
+	if err == entity.ErrMissingContainer {
+		// check if has pod; if not deploy objects
+		pods, err := input.Entities(entity.EntityPod)
+		if err != nil && len(pods) != 0 {
+			s.fatalf("Failed to deploy: %v", err)
+		}
+
+		dep, err = objectOnlyDeploy(input)
+		if err != nil {
+			s.fatalf("Failed to deploy: %v", err)
+		}
+
+	} else if err != nil {
+		println("deploy")
+		s.fatalf(inputError(srcDir, err))
+	}
+	return dep
 }
 
 func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {

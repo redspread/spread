@@ -38,17 +38,29 @@ func NewSpreadCli(in io.ReadCloser, out, err io.Writer, version, workDir string)
 	}
 }
 
+func (c SpreadCli) projectOrDie() *project.Project {
+	proj, err := c.project()
+	if err != nil {
+		c.fatalf("%v", err)
+	}
+	return proj
+}
+
 func (c SpreadCli) project() (*project.Project, error) {
 	if len(c.workDir) == 0 {
-		return nil, ErrNoWorkDir
+		return nil, fmt.Errorf("Encountered error: %v", ErrNoWorkDir)
 	}
 
 	root, found := findPath(c.workDir, project.SpreadDirectory, true)
 	if !found {
-		return nil, fmt.Errorf("could not find spread directory from %s", c.workDir)
+		return nil, fmt.Errorf("Not in a Spread project.")
 	}
 
-	return project.OpenProject(root)
+	proj, err := project.OpenProject(root)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening project: %v", err)
+	}
+	return proj, nil
 }
 
 func (c SpreadCli) printf(message string, data ...interface{}) {
@@ -89,34 +101,6 @@ func pathExists(path string, dir bool) (bool, error) {
 		return false, nil
 	}
 	return true, err
-}
-
-var shortForms = map[string]string{
-
-	"cs":     "componentstatuses",
-	"ds":     "daemonsets",
-	"ep":     "endpoints",
-	"ev":     "events",
-	"hpa":    "horizontalpodautoscalers",
-	"ing":    "ingresses",
-	"limits": "limitranges",
-	"no":     "nodes",
-	"ns":     "namespaces",
-	"po":     "pods",
-	"psp":    "podSecurityPolicies",
-	"pvc":    "persistentvolumeclaims",
-	"pv":     "persistentvolumes",
-	"quota":  "resourcequotas",
-	"rc":     "replicationcontrollers",
-	"rs":     "replicasets",
-	"svc":    "services",
-}
-
-func kubeShortForm(resource string) string {
-	if long, ok := shortForms[resource]; ok {
-		return long
-	}
-	return resource
 }
 
 var (

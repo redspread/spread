@@ -9,7 +9,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 )
 
-// Init sets up a Spread repository for versioning.
+// Add sets up a Spread repository for versioning.
 func (s SpreadCli) Add() *cli.Command {
 	return &cli.Command{
 		Name:        "add",
@@ -52,24 +52,14 @@ func (s SpreadCli) Add() *cli.Command {
 			}
 
 			kind, name := parts[0], parts[1]
-			kind = kubeShortForm(kind)
 			namespace := c.String("namespace")
 			export := !c.Bool("no-export")
-			req := cluster.Client.Get().Resource(kind).Namespace(namespace).Name(name)
 
-			if export {
-				req.Param("export", "true")
-			}
-
-			runObj, err := req.Do().Get()
+			kubeObj, err := cluster.Get(kind, namespace, name, export)
 			if err != nil {
-				s.fatalf("Failed to retrieve resource '%s (namespace=%s)' from Kube API server: %v", resource, namespace, err)
+				s.fatalf("Could not get object from cluster: %v", err)
 			}
 
-			kubeObj, err := deploy.AsKubeObject(runObj)
-			if err != nil {
-				s.fatalf("Unable to change into KubeObject: %v", err)
-			}
 			// TODO(DG): Clean this up
 			gvk := kubeObj.GetObjectKind().GroupVersionKind()
 			gvk.Version = "v1"
@@ -86,11 +76,7 @@ func (s SpreadCli) Add() *cli.Command {
 				s.fatalf("failed to encode object: %v", err)
 			}
 
-			proj, err := s.project()
-			if err != nil {
-				s.fatalf("Not in a Spread project.")
-			}
-
+			proj := s.projectOrDie()
 			err = proj.AddObjectToIndex(obj)
 			if err != nil {
 				s.fatalf("Failed to add object to Git index: %v", err)

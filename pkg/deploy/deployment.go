@@ -164,6 +164,45 @@ func (d *Deployment) Diff(other *Deployment) string {
 	return out
 }
 
+// PathDiff returns the list of the paths of objects.
+// Currently doesn't detect modifications
+func (d *Deployment) PathDiff(other *Deployment) (added, removed, modified []string) {
+	for path, obj := range d.objects {
+		if oObj, has := other.objects[path]; has {
+			if !kube.Semantic.DeepEqual(obj, oObj) {
+				//modified = append(modified, path)
+			}
+
+		} else {
+			added = append(added, path)
+		}
+	}
+
+	for path := range other.objects {
+		if _, has := d.objects[path]; !has {
+			removed = append(removed, path)
+		}
+	}
+	return
+}
+
+// Stat returns change information about a deployment.
+func Stat(index, head, cluster *Deployment) DiffStat {
+	stat := DiffStat{}
+	stat.IndexNew, stat.IndexDeleted, stat.IndexModified = index.PathDiff(head)
+	stat.ClusterNew, stat.ClusterDeleted, stat.ClusterModified = cluster.PathDiff(index)
+	return stat
+}
+
+type DiffStat struct {
+	IndexNew        []string
+	IndexModified   []string
+	IndexDeleted    []string
+	ClusterNew      []string
+	ClusterModified []string
+	ClusterDeleted  []string
+}
+
 // deepCopy creates a deep copy of the Kubernetes object given.
 func deepCopy(obj KubeObject) (KubeObject, error) {
 	copy, err := kube.Scheme.DeepCopy(obj)
