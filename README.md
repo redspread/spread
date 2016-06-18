@@ -67,8 +67,7 @@ Here is our suggested workflow for versioning with Spread:
 3. Stage an object: `spread add <objectType>/<objectName>`
 4. Repeat until all objects have been staged
 5. Commit your objects with a message: `spread commit -m "commit message"`
-6. Push your objects to a local Spread repository: `spread push remote local`
-7. Your environment is now reproducible as a commit.
+7. Go ahead and try out the other commands - anything not documented can be accessed using `spread git ...`
 
 Spread versioning is highly experimental for the next few weeks. If you find any bugs or have any feature requests for Spread versioning, please file an issue, and know that the format for Spread may change! 
 
