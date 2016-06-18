@@ -13,7 +13,7 @@ func (s SpreadCli) Status() *cli.Command {
 		Usage:       "spread status",
 		Description: "Information about what's commited, changed, and staged.",
 		Action: func(c *cli.Context) {
-			proj := s.project()
+			proj := s.projectOrDie()
 			index, err := proj.Index()
 			if err != nil {
 				s.fatalf("Could not load Index: %v", err)

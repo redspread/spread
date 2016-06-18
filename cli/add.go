@@ -76,7 +76,7 @@ func (s SpreadCli) Add() *cli.Command {
 				s.fatalf("failed to encode object: %v", err)
 			}
 
-			proj := s.project()
+			proj := s.projectOrDie()
 			err = proj.AddObjectToIndex(obj)
 			if err != nil {
 				s.fatalf("Failed to add object to Git index: %v", err)

@@ -20,7 +20,7 @@ func (s SpreadCli) Diff() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) {
-			proj := s.project()
+			proj := s.projectOrDie()
 			index, err := proj.Index()
 			if err != nil {
 				s.fatalf("Could not load Index: %v", err)

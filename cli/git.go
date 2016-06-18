@@ -19,7 +19,7 @@ func (s SpreadCli) Git() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) {
-			proj := s.project()
+			proj := s.projectOrDie()
 			gitDir := filepath.Join(proj.Path, "git")
 
 			gitArgs := []string{"--git-dir=" + gitDir}

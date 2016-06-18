@@ -26,7 +26,7 @@ func (s SpreadCli) Commit() *cli.Command {
 				s.fatalf("All commits must have a message. Specify one with 'spread commit -m \"message\"'")
 			}
 
-			proj := s.project()
+			proj := s.projectOrDie()
 			notImplemented := project.Person{
 				Name:  "not implemented",
 				Email: "not@implemented.com",

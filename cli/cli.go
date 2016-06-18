@@ -38,21 +38,29 @@ func NewSpreadCli(in io.ReadCloser, out, err io.Writer, version, workDir string)
 	}
 }
 
-func (c SpreadCli) project() *project.Project {
+func (c SpreadCli) projectOrDie() *project.Project {
+	proj, err := c.project()
+	if err != nil {
+		c.fatalf("%v", err)
+	}
+	return proj
+}
+
+func (c SpreadCli) project() (*project.Project, error) {
 	if len(c.workDir) == 0 {
-		c.fatalf("Encountered error: %v", ErrNoWorkDir)
+		return nil, fmt.Errorf("Encountered error: %v", ErrNoWorkDir)
 	}
 
 	root, found := findPath(c.workDir, project.SpreadDirectory, true)
 	if !found {
-		c.fatalf("Not in a Spread project.")
+		return nil, fmt.Errorf("Not in a Spread project.")
 	}
 
 	proj, err := project.OpenProject(root)
 	if err != nil {
-		c.fatalf("Error opening project: %v", err)
+		return nil, fmt.Errorf("Error opening project: %v", err)
 	}
-	return proj
+	return proj, nil
 }
 
 func (c SpreadCli) printf(message string, data ...interface{}) {

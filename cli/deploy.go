@@ -21,19 +21,24 @@ func (s SpreadCli) Deploy() *cli.Command {
 		Action: func(c *cli.Context) {
 			ref := c.Args().First()
 			var dep *deploy.Deployment
-			if len(ref) == 0 {
-				s.printf("Deploying from index...")
-				index, err := s.project().Index()
-				if err != nil {
-					s.fatalf("Error reading index: %v", err)
-				}
-				dep = index
-			} else {
-				if commit, err := s.project().ResolveCommit(ref); err == nil {
-					dep = commit
+
+			if proj, err := s.project(); err == nil {
+				if len(ref) == 0 {
+					s.printf("Deploying from index...")
+					index, err := proj.Index()
+					if err != nil {
+						s.fatalf("Error reading index: %v", err)
+					}
+					dep = index
 				} else {
-					dep = s.fileDeploy(ref)
+					if commit, err := proj.ResolveCommit(ref); err == nil {
+						dep = commit
+					} else {
+						dep = s.fileDeploy(ref)
+					}
 				}
+			} else {
+				dep = s.fileDeploy(ref)
 			}
 
 			context := c.Args().Get(1)
