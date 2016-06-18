@@ -33,6 +33,8 @@ func KubeShortForm(resource string) string {
 
 // TODO: ensure all Kinds are supported
 var kinds = map[string]KubeObject{
+	"configmap":       &kube.ConfigMap{},
+	"serviceaccount":  &kube.ServiceAccount{},
 	"componentstatus": &kube.ComponentStatus{},
 	"endpoint":        &kube.Endpoints{},
 	"event":           &kube.Event{},
@@ -46,6 +48,22 @@ var kinds = map[string]KubeObject{
 	"replicationcontroller": &kube.ReplicationController{},
 	"service":               &kube.Service{},
 	"secret":                &kube.Secret{},
+}
+
+var resources = []string{
+	"configmaps",
+	"endpoints",
+	"events",
+	"limitranges",
+	"namespaces",
+	"persistentvolumeclaims",
+	"persistentvolumes",
+	"pods",
+	"replicationcontrollers",
+	"resourcequotas",
+	"secrets",
+	"serviceaccounts",
+	"services",
 }
 
 // BaseObject returns a Kubernetes object of the given kind to be used to populate.

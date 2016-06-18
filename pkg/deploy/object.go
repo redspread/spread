@@ -30,7 +30,7 @@ func ObjectPath(obj KubeObject) (string, error) {
 	}
 
 	meta := obj.GetObjectMeta()
-	path := fmt.Sprintf("%s/namespaces/%s/%s/%s", obj.GetObjectKind().GroupVersionKind().Version, meta.GetNamespace(), gkv.Kind, meta.GetName())
+	path := fmt.Sprintf("namespaces/%s/%s/%s", meta.GetNamespace(), gkv.Kind, meta.GetName())
 	return strings.ToLower(path), nil
 }
 

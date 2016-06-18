@@ -77,10 +77,10 @@ func (p *Project) Index() (*deploy.Deployment, error) {
 
 func kindFromPath(path string) (string, error) {
 	parts := strings.Split(path, "/")
-	if len(parts) != 5 {
+	if len(parts) != 4 {
 		return "", fmt.Errorf("path wrong length (is %d, expected 5)", len(parts))
 	}
-	return parts[3], nil
+	return parts[2], nil
 }
 
 var (

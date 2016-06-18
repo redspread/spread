@@ -260,6 +260,108 @@ func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
 	return nil
 }
 
+func (c *KubeCluster) Deployment() (*Deployment, error) {
+	deployment := new(Deployment)
+	for _, resource := range resources {
+		obj, err := c.Client.Get().Resource(resource).Do().Get()
+		if err != nil {
+			return nil, fmt.Errorf("could not list '%s': %v", resource, err)
+		}
+
+		// TODO: this is what desperation looks like
+		switch t := obj.(type) {
+		case *kube.ComponentStatusList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ConfigMapList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.EndpointsList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.EventList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.LimitRangeList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.NamespaceList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.PersistentVolumeClaimList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.PersistentVolumeList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.PodList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ReplicationControllerList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ResourceQuotaList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.SecretList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ServiceAccountList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ServiceList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		default:
+			return nil, fmt.Errorf("could not match '%T' to type", obj)
+		}
+
+	}
+	return deployment, nil
+}
+
 // setRequestObjectInfo adds necessary type information to requests.
 func setRequestObjectInfo(req *rest.Request, namespace string, mapping *meta.RESTMapping) {
 	// if namespace scoped resource, set namespace
