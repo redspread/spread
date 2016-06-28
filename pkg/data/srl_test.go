@@ -30,6 +30,14 @@ var goodSRLs = []SRLTest{
 		},
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 	},
+	// treeish only, with double slash
+	{
+		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9//",
+		&SRL{
+			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
+		},
+		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
+	},
 	// shortened treeish
 	{
 		"a434f0b",
@@ -128,6 +136,13 @@ var badSRLs = []SRLTest{
 		nil,
 		"git object ID was too short",
 	},
+	// long oid
+	// short OID
+	{
+		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9d",
+		nil,
+		"git object ID was too long",
+	},
 	// invalid characters in ID
 	{
 		"a343invalidID",
@@ -173,6 +188,12 @@ var badSRLs = []SRLTest{
 	// unopened parentheses
 	{
 		"e8f3ab9/default/replicationcontroller/web?spec.template).spec.containers",
+		nil,
+		"invalid Field",
+	},
+	// already open parentheses
+	{
+		"e8f3ab9/default/replicationcontroller/web?spec.template.spec.co(ntainers(0)",
 		nil,
 		"invalid Field",
 	},

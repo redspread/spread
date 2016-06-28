@@ -169,9 +169,6 @@ func checkIllegalParens(fieldStr string) error {
 	inParen := false
 	for _, c := range fieldStr {
 		if c == '(' {
-			if inParen {
-				return errors.New("already opened parentheses")
-			}
 			inParen = true
 		} else if c == ')' {
 			if !inParen {
