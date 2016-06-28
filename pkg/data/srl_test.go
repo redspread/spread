@@ -89,7 +89,7 @@ var goodSRLs = []SRLTest{
 		&SRL{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 			Path:    "default/replicationcontroller/web",
-			Field:   "spec.template.spec.containers(0)",
+			Field:   "spec.template.spec.containers(0)(1)",
 		},
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9/default/replicationcontroller/web?spec.template.spec.containers(0)(1)",
 	},
@@ -136,43 +136,43 @@ var badSRLs = []SRLTest{
 	},
 	// invalid characters in path
 	{
-		"e8f3ab9/default/replication  controller/web/spec.template.spec.containers(0)",
+		"e8f3ab9/default/replication  controller/web?spec.template.spec.containers(0)",
 		nil,
 		"invalid Path",
 	},
 	// invalid characters in field
 	{
-		"e8f3ab9/default/replicationcontroller/web/spec.tem&&&&plate.spec.containers(0)",
+		"e8f3ab9/default/replicationcontroller/web?spec.tem&&&&plate.spec.containers(0)",
 		nil,
 		"invalid Field",
 	},
 	// character in field array access
 	{
-		"e8f3ab9/default/replicationcontroller/web/spec.template.spec.containers(d)",
+		"e8f3ab9/default/replicationcontroller/web/?spec.template.spec.containers(d)",
 		nil,
 		"invalid Field",
 	},
 	// double field dot
 	{
-		"e8f3ab9/default/replicationcontroller/web/spec..template.spec.containers(0)",
+		"e8f3ab9/default/replicationcontroller/web/?spec..template.spec.containers(0)",
 		nil,
 		"invalid Field",
 	},
 	// start field with dot
 	{
-		"e8f3ab9/default/replicationcontroller/web/.spec.template.spec.containers(0)",
+		"e8f3ab9/default/replicationcontroller/web?.spec.template.spec.containers(0)",
 		nil,
 		"invalid Field",
 	},
 	// unclosed parentheses
 	{
-		"e8f3ab9/default/replicationcontroller/web/spec.template.spec.containers(",
+		"e8f3ab9/default/replicationcontroller/web?spec.template.spec.containers(",
 		nil,
 		"invalid Field",
 	},
 	// unopened parentheses
 	{
-		"e8f3ab9/default/replicationcontroller/web/spec.template).spec.containers",
+		"e8f3ab9/default/replicationcontroller/web?spec.template).spec.containers",
 		nil,
 		"invalid Field",
 	},
@@ -184,7 +184,79 @@ func TestParseBadSRLs(t *testing.T) {
 		if err == nil {
 			t.Errorf("%s(%d) did not return error (expected error prefix: %s)", test.in, i, test.outStr)
 		} else if !strings.HasPrefix(err.Error(), test.outStr) {
-			t.Errorf("%s(%d) wrong error (expected error prefix: %s)", test.in, i, test.outStr)
+			t.Errorf("%s(%d) wrong error: '%v' (expected error prefix: %s)", test.in, i, err.Error(), test.outStr)
+		}
+	}
+}
+
+// PartTest checks if parts are being properly created for SRLs
+// rawsrl is the input and the remaining fields are the output. Empty fields mean the related element was missing.
+type PartTest struct {
+	rawsrl string
+	oid    string
+	path   string
+	field  string
+}
+
+func (t PartTest) String() string {
+	return fmt.Sprintf("rawsrl=%s, oid=%s, path=%s, field=%s", t.rawsrl, t.oid, t.path, t.field)
+}
+
+var partTests = []PartTest{
+	{
+		rawsrl: "oid",
+		oid:    "oid",
+	},
+	{
+		rawsrl: "oid/",
+		oid:    "oid",
+	},
+	{
+		rawsrl: "oid/?",
+		oid:    "oid",
+	},
+	{
+		rawsrl: "oid//////",
+		oid:    "oid",
+		path:   "/////",
+	},
+	{
+		rawsrl: "oid//////?",
+		oid:    "oid",
+		path:   "/////",
+	},
+	{
+		rawsrl: "oid//////?**",
+		oid:    "oid",
+		path:   "/////",
+		field:  "**",
+	},
+	{
+		rawsrl: "oid??//////?**",
+		oid:    "oid??",
+		path:   "/////",
+		field:  "**",
+	},
+	{
+		rawsrl: "oid//////?//",
+		oid:    "oid",
+		path:   "/////",
+		field:  "//",
+	},
+	{
+		rawsrl: "oid???",
+		oid:    "oid???",
+	},
+}
+
+func TestParts(t *testing.T) {
+	for i, expected := range partTests {
+		input := expected.rawsrl
+		actual := PartTest{rawsrl: input}
+		actual.oid, actual.path, actual.field = parts(input)
+
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Part %d:\n\thave %v\n\twant %v\n", i, actual, expected)
 		}
 	}
 }
