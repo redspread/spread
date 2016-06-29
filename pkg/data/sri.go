@@ -59,19 +59,34 @@ func (s *SRI) String() string {
 	return str
 }
 
+// IsTreeish is true if identifier points to tree.
+func (s *SRI) IsTree() bool {
+	return !s.IsObject() && !s.IsField()
+}
+
+// IsObject is true if points to object.
+func (s *SRI) IsObject() bool {
+	return len(s.Field) == 0 && len(s.Path) > 0
+}
+
+// IsField is true if points to field.
+func (s *SRI) IsField() bool {
+	return len(s.Field) > 0 && len(s.Path) > 0
+}
+
 // ParseSRI parses rawsri into SRI struct.
 func ParseSRI(rawsri string) (*SRI, error) {
 	oid, path, field := parts(rawsri)
 	var err error
-	if oid, err = ParseOID(oid); err != nil {
+	if oid, err = ValidateOID(oid); err != nil {
 		return nil, err
 	}
 
-	if path, err = ParsePath(path); err != nil {
+	if path, err = ValidatePath(path); err != nil {
 		return nil, err
 	}
 
-	if field, err = ParseField(field); err != nil {
+	if field, err = ValidateField(field); err != nil {
 		return nil, err
 	}
 
@@ -109,7 +124,7 @@ func parts(rawsri string) (oid, path, field string) {
 	return
 }
 
-func ParseOID(oidStr string) (string, error) {
+func ValidateOID(oidStr string) (string, error) {
 	if len(oidStr) == 1 && oidStr[0] == '*' {
 		return "*", nil
 	} else if len(oidStr) < MinObjectIDLen {
@@ -125,7 +140,7 @@ func ParseOID(oidStr string) (string, error) {
 	return oidStr, nil
 }
 
-func ParsePath(pathStr string) (string, error) {
+func ValidatePath(pathStr string) (string, error) {
 	if len(pathStr) == 0 {
 		return "", nil
 	}
@@ -145,13 +160,17 @@ func ParsePath(pathStr string) (string, error) {
 	return pathStr, nil
 }
 
-func ParseField(fieldStr string) (string, error) {
+func ValidateField(fieldStr string) (string, error) {
 	if len(fieldStr) == 0 {
 		return "", nil
 	}
 
 	if fieldStr[0] == '.' {
 		return "", errors.New("invalid Field: cannot begin with '.'")
+	}
+
+	if fieldStr[len(fieldStr)-1] == '.' {
+		return "", errors.New("invalid Field: cannot end with '.'")
 	}
 
 	if strings.Contains(fieldStr, "..") {
@@ -171,21 +190,23 @@ func ParseField(fieldStr string) (string, error) {
 }
 
 func checkIllegalParens(fieldStr string) error {
-	inParen := false
-	for _, c := range fieldStr {
+	inParen := -1
+	for i, c := range fieldStr {
 		if c == '(' {
-			inParen = true
+			inParen = i
 		} else if c == ')' {
-			if !inParen {
+			if inParen == -1 {
 				return errors.New("closed parenthese when one hasn't been opened")
+			} else if inParen == i-1 {
+				return errors.New("must specify array position, cannot have '()'")
 			}
-			inParen = false
-		} else if inParen && !unicode.IsNumber(c) {
+			inParen = -1
+		} else if inParen != -1 && !unicode.IsNumber(c) {
 			return errors.New("only numeric characters can be used in parentheses")
 		}
 	}
 
-	if inParen {
+	if inParen != -1 {
 		return errors.New("unclosed parentheses")
 	}
 

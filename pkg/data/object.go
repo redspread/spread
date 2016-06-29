@@ -25,6 +25,16 @@ func CreateObject(name, path string, ptr interface{}) (*pb.Object, error) {
 	return ObjectFromMap(name, path, jsonData)
 }
 
+// GetFieldFromObject returns a pointer to field in obj based on an SRI. SRI must point to Field.
+func GetFieldFromObject(obj *pb.Object, field *SRI) (*pb.Field, error) {
+	if !field.IsField() {
+		return nil, errors.New("passed SRI is not a field")
+	}
+
+	fields := Fields(obj.GetFields())
+	return fields.ResolveField(field.Path)
+}
+
 // ObjectFromMap creates an Object, using the entries of a map as fields.
 // This supports maps embedded as values. It is assumed that types are limited to JSON types.
 func ObjectFromMap(name, path string, data map[string]interface{}) (*pb.Object, error) {
