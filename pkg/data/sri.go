@@ -14,12 +14,14 @@ const (
 	MinObjectIDLen = 7
 	ValidOIDChars  = "abcdef0123456789"
 
-	OIDRegex   = `[^a-f0-9]+`
-	PathRegex  = `[^a-zA-Z0-9./]+`
-	FieldRegex = `[^a-zA-Z0-9./()]+`
-
 	PathDelimiter  = "/"
 	FieldDelimiter = "?"
+)
+
+var (
+	OIDRegex   = regexp.MustCompile(`[^a-f0-9]+`)
+	PathRegex  = regexp.MustCompile(`[^a-zA-Z0-9./]+`)
+	FieldRegex = regexp.MustCompile(`[^a-zA-Z0-9./()]+`)
 )
 
 // A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for an object or field stored within a repository.
@@ -114,7 +116,7 @@ func ParseOID(oidStr string) (string, error) {
 	}
 
 	// check has valid chars
-	if regexp.MustCompile(OIDRegex).MatchString(oidStr) {
+	if OIDRegex.MatchString(oidStr) {
 		return "", fmt.Errorf("invalid Treeish, invalid character in '%s' (only can contain '%s')", oidStr, ValidOIDChars)
 	}
 	return oidStr, nil
@@ -126,7 +128,7 @@ func ParsePath(pathStr string) (string, error) {
 	}
 
 	// check has valid chars
-	if regexp.MustCompile(PathRegex).MatchString(pathStr) {
+	if PathRegex.MatchString(pathStr) {
 		return "", fmt.Errorf("invalid Path, invalid character in '%s' (must match regex '%s')", pathStr, PathRegex)
 	}
 
@@ -154,7 +156,7 @@ func ParseField(fieldStr string) (string, error) {
 	}
 
 	// check has valid chars
-	if regexp.MustCompile(FieldRegex).MatchString(fieldStr) {
+	if FieldRegex.MatchString(fieldStr) {
 		return "", fmt.Errorf("invalid Field, invalid character in '%s' (must match regex '%s')", fieldStr, FieldRegex)
 	}
 
