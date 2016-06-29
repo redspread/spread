@@ -7,17 +7,17 @@ import (
 	"testing"
 )
 
-type SRLTest struct {
+type SRITest struct {
 	in     string
-	out    *SRL   // nil if error
+	out    *SRI   // nil if error
 	outStr string // expected string for success, prefix of error for failure
 }
 
-var goodSRLs = []SRLTest{
+var goodSRIs = []SRITest{
 	// treeish only
 	{
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 		},
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
@@ -25,7 +25,7 @@ var goodSRLs = []SRLTest{
 	// treeish only, with slash
 	{
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9/",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 		},
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
@@ -33,7 +33,7 @@ var goodSRLs = []SRLTest{
 	// treeish only, with double slash
 	{
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9//",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 		},
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
@@ -41,7 +41,7 @@ var goodSRLs = []SRLTest{
 	// shortened treeish
 	{
 		"a434f0b",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0b",
 		},
 		"a434f0b",
@@ -49,25 +49,25 @@ var goodSRLs = []SRLTest{
 	// treeish & path
 	{
 		"e8f3ab9/default/replicationcontroller/web/",
-		&SRL{
+		&SRI{
 			Treeish: "e8f3ab9",
 			Path:    "default/replicationcontroller/web",
 		},
 		"e8f3ab9/default/replicationcontroller/web",
 	},
-	// full SRL (no Field)
+	// full SRI (no Field)
 	{
 		"e8f3ab9/default/replicationcontroller/web/?",
-		&SRL{
+		&SRI{
 			Treeish: "e8f3ab9",
 			Path:    "default/replicationcontroller/web",
 		},
 		"e8f3ab9/default/replicationcontroller/web",
 	},
-	// full SRL
+	// full SRI
 	{
 		"e8f3ab9/default/replicationcontroller/web?spec.template.spec.containers(0)",
-		&SRL{
+		&SRI{
 			Treeish: "e8f3ab9",
 			Path:    "default/replicationcontroller/web",
 			Field:   "spec.template.spec.containers(0)",
@@ -76,7 +76,7 @@ var goodSRLs = []SRLTest{
 	},
 	{
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9/default/replicationcontroller/web/?spec.template.spec.containers(0)",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 			Path:    "default/replicationcontroller/web",
 			Field:   "spec.template.spec.containers(0)",
@@ -85,7 +85,7 @@ var goodSRLs = []SRLTest{
 	},
 	{
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9//default//replicationcontroller//web//?spec.template.spec.containers(0)",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 			Path:    "default/replicationcontroller/web",
 			Field:   "spec.template.spec.containers(0)",
@@ -94,7 +94,7 @@ var goodSRLs = []SRLTest{
 	},
 	{
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9/default/replicationcontroller/web/?spec.template.spec.containers(0)(1)",
-		&SRL{
+		&SRI{
 			Treeish: "a434f0ba11e6ec04ca640f90b854dddcecd0c8d9",
 			Path:    "default/replicationcontroller/web",
 			Field:   "spec.template.spec.containers(0)(1)",
@@ -103,27 +103,27 @@ var goodSRLs = []SRLTest{
 	},
 }
 
-func sfmt(s *SRL) string {
+func sfmt(s *SRI) string {
 	if s == nil {
-		s = new(SRL)
+		s = new(SRI)
 	}
 	return fmt.Sprintf("treeish=%s, path=%s, field=%s", s.Treeish, s.Path, s.Field)
 }
 
-func TestParseGoodSRLs(t *testing.T) {
-	for i, test := range goodSRLs {
-		srl, err := ParseSRL(test.in)
+func TestParseGoodSRIs(t *testing.T) {
+	for i, test := range goodSRIs {
+		sri, err := ParseSRI(test.in)
 		if err != nil {
 			t.Errorf("%s(%d) failed with: %v", test.in, i, err)
-		} else if !reflect.DeepEqual(srl, test.out) {
-			t.Errorf("%s(%d):\n\thave %v\n\twant %v\n", test.in, i, sfmt(srl), sfmt(test.out))
-		} else if srl.String() != test.outStr {
-			t.Errorf("%s(%d) - Bad Serialization:\n\thave %s\n\twant %s\n", test.in, i, srl.String(), test.outStr)
+		} else if !reflect.DeepEqual(sri, test.out) {
+			t.Errorf("%s(%d):\n\thave %v\n\twant %v\n", test.in, i, sfmt(sri), sfmt(test.out))
+		} else if sri.String() != test.outStr {
+			t.Errorf("%s(%d) - Bad Serialization:\n\thave %s\n\twant %s\n", test.in, i, sri.String(), test.outStr)
 		}
 	}
 }
 
-var badSRLs = []SRLTest{
+var badSRIs = []SRITest{
 	// empty string
 	{
 		"",
@@ -199,9 +199,9 @@ var badSRLs = []SRLTest{
 	},
 }
 
-func TestParseBadSRLs(t *testing.T) {
-	for i, test := range badSRLs {
-		_, err := ParseSRL(test.in)
+func TestParseBadSRIs(t *testing.T) {
+	for i, test := range badSRIs {
+		_, err := ParseSRI(test.in)
 		if err == nil {
 			t.Errorf("%s(%d) did not return error (expected error prefix: %s)", test.in, i, test.outStr)
 		} else if !strings.HasPrefix(err.Error(), test.outStr) {
@@ -210,70 +210,70 @@ func TestParseBadSRLs(t *testing.T) {
 	}
 }
 
-// PartTest checks if parts are being properly created for SRLs
-// rawsrl is the input and the remaining fields are the output. Empty fields mean the related element was missing.
+// PartTest checks if parts are being properly created for SRIs
+// rawsri is the input and the remaining fields are the output. Empty fields mean the related element was missing.
 type PartTest struct {
-	rawsrl string
+	rawsri string
 	oid    string
 	path   string
 	field  string
 }
 
 func (t PartTest) String() string {
-	return fmt.Sprintf("rawsrl=%s, oid=%s, path=%s, field=%s", t.rawsrl, t.oid, t.path, t.field)
+	return fmt.Sprintf("rawsri=%s, oid=%s, path=%s, field=%s", t.rawsri, t.oid, t.path, t.field)
 }
 
 var partTests = []PartTest{
 	{
-		rawsrl: "oid",
+		rawsri: "oid",
 		oid:    "oid",
 	},
 	{
-		rawsrl: "oid/",
+		rawsri: "oid/",
 		oid:    "oid",
 	},
 	{
-		rawsrl: "oid/?",
+		rawsri: "oid/?",
 		oid:    "oid",
 	},
 	{
-		rawsrl: "oid//////",
-		oid:    "oid",
-		path:   "/////",
-	},
-	{
-		rawsrl: "oid//////?",
+		rawsri: "oid//////",
 		oid:    "oid",
 		path:   "/////",
 	},
 	{
-		rawsrl: "oid//////?**",
+		rawsri: "oid//////?",
+		oid:    "oid",
+		path:   "/////",
+	},
+	{
+		rawsri: "oid//////?**",
 		oid:    "oid",
 		path:   "/////",
 		field:  "**",
 	},
 	{
-		rawsrl: "oid??//////?**",
+		rawsri: "oid??//////?**",
 		oid:    "oid??",
 		path:   "/////",
 		field:  "**",
 	},
 	{
-		rawsrl: "oid//////?//",
+		rawsri: "oid//////?//",
 		oid:    "oid",
 		path:   "/////",
 		field:  "//",
 	},
 	{
-		rawsrl: "oid???",
+		rawsri: "oid???",
 		oid:    "oid???",
 	},
 }
 
 func TestParts(t *testing.T) {
 	for i, expected := range partTests {
-		input := expected.rawsrl
-		actual := PartTest{rawsrl: input}
+		input := expected.rawsri
+		actual := PartTest{rawsri: input}
 		actual.oid, actual.path, actual.field = parts(input)
 
 		if !reflect.DeepEqual(actual, expected) {

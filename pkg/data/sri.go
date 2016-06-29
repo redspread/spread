@@ -22,21 +22,21 @@ const (
 	FieldDelimiter = "?"
 )
 
-// A SRL represents a parsed Spread Resource Locator (SRL), a globally unique address for an object or field stored within a repository.
+// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for an object or field stored within a repository.
 // This is represented as:
 //
-// 	treeish/path[?fieldpath]
-type SRL struct {
+// 	treeish/path[?field]
+type SRI struct {
 	// Treeish is a Git Object ID to either a Commit or a Tree Git object.
 	// The use of a Git OID (treeish) allows for any object or field to be addressed regardless if it is accessible.
 	// The Object ID may be truncated down to a minimum of 7 characters.
 	Treeish string
 
-	// Path to the Spread Object being addressed. If omitted, SRL refers to treeish.
+	// Path to the Spread Object being addressed. If omitted, SRI refers to treeish.
 	// This will be traversed starting from the given Treeish.
 	Path string
 
-	// Field specifies a path to the field within the Object that is being referred to. If omitted, the SRL refers to the entire object.
+	// Field specifies a path to the field within the Object that is being referred to. If omitted, the SRI refers to the entire object.
 	// Path must be given to have a Field.
 	// Fieldpaths are specified by name using the character “.” to specify sub-fields.
 	// Fieldpath of arrays are addressed using their 0 indexed position wrapped with parentheses.
@@ -44,8 +44,8 @@ type SRL struct {
 	Field string
 }
 
-// String returns a textual representation of the SRL which will be similar to the input.
-func (s *SRL) String() string {
+// String returns a textual representation of the SRI which will be similar to the input.
+func (s *SRI) String() string {
 	str := s.Treeish
 	if len(s.Path) > 0 {
 		str += "/" + s.Path
@@ -56,9 +56,9 @@ func (s *SRL) String() string {
 	return str
 }
 
-// ParseSRL parses rawsrl into SRL struct.
-func ParseSRL(rawsrl string) (*SRL, error) {
-	oid, path, field := parts(rawsrl)
+// ParseSRI parses rawsri into SRI struct.
+func ParseSRI(rawsri string) (*SRI, error) {
+	oid, path, field := parts(rawsri)
 	var err error
 	if oid, err = ParseOID(oid); err != nil {
 		return nil, err
@@ -72,37 +72,37 @@ func ParseSRL(rawsrl string) (*SRL, error) {
 		return nil, err
 	}
 
-	return &SRL{
+	return &SRI{
 		Treeish: oid,
 		Path:    path,
 		Field:   field,
 	}, nil
 }
 
-func parts(rawsrl string) (oid, path, field string) {
-	if len(rawsrl) == 0 {
+func parts(rawsri string) (oid, path, field string) {
+	if len(rawsri) == 0 {
 		return
 	}
 
 	// OID
-	pathDelim := strings.Index(rawsrl, PathDelimiter)
+	pathDelim := strings.Index(rawsri, PathDelimiter)
 	// check if only OID
 	if pathDelim == -1 {
-		oid = rawsrl
+		oid = rawsri
 		return
 	}
-	oid = rawsrl[:pathDelim]
+	oid = rawsri[:pathDelim]
 
 	// Path
-	fieldDelim := strings.LastIndex(rawsrl, FieldDelimiter)
+	fieldDelim := strings.LastIndex(rawsri, FieldDelimiter)
 	if fieldDelim == -1 {
-		if len(rawsrl) > pathDelim+1 {
-			path = rawsrl[pathDelim+1:]
+		if len(rawsri) > pathDelim+1 {
+			path = rawsri[pathDelim+1:]
 		}
 		return
 	}
 
-	path, field = rawsrl[pathDelim+1:fieldDelim], rawsrl[fieldDelim+1:]
+	path, field = rawsri[pathDelim+1:fieldDelim], rawsri[fieldDelim+1:]
 	return
 }
 
