@@ -101,6 +101,16 @@ var goodSRIs = []SRITest{
 		},
 		"a434f0ba11e6ec04ca640f90b854dddcecd0c8d9/default/replicationcontroller/web?spec.template.spec.containers(0)(1)",
 	},
+	// no treeish SRI
+	{
+		"*/default/replicationcontroller/web/?spec.template.spec.containers(1)",
+		&SRI{
+			Treeish: "*",
+			Path:    "default/replicationcontroller/web",
+			Field:   "spec.template.spec.containers(1)",
+		},
+		"*/default/replicationcontroller/web?spec.template.spec.containers(1)",
+	},
 }
 
 func sfmt(s *SRI) string {

@@ -24,6 +24,22 @@ func (p *Project) getObject(oid *git.Oid) (*pb.Object, error) {
 	return obj, nil
 }
 
+func (p *Project) createObject(obj *pb.Object) (oid *git.Oid, size int, err error) {
+	data, err := proto.Marshal(obj)
+	if err != nil {
+		err = fmt.Errorf("could not encode object: %v", err)
+		return
+	}
+	size = len(data)
+
+	oid, err = p.repo.CreateBlobFromBuffer(data)
+	if err != nil {
+		err = fmt.Errorf("could not write Object as blob in Git repo: %v", err)
+		return
+	}
+	return
+}
+
 func (p *Project) getKubeObject(oid *git.Oid, path string) (deploy.KubeObject, error) {
 	obj, err := p.getObject(oid)
 	if err != nil {

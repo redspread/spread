@@ -32,6 +32,7 @@ type SRI struct {
 	// Treeish is a Git Object ID to either a Commit or a Tree Git object.
 	// The use of a Git OID (treeish) allows for any object or field to be addressed regardless if it is accessible.
 	// The Object ID may be truncated down to a minimum of 7 characters.
+	// A single character “*” indicates a relative reference, this intentionally can’t be formed into a URL.
 	Treeish string
 
 	// Path to the Spread Object being addressed. If omitted, SRI refers to treeish.
@@ -109,7 +110,9 @@ func parts(rawsri string) (oid, path, field string) {
 }
 
 func ParseOID(oidStr string) (string, error) {
-	if len(oidStr) < MinObjectIDLen {
+	if len(oidStr) == 1 && oidStr[0] == '*' {
+		return "*", nil
+	} else if len(oidStr) < MinObjectIDLen {
 		return "", fmt.Errorf("git object ID was too short (%d chars), must be at least %d chars.", len(oidStr), MinObjectIDLen)
 	} else if len(oidStr) > MaxObjectIDLen {
 		return "", fmt.Errorf("git object ID was too long (%d chars), must be %d chars at most.", len(oidStr), MaxObjectIDLen)

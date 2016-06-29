@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
 	git "gopkg.in/libgit2/git2go.v23"
 
 	"rsprd.com/spread/pkg/deploy"
@@ -13,24 +12,19 @@ import (
 )
 
 func (p *Project) AddObjectToIndex(obj *pb.Object) error {
+	oid, size, err := p.createObject(obj)
+	if err != nil {
+		return fmt.Errorf("object couldn't be created: %v", err)
+	}
+
 	info := obj.GetInfo()
 	if info == nil {
 		return ErrNilObjectInfo
 	}
 
-	data, err := proto.Marshal(obj)
-	if err != nil {
-		return fmt.Errorf("could not encode object: %v", err)
-	}
-
-	oid, err := p.repo.CreateBlobFromBuffer(data)
-	if err != nil {
-		return fmt.Errorf("could not write Object as blob in Git repo: %v", err)
-	}
-
 	entry := &git.IndexEntry{
 		Mode: git.FilemodeBlob,
-		Size: uint32(len(data)),
+		Size: uint32(size),
 		Id:   oid,
 		Path: info.Path,
 	}
