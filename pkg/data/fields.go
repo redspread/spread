@@ -39,12 +39,15 @@ func (f Fields) Get(name string) *pb.Field {
 
 // GetFields returns the sub-fields of a field by name through an O(n) operation. Nil is returned if no field exists.
 func (f Fields) GetFields(name string) Fields {
-	fields := f.Get(name).Fields
-	if fields == nil {
+	field := f.Get(name)
+	if field == nil {
 		return nil
 	}
 
-	return Fields(fields)
+	if field.Fields != nil {
+		return Fields(field.Fields)
+	}
+	return nil
 }
 
 // nextField returns the first field in a fieldpath and returns the remainder after removing the root element.
