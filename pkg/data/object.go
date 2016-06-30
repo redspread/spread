@@ -32,7 +32,7 @@ func GetFieldFromObject(obj *pb.Object, field *SRI) (*pb.Field, error) {
 	}
 
 	fields := Fields(obj.GetFields())
-	return fields.ResolveField(field.Path)
+	return fields.ResolveField(field.Field)
 }
 
 // ObjectFromMap creates an Object, using the entries of a map as fields.

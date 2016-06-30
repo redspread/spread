@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
@@ -10,17 +12,39 @@ type Fields []*pb.Field
 // ResolveFields returns a field based on the provided field path in the format used for SRIs.
 // An error is returned if the given path doesn't exist.
 func (f Fields) ResolveField(fieldpath string) (*pb.Field, error) {
-	return nil, nil
+	field, next, _ := nextField(fieldpath)
+	if len(field) == 0 {
+		return nil, fmt.Errorf("could not resolve fieldpath '%s'", fieldpath)
+	} else if len(next) > 0 {
+		fields := f.GetFields(field)
+		if fields != nil {
+			return fields.ResolveField(next)
+		}
+	} else if out := f.Get(field); out != nil {
+		return out, nil
+	}
+
+	return nil, fmt.Errorf("could not find field '%s'", field)
 }
 
-// Get returns the sub-fields of a field by name through an O(n) operation. Nil is returned if no field exists.
-func (f Fields) GetFields(name string) Fields {
+// Get returns a field by name
+func (f Fields) Get(name string) *pb.Field {
 	for _, field := range f {
 		if field.Key == name {
-			return field.GetFields()
+			return field
 		}
 	}
 	return nil
+}
+
+// GetFields returns the sub-fields of a field by name through an O(n) operation. Nil is returned if no field exists.
+func (f Fields) GetFields(name string) Fields {
+	fields := f.Get(name).Fields
+	if fields == nil {
+		return nil
+	}
+
+	return Fields(fields)
 }
 
 // nextField returns the first field in a fieldpath and returns the remainder after removing the root element.
