@@ -16,19 +16,9 @@ func (p *Project) Commit(refname string, author, committer Person, message strin
 
 	gitAuthor, gitCommitter := git.Signature(author), git.Signature(committer)
 
-	index, err := p.repo.Index()
+	commitTree, err := p.writeIndex()
 	if err != nil {
-		return "", fmt.Errorf("could not get index: %v", err)
-	}
-
-	treeOid, err := index.WriteTree()
-	if err != nil {
-		return "", fmt.Errorf("could not write index to tree: %v", err)
-	}
-
-	commitTree, err := p.repo.LookupTree(treeOid)
-	if err != nil {
-		return "", fmt.Errorf("could not retrieve created commit tree: %v", err)
+		return "", err
 	}
 
 	commit, err := p.repo.CreateCommit(refname, &gitAuthor, &gitCommitter, message, commitTree, parents...)
@@ -37,6 +27,24 @@ func (p *Project) Commit(refname string, author, committer Person, message strin
 	}
 
 	return commit.String(), nil
+}
+
+func (p *Project) writeIndex() (*git.Tree, error) {
+	index, err := p.repo.Index()
+	if err != nil {
+		return nil, fmt.Errorf("could not get index: %v", err)
+	}
+
+	treeOid, err := index.WriteTree()
+	if err != nil {
+		return nil, fmt.Errorf("could not write index to tree: %v", err)
+	}
+
+	tree, err := p.repo.LookupTree(treeOid)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve created commit tree: %v", err)
+	}
+	return tree, nil
 }
 
 func (p *Project) Head() (*deploy.Deployment, error) {

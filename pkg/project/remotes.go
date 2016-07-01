@@ -43,12 +43,30 @@ func (p *Project) Push(remoteName string, refspecs ...string) error {
 		return fmt.Errorf("Failed to lookup branch: %v", err)
 	}
 
-	pushOpts := &git.PushOptions{
+	opts := &git.PushOptions{
 		RemoteCallbacks: remoteCallbacks,
 	}
-	err = remote.Push(refspecs, pushOpts)
+	err = remote.Push(refspecs, opts)
 	if err != nil {
 		return fmt.Errorf("Failed to push: %v", err)
+	}
+	return nil
+}
+
+func (p *Project) Fetch(remoteName string, refspecs ...string) error {
+	remote, err := p.Remotes().Lookup(remoteName)
+	if err != nil {
+		return fmt.Errorf("Failed to lookup branch: %v", err)
+	}
+
+	opts := &git.FetchOptions{
+		RemoteCallbacks: remoteCallbacks,
+	}
+
+	// fetch with default reflog message
+	err = remote.Fetch(refspecs, opts, "")
+	if err != nil {
+		return fmt.Errorf("Failed to fetch: %v", err)
 	}
 	return nil
 }
