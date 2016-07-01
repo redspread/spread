@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/codegangsta/cli"
 )
 
@@ -20,10 +23,17 @@ func (s SpreadCli) Push() *cli.Command {
 			if len(c.Args()) < 2 {
 				s.fatalf("a refspec must be specified")
 			}
-			refspec := c.Args()[1:]
+
+			refspecs := c.Args()[1:]
+
+			for i, spec := range refspecs {
+				if !strings.HasPrefix(spec, "refs/") {
+					refspecs[i] = fmt.Sprintf("refs/heads/%s", spec)
+				}
+			}
 
 			p := s.projectOrDie()
-			err := p.Push(remoteName, refspec...)
+			err := p.Push(remoteName, refspecs...)
 			if err != nil {
 				s.fatalf("Failed to push: %v", err)
 			}

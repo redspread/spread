@@ -24,8 +24,12 @@ var remoteCallbacks = git.RemoteCallbacks{
 		return git.ErrorCode(code), &key
 	},
 	CertificateCheckCallback: func(cert *git.Certificate, valid bool, hostname string) git.ErrorCode {
-		// TODO: MAJOR SECURITY VULNERABILITY!!!!, resolve ASAP
-		return git.ErrOk
+		if cert.Kind == git.CertificateHostkey {
+			return git.ErrOk
+		} else if valid {
+			return git.ErrOk
+		}
+		return git.ErrAuth
 	},
 }
 
@@ -33,7 +37,7 @@ func (p *Project) Remotes() *git.RemoteCollection {
 	return &p.repo.Remotes
 }
 
-func (p *Project) Push(remoteName string, refspec ...string) error {
+func (p *Project) Push(remoteName string, refspecs ...string) error {
 	remote, err := p.Remotes().Lookup(remoteName)
 	if err != nil {
 		return fmt.Errorf("Failed to lookup branch: %v", err)
@@ -42,7 +46,7 @@ func (p *Project) Push(remoteName string, refspec ...string) error {
 	pushOpts := &git.PushOptions{
 		RemoteCallbacks: remoteCallbacks,
 	}
-	err = remote.Push(refspec, pushOpts)
+	err = remote.Push(refspecs, pushOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to push: %v", err)
 	}
