@@ -36,13 +36,6 @@ func (p *Project) Pull(remoteName, refspec string) error {
 		return err
 	}
 
-	// Perform analysis of merge
-	mergeHeads := []*git.AnnotatedCommit{aCommit}
-	analysis, _, err := p.repo.MergeAnalysis(mergeHeads)
-	if err != nil {
-		return err
-	}
-
 	head, err := p.repo.Head()
 	// create new branch for head if doesn't exist
 	if err != nil && strings.HasSuffix(err.Error(), "not found") {
@@ -65,15 +58,28 @@ func (p *Project) Pull(remoteName, refspec string) error {
 		return err
 	}
 
+	path, err := p.TempWorkdir()
+	if err != nil {
+		return fmt.Errorf("could not setup temporary working directory: %v", err)
+	}
+	defer p.CleanupWorkdir(path)
+
+	// Perform analysis of merge
+	mergeHeads := []*git.AnnotatedCommit{aCommit}
+	analysis, _, err := p.repo.MergeAnalysis(mergeHeads)
+	if err != nil {
+		return err
+	}
+
 	switch {
 	case analysis&git.MergeAnalysisUpToDate != 0:
 		// no changes required
 		return nil
+	case analysis&git.MergeAnalysisFastForward != 0:
+		return p.fastForward(ref, head)
 	case analysis&git.MergeAnalysisNormal != 0:
 		_, err = p.merge(mergeHeads, ref, head)
 		return err
-	case analysis&git.MergeAnalysisFastForward != 0:
-		return p.fastForward(ref, head)
 	}
 
 	return fmt.Errorf("merge analysis failed to determine a viable strategy, result: %d", analysis)
