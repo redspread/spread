@@ -36,13 +36,15 @@ func ObjectFromMap(name, path string, data map[string]interface{}) (*pb.Object, 
 	}
 
 	i := 0
-	obj.Fields = make([]*pb.Field, len(data))
+	obj.Fields = &pb.Array{
+		Items: make([]*pb.Field, len(data)),
+	}
 	for k, v := range data {
 		field, err := buildField(k, v)
 		if err != nil {
 			return nil, err
 		}
-		obj.Fields[i] = field
+		obj.Fields.Items[i] = field
 		i++
 	}
 	return obj, nil
@@ -65,12 +67,12 @@ func Unmarshal(obj *pb.Object, ptr interface{}) error {
 
 func MapFromObject(obj *pb.Object) (map[string]interface{}, error) {
 	fields := obj.GetFields()
-	if fields == nil {
+	if fields == nil || fields.GetItems() == nil {
 		return nil, ErrObjectNilFields
 	}
 
-	out := make(map[string]interface{}, len(fields))
-	for _, field := range fields {
+	out := make(map[string]interface{}, len(fields.GetItems()))
+	for _, field := range fields.GetItems() {
 		val, err := decodeField(field)
 		if err != nil {
 			return nil, fmt.Errorf("could not decode field '%s': %v", field.Key, err)
