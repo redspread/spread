@@ -47,7 +47,7 @@ func getFromMapField(field *pb.Field, key string) (*pb.Field, error) {
 
 	items := fieldMap.GetItems()
 	if items == nil {
-		return nil, fmt.Errorf("the object wrapper struct for the value of field '%s' had nil for items, cannot access %s[%d]", field.Key, field.Key, key)
+		return nil, fmt.Errorf("the object wrapper struct for the value of field '%s' had nil for items, cannot access %s[%s]", field.Key, field.Key, key)
 	}
 
 	item, ok := items[key]
