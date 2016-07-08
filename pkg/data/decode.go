@@ -19,16 +19,19 @@ func decodeField(field *pb.Field) (interface{}, error) {
 		return v.Str, nil
 	case *pb.Field_Boolean:
 		return v.Boolean, nil
-	case *pb.Field_Obj:
-		return decodeMap(v.Obj.Item)
+	case *pb.Field_Object:
+		return decodeObject(v.Object.GetItems())
 	case *pb.Field_Array:
 		return decodeArray(v.Array.GetItems())
+	case *pb.Field_Link:
+		// TODO: IMPLEMENT FOLLOWING LINKS
+		return nil, nil
 	}
 
 	return nil, fmt.Errorf("unknown type for Field '%s'", field.Key)
 }
 
-func decodeMap(fields map[string]*pb.Field) (map[string]interface{}, error) {
+func decodeObject(fields map[string]*pb.Field) (map[string]interface{}, error) {
 	out := make(map[string]interface{}, len(fields))
 	for k, field := range fields {
 		val, err := decodeField(field)

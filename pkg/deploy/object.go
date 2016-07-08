@@ -46,13 +46,13 @@ func objectKind(obj KubeObject) (types.GroupVersionKind, error) {
 	return gkv, nil
 }
 
-func KubeObjectFromObject(kind string, obj *pb.Object) (KubeObject, error) {
+func KubeObjectFromDocument(kind string, doc *pb.Document) (KubeObject, error) {
 	base := BaseObject(kind)
 	if base == nil {
 		return nil, fmt.Errorf("unable to find Kind for '%s'", kind)
 	}
 
-	err := data.Unmarshal(obj, &base)
+	err := data.Unmarshal(doc, &base)
 	if err != nil {
 		return nil, err
 	}

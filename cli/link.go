@@ -50,17 +50,17 @@ func (s SpreadCli) Link() *cli.Command {
 				s.fatalf("Failed to determine path to save object: %v", err)
 			}
 
-			obj, err := data.CreateObject(kubeObj.GetObjectMeta().GetName(), path, kubeObj)
+			obj, err := data.CreateDocument(kubeObj.GetObjectMeta().GetName(), path, kubeObj)
 			if err != nil {
 				s.fatalf("failed to encode object: %v", err)
 			}
 
 			link := data.NewLink("test", target, false)
-			if err = data.CreateLinkInObject(obj, link, attach); err != nil {
+			if err = data.CreateLinkInDocument(obj, link, attach); err != nil {
 				s.fatalf("Could not create link: %v", err)
 			}
 
-			if err = proj.AddObjectToIndex(obj); err != nil {
+			if err = proj.AddDocumentToIndex(obj); err != nil {
 				s.fatalf("Failed to add object to Git index: %v", err)
 			}
 		},

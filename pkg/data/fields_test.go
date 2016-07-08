@@ -11,29 +11,28 @@ type NextFieldTest struct {
 
 type NextField struct {
 	name  string
-	array bool
+	array int
 }
 
 var nextFieldTests = []NextFieldTest{
 	{
 		"spec.template.spec.containers(0)",
 		[]NextField{
-			{name: "spec"}, {name: "template"}, {name: "spec"}, {name: "containers"},
-			{name: "0", array: true},
+			{name: "spec", array: -1}, {name: "template", array: -1}, {name: "spec", array: -1},
+			{name: "containers", array: -1}, {array: 0},
 		},
 	},
 	{
 		"(0)(1)(2)(3)(4)(5)ape",
 		[]NextField{
-			{name: "0", array: true}, {name: "1", array: true}, {name: "2", array: true},
-			{name: "3", array: true}, {name: "4", array: true}, {name: "5", array: true},
-			{name: "ape"},
+			{array: 0}, {array: 1}, {array: 2}, {array: 3}, {array: 4}, {array: 5}, {name: "ape", array: -1},
 		},
 	},
 	{
 		"spec(0)helo.eat.cheese",
 		[]NextField{
-			{name: "spec"}, {name: "0", array: true}, {name: "helo"}, {name: "eat"}, {name: "cheese"},
+			{name: "spec", array: -1}, {array: 0}, {name: "helo", array: -1}, {name: "eat", array: -1},
+			{name: "cheese", array: -1},
 		},
 	},
 	// invalid (two dots + dot at beginning)
@@ -48,11 +47,11 @@ var nextFieldTests = []NextFieldTest{
 
 func TestNextField(t *testing.T) {
 	for i, test := range nextFieldTests {
-		field, next, array := "", test.FieldStr, false
+		field, array, next := "", -1, test.FieldStr
 		for fNum, curField := range test.NextFields {
-			field, next, array = nextField(next)
+			field, array, next = nextField(next)
 
-			if len(test.NextFields) == 0 && (len(field)+len(next) != 0 || array) {
+			if len(test.NextFields) == 0 && (len(field)+len(next) != 0 || array < 0) {
 				t.Errorf("test %d: should have returned nothing", i)
 			}
 
@@ -62,11 +61,11 @@ func TestNextField(t *testing.T) {
 			}
 
 			if array != curField.array {
-				expected := "field"
-				if curField.array {
-					expected = "array"
+				if curField.array != -1 {
+					t.Errorf("test %d: expecting array for step %d", i, fNum)
+				} else {
+					t.Errorf("test %d: expecting %d (got %d) for step %d", i, curField.array, array, fNum)
 				}
-				t.Errorf("test %d: expecting %s for step %d", i, expected, fNum)
 			}
 		}
 	}

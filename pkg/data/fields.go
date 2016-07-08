@@ -2,57 +2,65 @@ package data
 
 import (
 	"fmt"
+	"strconv"
 
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
-// Fields provides helper methods for working with protobuf object fields.
-type Fields []*pb.Field
-
-// ResolveFields returns a field based on the provided field path in the format used for SRIs.
-// An error is returned if the given path doesn't exist.
-func (f Fields) ResolveField(fieldpath string) (*pb.Field, error) {
-	field, next, _ := nextField(fieldpath)
-	if len(field) == 0 {
-		return nil, fmt.Errorf("could not resolve fieldpath '%s'", fieldpath)
-	} else if len(next) > 0 {
-		fields := f.GetFields(field)
-		if fields != nil {
-			return fields.ResolveField(next)
-		}
-	} else if out := f.Get(field); out != nil {
-		return out, nil
+func ResolveRelativeField(field *pb.Field, fieldpath string) (resolvedField *pb.Field, err error) {
+	fieldKey, arrIndex, next := nextField(fieldpath)
+	if arrIndex >= 0 {
+		resolvedField, err = getFromArrayField(field, arrIndex)
+	} else if len(fieldKey) > 0 {
+		resolvedField, err = getFromMapField(field, fieldKey)
+	} else {
+		err = fmt.Errorf("could not resolve fieldpath '%s'", fieldpath)
 	}
 
-	return nil, fmt.Errorf("could not find field '%s'", field)
+	// return if err or no more fields to traverse (end of field path)
+	if err != nil || len(next) == 0 {
+		return
+	}
+	return ResolveRelativeField(resolvedField, next)
 }
 
-// Get returns a field by name
-func (f Fields) Get(name string) *pb.Field {
-	for _, field := range f {
-		if field.Key == name {
-			return field
-		}
+func getFromArrayField(field *pb.Field, index int) (*pb.Field, error) {
+	fieldArr := field.GetArray()
+	if fieldArr == nil {
+		return nil, fmt.Errorf("field '%s' isn't an array, cannot access %s[%d]", field.Key, field.Key, index)
 	}
-	return nil
+
+	items := fieldArr.GetItems()
+	if items == nil {
+		return nil, fmt.Errorf("the array wrapper struct for the value of field '%s' had nil for items, cannot access %s[%d]", field.Key, field.Key, index)
+	} else if len(items)-1 < index {
+		return nil, fmt.Errorf("could not access %s[%d], the size of '%s' is %d", field.Key, index, field.Key, len(items))
+	}
+	return items[index], nil
 }
 
-// GetFields returns the sub-fields of a field by name through an O(n) operation. Nil is returned if no field exists.
-func (f Fields) GetFields(name string) Fields {
-	field := f.Get(name)
-	if field == nil {
-		return nil
+func getFromMapField(field *pb.Field, key string) (*pb.Field, error) {
+	fieldMap := field.GetObject()
+	if fieldMap == nil {
+		return nil, fmt.Errorf("field '%s' isn't an object, cannot access %s['%s']", field.Key, field.Key, key)
 	}
 
-	if field.Fields != nil {
-		return Fields(field.Fields)
+	items := fieldMap.GetItems()
+	if items == nil {
+		return nil, fmt.Errorf("the object wrapper struct for the value of field '%s' had nil for items, cannot access %s[%d]", field.Key, field.Key, key)
 	}
-	return nil
+
+	item, ok := items[key]
+	if !ok {
+		return nil, fmt.Errorf("no key '%s' in map for field '%s", key, field.Key)
+	}
+	return item, nil
 }
 
 // nextField returns the first field in a fieldpath and returns the remainder after removing the root element.
-// It will return array as true if the field is an array. If there is no next field, an empty string in field will be returned.
-func nextField(fieldpath string) (field, next string, array bool) {
+// It will return array as positive number or 0 if refers to array. If there is no next field, an empty string in field will be returned.
+func nextField(fieldpath string) (field string, array int, next string) {
+	array = -1
 	fieldpath, err := ValidateField(fieldpath)
 	if err != nil {
 		return
@@ -71,11 +79,14 @@ func nextField(fieldpath string) (field, next string, array bool) {
 			}
 			return
 		} else if c == ')' {
-			field = fieldpath[1:i]
+			indexStr := fieldpath[1:i]
 			if len(fieldpath) > i+2 {
 				next = fieldpath[i+1:]
 			}
-			array = true
+
+			if num, err := strconv.ParseInt(indexStr, 10, 64); err == nil {
+				array = int(num)
+			}
 			return
 		} else if i+1 == len(fieldpath) {
 			field = fieldpath

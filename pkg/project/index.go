@@ -11,13 +11,13 @@ import (
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
-func (p *Project) AddObjectToIndex(obj *pb.Object) error {
-	oid, size, err := p.createObject(obj)
+func (p *Project) AddDocumentToIndex(doc *pb.Document) error {
+	oid, size, err := p.createDocument(doc)
 	if err != nil {
 		return fmt.Errorf("object couldn't be created: %v", err)
 	}
 
-	info := obj.GetInfo()
+	info := doc.GetInfo()
 	if info == nil {
 		return ErrNilObjectInfo
 	}

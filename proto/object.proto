@@ -18,15 +18,15 @@ message Field {
         double number = 2;
         string str = 3;
         bool boolean = 4;
-        Map obj = 5;
+        Object object = 5;
         Array array = 6;
         Link link = 7;
     }
 }
 
-// Map represents a map.
-message Map {
-    map<string, Field> item = 1;
+// Object represents a map with strings for keys.
+message Object {
+    map<string, Field> items = 1;
 }
 
 // Array represents an array.
@@ -34,7 +34,7 @@ message Array {
     repeated Field items = 1;
 }
 
-// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for an object or field stored within a repository.
+// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for a document or field stored within a repository.
 message SRI {
     string treeish = 1;
     string path = 2;
@@ -48,14 +48,14 @@ message Link {
     bool override = 3;
 }
 
-// Object holds a representation of a Kubernetes object.
-message Object {
+// Document is the root of Spread data stored in a Git blob. It has field stored at it's root, typically with an object as it's value.
+message Document {
     string name = 1;
-    ObjectInfo info = 2;
-    repeated Field fields = 3;
+    DocumentInfo info = 2;
+    Field root = 3;
 }
 
-// ObjectInfo provides metadata about an object.
-message ObjectInfo {
+// DocumentInfo provides metadata about an document.
+message DocumentInfo {
     string path = 1;
 }

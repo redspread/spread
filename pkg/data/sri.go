@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+
+	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
 const (
@@ -24,22 +26,22 @@ var (
 	FieldRegex = regexp.MustCompile(`[^a-zA-Z0-9./()]+`)
 )
 
-// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for an object or field stored within a repository.
+// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for an document or field stored within a repository.
 // This is represented as:
 //
 // 	treeish/path[?field]
 type SRI struct {
 	// Treeish is a Git Object ID to either a Commit or a Tree Git object.
-	// The use of a Git OID (treeish) allows for any object or field to be addressed regardless if it is accessible.
+	// The use of a Git OID (treeish) allows for any document or field to be addressed regardless if it is accessible.
 	// The Object ID may be truncated down to a minimum of 7 characters.
 	// A single character “*” indicates a relative reference, this intentionally can’t be formed into a URL.
 	Treeish string
 
-	// Path to the Spread Object being addressed. If omitted, SRI refers to treeish.
+	// Path to the Spread Document being addressed. If omitted, SRI refers to treeish.
 	// This will be traversed starting from the given Treeish.
 	Path string
 
-	// Field specifies a path to the field within the Object that is being referred to. If omitted, the SRI refers to the entire object.
+	// Field specifies a path to the field within the Document that is being referred to. If omitted, the SRI refers to the entire document.
 	// Path must be given to have a Field.
 	// Fieldpaths are specified by name using the character “.” to specify sub-fields.
 	// Fieldpath of arrays are addressed using their 0 indexed position wrapped with parentheses.
@@ -59,13 +61,22 @@ func (s *SRI) String() string {
 	return str
 }
 
-// IsTreeish is true if identifier points to tree.
-func (s *SRI) IsTree() bool {
-	return !s.IsObject() && !s.IsField()
+// Proto returns the protobuf representation of an SRI
+func (s *SRI) Proto() *pb.SRI {
+	return &pb.SRI{
+		Treeish: s.Treeish,
+		Path:    s.Path,
+		Field:   s.Field,
+	}
 }
 
-// IsObject is true if points to object.
-func (s *SRI) IsObject() bool {
+// IsTreeish is true if identifier points to tree.
+func (s *SRI) IsTree() bool {
+	return !s.IsDocument() && !s.IsField()
+}
+
+// IsDocument is true if points to document.
+func (s *SRI) IsDocument() bool {
 	return len(s.Field) == 0 && len(s.Path) > 0
 }
 

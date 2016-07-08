@@ -71,13 +71,13 @@ func (s SpreadCli) Add() *cli.Command {
 				s.fatalf("Failed to determine path to save object: %v", err)
 			}
 
-			obj, err := data.CreateObject(kubeObj.GetObjectMeta().GetName(), path, kubeObj)
+			obj, err := data.CreateDocument(kubeObj.GetObjectMeta().GetName(), path, kubeObj)
 			if err != nil {
-				s.fatalf("failed to encode object: %v", err)
+				s.fatalf("failed to encode document: %v", err)
 			}
 
 			proj := s.projectOrDie()
-			err = proj.AddObjectToIndex(obj)
+			err = proj.AddDocumentToIndex(obj)
 			if err != nil {
 				s.fatalf("Failed to add object to Git index: %v", err)
 			}

@@ -10,38 +10,38 @@ import (
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
-func (p *Project) getObject(oid *git.Oid) (*pb.Object, error) {
+func (p *Project) getDocument(oid *git.Oid) (*pb.Document, error) {
 	blob, err := p.repo.LookupBlob(oid)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Object blob: %v", err)
+		return nil, fmt.Errorf("failed to retrieve Document blob: %v", err)
 	}
 
-	obj := &pb.Object{}
-	err = proto.Unmarshal(blob.Contents(), obj)
+	doc := &pb.Document{}
+	err = proto.Unmarshal(blob.Contents(), doc)
 	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal object protobuf: %v", err)
+		return nil, fmt.Errorf("unable to unmarshal document protobuf: %v", err)
 	}
-	return obj, nil
+	return doc, nil
 }
 
-func (p *Project) createObject(obj *pb.Object) (oid *git.Oid, size int, err error) {
+func (p *Project) createDocument(obj *pb.Document) (oid *git.Oid, size int, err error) {
 	data, err := proto.Marshal(obj)
 	if err != nil {
-		err = fmt.Errorf("could not encode object: %v", err)
+		err = fmt.Errorf("could not encode document: %v", err)
 		return
 	}
 	size = len(data)
 
 	oid, err = p.repo.CreateBlobFromBuffer(data)
 	if err != nil {
-		err = fmt.Errorf("could not write Object as blob in Git repo: %v", err)
+		err = fmt.Errorf("could not write Document as blob in Git repo: %v", err)
 		return
 	}
 	return
 }
 
 func (p *Project) getKubeObject(oid *git.Oid, path string) (deploy.KubeObject, error) {
-	obj, err := p.getObject(oid)
+	doc, err := p.getDocument(oid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read object from Git repository: %v", err)
 	}
@@ -51,7 +51,7 @@ func (p *Project) getKubeObject(oid *git.Oid, path string) (deploy.KubeObject, e
 		return nil, err
 	}
 
-	kubeObj, err := deploy.KubeObjectFromObject(kind, obj)
+	kubeObj, err := deploy.KubeObjectFromDocument(kind, doc)
 	if err != nil {
 		return nil, err
 	}
