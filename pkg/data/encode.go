@@ -32,7 +32,7 @@ func buildField(key string, data interface{}) (*pb.Field, error) {
 	case []interface{}:
 		return buildArray(key, typedData)
 	case map[string]interface{}:
-		return buildMap(key, typedData)
+		return buildObject(key, typedData)
 	}
 
 	if field.Value == nil {
@@ -62,7 +62,7 @@ func buildArray(key string, data []interface{}) (*pb.Field, error) {
 	}, nil
 }
 
-func buildMap(key string, data map[string]interface{}) (*pb.Field, error) {
+func buildObject(key string, data map[string]interface{}) (*pb.Field, error) {
 	obj := make(map[string]*pb.Field, len(data))
 	for k, v := range data {
 		field, err := buildField(k, v)
@@ -74,9 +74,9 @@ func buildMap(key string, data map[string]interface{}) (*pb.Field, error) {
 
 	return &pb.Field{
 		Key: key,
-		Value: &pb.Field_Obj{
-			Obj: &pb.Map{
-				Item: obj,
+		Value: &pb.Field_Object{
+			Object: &pb.Object{
+				Items: obj,
 			},
 		},
 	}, nil

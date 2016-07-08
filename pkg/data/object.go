@@ -9,7 +9,7 @@ import (
 )
 
 // CreateObject uses reflection to convert the data (usually a struct) into an Object.
-func CreateObject(name, path string, ptr interface{}) (*pb.Object, error) {
+func CreateObject(key string, ptr interface{}) (*pb.Object, error) {
 	data, err := json.Marshal(ptr)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate JSON object: %v", err)
@@ -22,57 +22,33 @@ func CreateObject(name, path string, ptr interface{}) (*pb.Object, error) {
 		return nil, err
 	}
 
-	return ObjectFromMap(name, path, jsonData)
+	return ObjectFromMap(key, jsonData)
 }
 
 // ObjectFromMap creates an Object, using the entries of a map as fields.
 // This supports maps embedded as values. It is assumed that types are limited to JSON types.
-func ObjectFromMap(name, path string, data map[string]interface{}) (*pb.Object, error) {
-	obj := &pb.Object{
-		Name: name,
-		Info: &pb.ObjectInfo{
-			Path: path,
-		},
-	}
-
-	i := 0
-	obj.Fields = &pb.Array{
-		Items: make([]*pb.Field, len(data)),
-	}
+func ObjectFromMap(key string, data map[string]interface{}) (*pb.Object, error) {
+	items := make(map[string]*pb.Field, len(data))
 	for k, v := range data {
 		field, err := buildField(k, v)
 		if err != nil {
 			return nil, err
 		}
-		obj.Fields.Items[i] = field
-		i++
+		items[k] = field
 	}
-	return obj, nil
-}
-
-func Unmarshal(obj *pb.Object, ptr interface{}) error {
-	fieldMap, err := MapFromObject(obj)
-	if err != nil {
-		return err
-	}
-
-	// TODO: use reflection to replace this
-	jsonData, err := json.Marshal(&fieldMap)
-	if err != nil {
-		return fmt.Errorf("unable to generate JSON from object data: %v", err)
-	}
-
-	return json.Unmarshal(jsonData, ptr)
+	return &pb.Object{
+		Items: items,
+	}, nil
 }
 
 func MapFromObject(obj *pb.Object) (map[string]interface{}, error) {
-	fields := obj.GetFields()
-	if fields == nil || fields.GetItems() == nil {
+	items := obj.GetItems()
+	if items == nil {
 		return nil, ErrObjectNilFields
 	}
 
-	out := make(map[string]interface{}, len(fields.GetItems()))
-	for _, field := range fields.GetItems() {
+	out := make(map[string]interface{}, len(items))
+	for _, field := range items {
 		val, err := decodeField(field)
 		if err != nil {
 			return nil, fmt.Errorf("could not decode field '%s': %v", field.Key, err)

@@ -61,6 +61,15 @@ func (d *Deployment) AddDeployment(deployment Deployment) (err error) {
 	return nil
 }
 
+// Get returns the object with the given path from the Deployment. Error is returned if object does not exist.
+func (d *Deployment) Get(name string) (KubeObject, error) {
+	obj, ok := d.objects[name]
+	if !ok {
+		return nil, fmt.Errorf("no object '%s' exists", name)
+	}
+	return obj, nil
+}
+
 // Equal performs a deep equality check between Deployments. Internal ordering is ignored.
 func (d *Deployment) Equal(other *Deployment) bool {
 	if other == nil {
