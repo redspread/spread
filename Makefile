@@ -1,6 +1,7 @@
 BASE := rsprd.com/spread
 DIR := $(GOPATH)/src/$(BASE)
 CMD_NAME := spread
+PROTO_DIR := proto
 
 EXEC_PKG := $(BASE)/cmd/$(CMD_NAME)
 PKGS := ./pkg/... ./cli/... ./cmd/...
@@ -20,6 +21,7 @@ GOX ?= gox
 GOFMT ?= gofmt "-s"
 GOLINT ?= golint
 DOCKER ?= docker
+PROTOC := protoc
 
 GOFILES := find . -name '*.go' -not -path "./vendor/*"
 
@@ -79,6 +81,11 @@ unit: build
 integration: build
 	mkdir -p ./build
 	./test/mattermost-demo.sh
+
+proto: pkg/spreadproto/*.pb.go
+pkg/spreadproto/*.pb.go:$(PROTO_DIR)/*.proto
+	mkdir -p $$(dirname $@)
+	$(PROTOC) --go_out=plugins=grpc:$$(dirname $@) -I=$(PROTO_DIR) $^
 
 .PHONY: validate
 validate: lint checkgofmt vet

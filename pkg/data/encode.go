@@ -7,63 +7,38 @@ import (
 )
 
 func buildField(key string, data interface{}) (*pb.Field, error) {
+	field := &pb.Field{
+		Key: key,
+	}
+
+	// don't set Value for nil
 	if data == nil {
-		return buildNil(key)
+		return field, nil
 	}
 
 	switch typedData := data.(type) {
 	case bool:
-		return buildBool(key, typedData)
+		field.Value = &pb.Field_Boolean{
+			Boolean: typedData,
+		}
 	case float64:
-		return buildNumber(key, typedData)
+		field.Value = &pb.Field_Number{
+			Number: typedData,
+		}
 	case string:
-		return buildString(key, typedData)
+		field.Value = &pb.Field_Str{
+			Str: typedData,
+		}
 	case []interface{}:
 		return buildArray(key, typedData)
 	case map[string]interface{}:
 		return buildMap(key, typedData)
 	}
 
-	return nil, fmt.Errorf("could not resolve type of %s (value=%+v)", key, data)
-}
-
-func buildNil(key string) (*pb.Field, error) {
-	return &pb.Field{
-		Key: key,
-		Value: &pb.FieldValue{
-			Type: pb.FieldValue_NULL,
-		},
-	}, nil
-}
-
-func buildBool(key string, data bool) (*pb.Field, error) {
-	return &pb.Field{
-		Key: key,
-		Value: &pb.FieldValue{
-			Type:  pb.FieldValue_BOOL,
-			Value: fmt.Sprintf("%t", data),
-		},
-	}, nil
-}
-
-func buildNumber(key string, data float64) (*pb.Field, error) {
-	return &pb.Field{
-		Key: key,
-		Value: &pb.FieldValue{
-			Type:  pb.FieldValue_NUMBER,
-			Value: fmt.Sprintf("%g", data),
-		},
-	}, nil
-}
-
-func buildString(key string, data string) (*pb.Field, error) {
-	return &pb.Field{
-		Key: key,
-		Value: &pb.FieldValue{
-			Type:  pb.FieldValue_STRING,
-			Value: data,
-		},
-	}, nil
+	if field.Value == nil {
+		return nil, fmt.Errorf("could not resolve type of %s (value=%+v)", key, data)
+	}
+	return field, nil
 }
 
 func buildArray(key string, data []interface{}) (*pb.Field, error) {
@@ -79,30 +54,30 @@ func buildArray(key string, data []interface{}) (*pb.Field, error) {
 
 	return &pb.Field{
 		Key: key,
-		Value: &pb.FieldValue{
-			Type: pb.FieldValue_ARRAY,
+		Value: &pb.Field_Array{
+			Array: &pb.Array{
+				Items: arr,
+			},
 		},
-		Fields: arr,
 	}, nil
 }
 
 func buildMap(key string, data map[string]interface{}) (*pb.Field, error) {
-	arr := make([]*pb.Field, len(data))
-	i := 0
+	obj := make(map[string]*pb.Field, len(data))
 	for k, v := range data {
 		field, err := buildField(k, v)
 		if err != nil {
 			return nil, err
 		}
-		arr[i] = field
-		i++
+		obj[k] = field
 	}
 
 	return &pb.Field{
 		Key: key,
-		Value: &pb.FieldValue{
-			Type: pb.FieldValue_MAP,
+		Value: &pb.Field_Obj{
+			Obj: &pb.Map{
+				Item: obj,
+			},
 		},
-		Fields: arr,
 	}, nil
 }

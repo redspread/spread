@@ -1,0 +1,61 @@
+// Copyright 2016, Redspread Inc.
+// All rights reserved.
+
+syntax = "proto3";
+
+package spread;
+
+option go_package = "spreadproto";
+
+///////////////////
+//     Models     /
+///////////////////
+
+// Field represents a field of an object.
+message Field {
+    string key = 1;
+    oneof value {
+        double number = 2;
+        string str = 3;
+        bool boolean = 4;
+        Map obj = 5;
+        Array array = 6;
+        Link link = 7;
+    }
+}
+
+// Map represents a map.
+message Map {
+    map<string, Field> item = 1;
+}
+
+// Array represents an array.
+message Array {
+    repeated Field items = 1;
+}
+
+// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for an object or field stored within a repository.
+message SRI {
+    string treeish = 1;
+    string path = 2;
+    string field = 3;
+}
+
+// Link represents a relationship to another field.
+message Link {
+    string packageName = 1;
+    SRI target = 2;
+    bool override = 3;
+}
+
+// Object holds a representation of a Kubernetes object.
+message Object {
+    string name = 1;
+    ObjectInfo info = 2;
+    repeated Field fields = 3;
+}
+
+// ObjectInfo provides metadata about an object.
+message ObjectInfo {
+    string path = 1;
+}
