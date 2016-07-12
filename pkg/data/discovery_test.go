@@ -20,8 +20,7 @@ func TestDiscoverPackage(t *testing.T) {
 	// we will only check if package data matches
 	// another test should be used to ensure that prefix matches package
 	importURL := fmt.Sprintf("%s/halp", server.Addr())
-	println(importURL)
-	actual, err := DiscoverPackage(importURL, false)
+	actual, err := DiscoverPackage(importURL, true, true)
 	if err != nil {
 		t.Errorf("could not discover package: %v", err)
 	} else if actual.repoURL != expected.repoURL {
@@ -61,8 +60,8 @@ func (s *testDServer) Stop() error {
 }
 
 func (s *testDServer) handler(w http.ResponseWriter, r *http.Request) {
-	msg := "<!DOCTYPE html><html><head><meta name=\"spread-ref\" content=\"%s %s\"><title>Discovery Test Page</title></head><body><h1>Nothing to see here!</h1></body></html>"
-	if _, err := fmt.Fprintf(w, msg, s.info.prefix, s.info.repoURL); err != nil {
+	msg := "<!DOCTYPE html><html><head><meta name=\"%s\" content=\"%s %s\"><title>Discovery Test Page</title></head><body><h1>Nothing to see here!</h1></body></html>"
+	if _, err := fmt.Fprintf(w, msg, DiscoveryMetaName, s.info.prefix, s.info.repoURL); err != nil {
 		s.Fatalf("Encountered error mocking discovery response: %v", err)
 	}
 }
