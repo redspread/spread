@@ -26,7 +26,7 @@ func cleanupGlobal(t *testing.T) string {
 func TestNoInitGlobal(t *testing.T) {
 	cleanupGlobal(t)
 	_, err := Global()
-	if err != ErrNoGlobal {
+	if err == nil {
 		t.Error("did not return error about getting global while none exists")
 	}
 }

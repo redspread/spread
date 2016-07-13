@@ -1,8 +1,6 @@
 package project
 
 import (
-	"errors"
-
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -14,19 +12,25 @@ var (
 
 // Global returns the users global project which holds data from any package downloaded.
 func Global() (*Project, error) {
-	return nil, nil
+	path, err := GlobalLocation()
+	if err != nil {
+		return nil, err
+	}
+
+	return OpenProject(path)
 }
 
 // InitGlobal initializes the global repository for this user.
 func InitGlobal() (*Project, error) {
-	return nil, nil
+	path, err := GlobalLocation()
+	if err != nil {
+		return nil, err
+	}
+
+	return InitProject(path)
 }
 
+// GlobalLocation returns the path of the global project. An error is returned if the path doesn't exist.
 func GlobalLocation() (string, error) {
 	return homedir.Expand(GlobalPath)
 }
-
-var (
-	// ErrNoGlobal is returned when a global project does not exist for this user.
-	ErrNoGlobal = errors.New("global project does not exist")
-)
