@@ -2,14 +2,22 @@ package packages
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"rsprd.com/spread/pkg/config"
 )
+
+var domainRegexp *regexp.Regexp
+
+func init() {
+	domainRegexp = regexp.MustCompile(DomainRegexpStr)
+}
 
 const (
 	// DiscoveryQueryParam is the query parameter that is appended to URLs to signal the request is looking for
@@ -24,11 +32,29 @@ const (
 
 	// DefaultNamespace is the namespace used if no domain and namespace is given.
 	DefaultNamespace = "library"
+
+	// DomainRegexpStr is a regular expression string to validate domains.
+	DomainRegexpStr = "^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$"
 )
 
 // ExpandPackageName returns a retrievable package name for packageName by adding the Redspread domain where a domain isn't specified.
 func ExpandPackageName(packageName string) (string, error) {
-	return "", nil
+	if len(packageName) == 0 {
+		return "", errors.New("empty package name")
+	}
+
+	// if single segment, assume domain and namespace
+	pkgArr := strings.Split(packageName, "/")
+	if len(pkgArr) == 1 {
+		return DefaultDomain + "/" + DefaultNamespace + "/" + packageName, nil
+	}
+
+	if isDomain(pkgArr[0]) {
+		return packageName, nil
+	}
+
+	// if no domain, assume it
+	return DefaultDomain + "/" + packageName, nil
 }
 
 // httpClient is a copy of DefaultClient for testing purposes.
@@ -157,4 +183,22 @@ func attrValue(attrs []xml.Attr, name string) string {
 		}
 	}
 	return ""
+}
+
+// isDomain returns whether given string is a domain.
+// It first checks the TLD, and then uses a regular expression.
+func isDomain(s string) bool {
+	if strings.HasSuffix(s, ".") {
+		s = s[:len(s)-1]
+	}
+
+	split := strings.Split(s, ".")
+	tld := split[len(split)-1]
+
+	if len(tld) < 2 {
+		return false
+	}
+
+	s = strings.ToLower(s)
+	return domainRegexp.MatchString(s)
 }

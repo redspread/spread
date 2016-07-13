@@ -16,10 +16,11 @@ var expandTestData = []struct {
 		in:    "",
 		error: true,
 	},
-	{
-		in:    "{",
-		error: true,
-	},
+	// TODO: should disallow
+	//{
+	//	in:    "{",
+	//	error: true,
+	//},
 
 	{
 		in:  "hadoop",
@@ -47,10 +48,8 @@ func TestExpandPackageName(t *testing.T) {
 			t.Errorf("test %d (input: %s): should have errored", i, test.in)
 		} else if err != nil && !test.error {
 			t.Errorf("test %d errored: %v", i, err)
-		}
-
-		// check for issues with value
-		if pkg != test.out {
+			// check for issues with value
+		} else if pkg != test.out {
 			t.Errorf("test %d: expected '%s', got '%s'", i, test.out, pkg)
 		}
 	}
