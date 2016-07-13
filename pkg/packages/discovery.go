@@ -1,4 +1,4 @@
-package data
+package packages
 
 import (
 	"encoding/xml"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"rsprd.com/spread/pkg/config"
 )
 
 const (
@@ -37,9 +39,9 @@ func DiscoverPackage(packageName string, insecure, verbose bool) (packageInfo, e
 	if err != nil || res.StatusCode != 200 {
 		if verbose {
 			if err != nil {
-				fmt.Fprint(Out, "https fetch failed")
+				fmt.Fprint(config.Out, "https fetch failed")
 			} else {
-				fmt.Fprintf(Out, "ignoring https fetch with status code %d", res.StatusCode)
+				fmt.Fprintf(config.Out, "ignoring https fetch with status code %d", res.StatusCode)
 			}
 		}
 		// fallback to HTTP if insecure is allowed
@@ -60,7 +62,7 @@ func DiscoverPackage(packageName string, insecure, verbose bool) (packageInfo, e
 	}
 
 	if verbose {
-		fmt.Fprintf(Out, "Parsing meta information from '%s' (status code %d)", urlStr, res.StatusCode)
+		fmt.Fprintf(config.Out, "Parsing meta information from '%s' (status code %d)", urlStr, res.StatusCode)
 	}
 
 	pkgs, err := parseSpreadRefs(res.Body)
@@ -69,7 +71,7 @@ func DiscoverPackage(packageName string, insecure, verbose bool) (packageInfo, e
 	} else if len(pkgs) < 1 {
 		return packageInfo{}, fmt.Errorf("no reference found at '%s'", urlStr)
 	} else if len(pkgs) > 1 && verbose {
-		fmt.Fprintf(Out, "found more than one reference at '%s', using first found", urlStr)
+		fmt.Fprintf(config.Out, "found more than one reference at '%s', using first found", urlStr)
 	}
 	return pkgs[0], nil
 }
@@ -83,7 +85,7 @@ func fetch(scheme, packageName string, verbose bool) (string, *http.Response, er
 	u.RawQuery = DiscoveryQueryParam
 	urlStr := u.String()
 	if verbose {
-		fmt.Fprintf(Out, "fetching %s", urlStr)
+		fmt.Fprintf(config.Out, "fetching %s", urlStr)
 	}
 
 	res, err := httpClient.Get(urlStr)
