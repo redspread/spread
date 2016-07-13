@@ -44,6 +44,9 @@ func DiscoverPackage(packageName string, insecure, verbose bool) (packageInfo, e
 		}
 		// fallback to HTTP if insecure is allowed
 		if insecure {
+			if res != nil {
+				res.Body.Close()
+			}
 			urlStr, res, err = fetch("http", packageName, verbose)
 		}
 	}
