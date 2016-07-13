@@ -18,7 +18,18 @@ const (
 
 	// DiscoveryMetaName is the the 'name' of the <meta> tag that contains Spread package information.
 	DiscoveryMetaName = "spread-ref"
+
+	// DefaultDomain is the domain assumed for packages if one is not given.
+	DefaultDomain = "redspread.com"
+
+	// DefaultNamespace is the namespace used if no domain and namespace is given.
+	DefaultNamespace = "library"
 )
+
+// ExpandPackageName returns a retrievable package name for packageName by adding the Redspread domain where a domain isn't specified.
+func ExpandPackageName(packageName string) (string, error) {
+	return "", nil
+}
 
 // httpClient is a copy of DefaultClient for testing purposes.
 var httpClient = http.DefaultClient

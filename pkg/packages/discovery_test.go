@@ -7,6 +7,55 @@ import (
 	"testing"
 )
 
+var expandTestData = []struct {
+	in    string
+	out   string
+	error bool
+}{
+	{
+		in:    "",
+		error: true,
+	},
+	{
+		in:    "{",
+		error: true,
+	},
+
+	{
+		in:  "hadoop",
+		out: DefaultDomain + "/" + DefaultNamespace + "/hadoop",
+	},
+	{
+		in:  "library/hadoop",
+		out: DefaultDomain + "/library/hadoop",
+	},
+	{
+		in:  "redspread.com/library/hadoop",
+		out: "redspread.com/library/hadoop",
+	},
+	{
+		in:  "github.com/redspread/hadoop",
+		out: "github.com/redspread/hadoop",
+	},
+}
+
+func TestExpandPackageName(t *testing.T) {
+	for i, test := range expandTestData {
+		pkg, err := ExpandPackageName(test.in)
+		// check for issues with errors
+		if err == nil && test.error {
+			t.Errorf("test %d (input: %s): should have errored", i, test.in)
+		} else if err != nil && !test.error {
+			t.Errorf("test %d errored: %v", i, err)
+		}
+
+		// check for issues with value
+		if pkg != test.out {
+			t.Errorf("test %d: expected '%s', got '%s'", i, test.out, pkg)
+		}
+	}
+}
+
 func TestDiscoverPackage(t *testing.T) {
 	expected := packageInfo{
 		prefix:  "redspread.com/halp",
