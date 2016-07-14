@@ -7,6 +7,7 @@ import (
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/entity"
 	"rsprd.com/spread/pkg/input/dir"
+	"rsprd.com/spread/pkg/packages"
 
 	"github.com/codegangsta/cli"
 )
@@ -34,11 +35,11 @@ func (s SpreadCli) Deploy() *cli.Command {
 					if commit, err := proj.ResolveCommit(ref); err == nil {
 						dep = commit
 					} else {
-						dep = s.fileDeploy(ref)
+						dep, err = s.nonLocalRepoDeploy(ref)
 					}
 				}
 			} else {
-				dep = s.fileDeploy(ref)
+				dep, err = s.nonLocalRepoDeploy(ref)
 			}
 
 			context := c.Args().Get(1)
@@ -61,16 +62,15 @@ func (s SpreadCli) Deploy() *cli.Command {
 	}
 }
 
-func (s SpreadCli) fileDeploy(srcDir string) *deploy.Deployment {
+func (s SpreadCli) fileDeploy(srcDir string) (*deploy.Deployment, error) {
 	input, err := dir.NewFileInput(srcDir)
 	if err != nil {
-		s.fatalf(inputError(srcDir, err))
+		return nil, inputError(srcDir, err)
 	}
 
 	e, err := input.Build()
 	if err != nil {
-		println("build")
-		s.fatalf(inputError(srcDir, err))
+		return nil, inputError(srcDir, err)
 	}
 
 	dep, err := e.Deployment()
@@ -80,19 +80,34 @@ func (s SpreadCli) fileDeploy(srcDir string) *deploy.Deployment {
 		// check if has pod; if not deploy objects
 		pods, err := input.Entities(entity.EntityPod)
 		if err != nil && len(pods) != 0 {
-			s.fatalf("Failed to deploy: %v", err)
+			return nil, fmt.Errorf("Failed to deploy: %v", err)
 		}
 
 		dep, err = objectOnlyDeploy(input)
 		if err != nil {
-			s.fatalf("Failed to deploy: %v", err)
+			return nil, fmt.Errorf("Failed to deploy: %v", err)
 		}
 
 	} else if err != nil {
-		println("deploy")
-		s.fatalf(inputError(srcDir, err))
+		return nil, inputError(srcDir, err)
 	}
-	return dep
+	return dep, nil
+}
+
+func (s SpreadCli) nonLocalRepoDeploy(ref string) (*deploy.Deployment, error) {
+	dep, err := s.fileDeploy(ref)
+	if err != nil {
+		ref, err = packages.ExpandPackageName(ref)
+		if err == nil {
+			var info packages.PackageInfo
+			info, err = packages.DiscoverPackage(ref, true, true)
+			if err != nil {
+				s.fatalf("failed to retrieve package info: %v", err)
+			}
+			s.fatalf("if hooked up would now\n\t- pull %s into the global repo\n\t- deploy the package", info.RepoURL)
+		}
+	}
+	return dep, err
 }
 
 func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {
@@ -113,8 +128,8 @@ func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {
 	return deployment, nil
 }
 
-func inputError(srcDir string, err error) string {
-	return fmt.Sprintf("Error using `%s`: %v", srcDir, err)
+func inputError(srcDir string, err error) error {
+	return fmt.Errorf("Error using `%s`: %v", srcDir, err)
 }
 
 func displayContext(name string) string {

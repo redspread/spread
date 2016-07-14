@@ -56,9 +56,9 @@ func TestExpandPackageName(t *testing.T) {
 }
 
 func TestDiscoverPackage(t *testing.T) {
-	expected := packageInfo{
-		prefix:  "redspread.com/halp",
-		repoURL: "http://104.155.154.203/test.git",
+	expected := PackageInfo{
+		Prefix:  "redspread.com/halp",
+		RepoURL: "http://104.155.154.203/test.git",
 	}
 	server := NewDServer(t, expected)
 	go server.Start()
@@ -71,21 +71,21 @@ func TestDiscoverPackage(t *testing.T) {
 	actual, err := DiscoverPackage(importURL, true, true)
 	if err != nil {
 		t.Errorf("could not discover package: %v", err)
-	} else if actual.repoURL != expected.repoURL {
-		t.Errorf("repoURL did not match: \"%s\" (expected \"%s\")", actual.repoURL, expected.repoURL)
-	} else if actual.prefix != expected.prefix {
-		t.Errorf("prefix did not match: \"%s\" (expected \"%s\")", actual.prefix, expected.prefix)
+	} else if actual.RepoURL != expected.RepoURL {
+		t.Errorf("repoURL did not match: \"%s\" (expected \"%s\")", actual.RepoURL, expected.RepoURL)
+	} else if actual.Prefix != expected.Prefix {
+		t.Errorf("prefix did not match: \"%s\" (expected \"%s\")", actual.Prefix, expected.Prefix)
 	}
 }
 
 // testDServer mocks a server with discovery info.
 type testDServer struct {
-	info packageInfo
+	info PackageInfo
 	net.Listener
 	*testing.T
 }
 
-func NewDServer(t *testing.T, pkgInfo packageInfo) *testDServer {
+func NewDServer(t *testing.T, pkgInfo PackageInfo) *testDServer {
 	return &testDServer{
 		info:     pkgInfo,
 		Listener: randListener(t),
@@ -109,7 +109,7 @@ func (s *testDServer) Stop() error {
 
 func (s *testDServer) handler(w http.ResponseWriter, r *http.Request) {
 	msg := "<!DOCTYPE html><html><head><meta name=\"%s\" content=\"%s %s\"><title>Discovery Test Page</title></head><body><h1>Nothing to see here!</h1></body></html>"
-	if _, err := fmt.Fprintf(w, msg, DiscoveryMetaName, s.info.prefix, s.info.repoURL); err != nil {
+	if _, err := fmt.Fprintf(w, msg, DiscoveryMetaName, s.info.Prefix, s.info.RepoURL); err != nil {
 		s.Fatalf("Encountered error mocking discovery response: %v", err)
 	}
 }
