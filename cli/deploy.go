@@ -23,23 +23,24 @@ func (s SpreadCli) Deploy() *cli.Command {
 			ref := c.Args().First()
 			var dep *deploy.Deployment
 
-			if proj, err := s.project(); err == nil {
+			proj, err := s.project()
+			if err == nil {
 				if len(ref) == 0 {
 					s.printf("Deploying from index...")
-					index, err := proj.Index()
-					if err != nil {
-						s.fatalf("Error reading index: %v", err)
-					}
-					dep = index
+					dep, err = proj.Index()
 				} else {
 					if commit, err := proj.ResolveCommit(ref); err == nil {
 						dep = commit
 					} else {
-						dep, err = s.nonLocalRepoDeploy(ref)
+						dep, err = s.globalDeploy(ref)
 					}
 				}
 			} else {
-				dep, err = s.nonLocalRepoDeploy(ref)
+				dep, err = s.globalDeploy(ref)
+			}
+
+			if err != nil {
+				s.fatalf("Failed to assemble deployment: %v", err)
 			}
 
 			context := c.Args().Get(1)
@@ -94,17 +95,31 @@ func (s SpreadCli) fileDeploy(srcDir string) (*deploy.Deployment, error) {
 	return dep, nil
 }
 
-func (s SpreadCli) nonLocalRepoDeploy(ref string) (*deploy.Deployment, error) {
+func (s SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
+	// check if reference is local file
 	dep, err := s.fileDeploy(ref)
 	if err != nil {
 		ref, err = packages.ExpandPackageName(ref)
 		if err == nil {
 			var info packages.PackageInfo
-			info, err = packages.DiscoverPackage(ref, true, true)
+			info, err = packages.DiscoverPackage(ref, true, false)
 			if err != nil {
 				s.fatalf("failed to retrieve package info: %v", err)
 			}
-			s.fatalf("if hooked up would now\n\t- pull %s into the global repo\n\t- deploy the package", info.RepoURL)
+
+			proj, err := s.globalProject()
+			if err != nil {
+				s.fatalf("error setting up global project: %v", err)
+			}
+
+			s.printf("pulling repo from %s", info.RepoURL)
+			refSpec := fmt.Sprintf("refs/heads/%s", ref)
+			err = proj.FetchAnonymous(info.RepoURL, refSpec)
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch '%s': %v", ref, err)
+			}
+
+			return proj.ResolveCommit(ref)
 		}
 	}
 	return dep, err

@@ -56,9 +56,22 @@ func (p *Project) Push(remoteName string, refspecs ...string) error {
 func (p *Project) Fetch(remoteName string, refspecs ...string) error {
 	remote, err := p.Remotes().Lookup(remoteName)
 	if err != nil {
-		return fmt.Errorf("Failed to lookup branch: %v", err)
+		return fmt.Errorf("Failed to lookup remote: %v", err)
 	}
 
+	return p.fetch(remote, refspecs...)
+}
+
+func (p *Project) FetchAnonymous(url string, refspecs ...string) error {
+	remote, err := p.Remotes().CreateAnonymous(url)
+	if err != nil {
+		return fmt.Errorf("Failed to create anonymous remote for '%s': %v", url, err)
+	}
+
+	return p.fetch(remote, refspecs...)
+}
+
+func (p *Project) fetch(remote *git.Remote, refspecs ...string) (err error) {
 	opts := &git.FetchOptions{
 		RemoteCallbacks: remoteCallbacks,
 	}
@@ -68,5 +81,5 @@ func (p *Project) Fetch(remoteName string, refspecs ...string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to fetch: %v", err)
 	}
-	return nil
+	return
 }
