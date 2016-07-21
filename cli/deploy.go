@@ -112,14 +112,29 @@ func (s SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
 				s.fatalf("error setting up global project: %v", err)
 			}
 
+			remote, err := proj.Remotes().Lookup(ref)
+			// if does not exist or has different URL, create new remote
+			if err != nil {
+				remote, err = proj.Remotes().Create(ref, info.RepoURL)
+				if err != nil {
+					return nil, fmt.Errorf("could not create remote: %v", err)
+				}
+			} else if remote.Url() != info.RepoURL {
+				s.printf("changing remote URL for %s, current: '%s' new: '%s'", ref, remote.Url(), info.RepoURL)
+				err = proj.Remotes().SetUrl(ref, info.RepoURL)
+				if err != nil {
+					return nil, fmt.Errorf("failed to change URL for %s: %v", ref, err)
+				}
+			}
+
 			s.printf("pulling repo from %s", info.RepoURL)
-			refSpec := fmt.Sprintf("refs/heads/%s", ref)
-			err = proj.FetchAnonymous(info.RepoURL, refSpec)
+			branch := fmt.Sprintf("%s/master", ref)
+			err = proj.Fetch(remote.Name(), "master")
 			if err != nil {
 				return nil, fmt.Errorf("failed to fetch '%s': %v", ref, err)
 			}
 
-			return proj.ResolveCommit(ref)
+			return proj.Branch(branch)
 		}
 	}
 	return dep, err
