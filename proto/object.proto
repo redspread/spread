@@ -78,6 +78,5 @@ message Argument {
         bool boolean = 3;
         Object object = 4;
         Array array = 5;
-        Link link = 6;
     }
 }
