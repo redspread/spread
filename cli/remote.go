@@ -25,6 +25,7 @@ func (s SpreadCli) Remote() *cli.Command {
 			println()
 			cli.ShowSubcommandHelp(c)
 		},
+		HideHelp: true,
 		Subcommands: []cli.Command{
 			{
 				Name:      "add",

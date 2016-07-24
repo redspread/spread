@@ -63,6 +63,17 @@ func (c SpreadCli) project() (*project.Project, error) {
 	return proj, nil
 }
 
+func (c SpreadCli) globalProject() (*project.Project, error) {
+	proj, err := project.Global()
+	if err != nil {
+		if strings.HasSuffix(err.Error(), "no such file or directory") {
+			return project.InitGlobal()
+		}
+		return nil, err
+	}
+	return proj, nil
+}
+
 func (c SpreadCli) printf(message string, data ...interface{}) {
 	// add newline if doesn't have one
 	if !strings.HasSuffix(message, "\n") {
