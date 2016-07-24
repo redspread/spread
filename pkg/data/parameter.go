@@ -41,15 +41,15 @@ func ApplyArguments(field *pb.Field, args ...*pb.Argument) error {
 func simpleArgApply(field *pb.Field, arg *pb.Argument) error {
 	switch val := arg.GetValue().(type) {
 	case *pb.Argument_Number:
-		field.Value = *pb.Field_Number{Number: val.Number}
+		field.Value = &pb.Field_Number{Number: val.Number}
 	case *pb.Argument_Str:
-		field.Value = *pb.Field_Str{Str: val.Str}
+		field.Value = &pb.Field_Str{Str: val.Str}
 	case *pb.Argument_Boolean:
-		field.Value = *pb.Field_Boolean{Boolean: val.Boolean}
+		field.Value = &pb.Field_Boolean{Boolean: val.Boolean}
 	case *pb.Argument_Object:
-		field.Value = *pb.Field_Object{Object: val.Object}
+		field.Value = &pb.Field_Object{Object: val.Object}
 	case *pb.Argument_Array:
-		field.Value = *pb.Field_Array{Array: val.Array}
+		field.Value = &pb.Field_Array{Array: val.Array}
 	default:
 		field.Value = nil
 	}
