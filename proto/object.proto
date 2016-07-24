@@ -22,6 +22,8 @@ message Field {
         Array array = 6;
         Link link = 7;
     }
+    Parameter param = 8;
+    repeated Argument args = 9;
 }
 
 // Object represents a map with strings for keys.
@@ -58,4 +60,24 @@ message Document {
 // DocumentInfo provides metadata about an document.
 message DocumentInfo {
     string path = 1;
+}
+
+// Parameter allows user input to be used in producing the output of the field.
+message Parameter {
+    string name = 1;
+    string prompt = 2;
+    string pattern = 3;
+    bool required = 4;
+}
+
+// Argument contains an argument to fulfill a parameter.
+message Argument {
+    oneof value {
+        double number = 1;
+        string str = 2;
+        bool boolean = 3;
+        Object object = 4;
+        Array array = 5;
+        Link link = 6;
+    }
 }
