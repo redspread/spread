@@ -30,8 +30,10 @@ func ApplyArguments(field *pb.Field, args ...*pb.Argument) error {
 		return errors.New("field was nil")
 	} else if field.GetParam() == nil {
 		return fmt.Errorf("field %s does not have a parameter", field.Key)
+	} else if len(args) < 1 && field.GetParam().GetDefault() == nil {
+		return errors.New("an argument must be specified if no default is given")
 	} else if len(args) < 1 {
-		return errors.New("an argument must be specified")
+		return applyDefault(field)
 	} else if len(args) == 1 && len(field.GetParam().Pattern) == 0 {
 		return simpleArgApply(field, args[0])
 	} else if len(args) > 1 && len(field.GetParam().Pattern) == 0 {
@@ -68,5 +70,25 @@ func simpleArgApply(field *pb.Field, arg *pb.Argument) error {
 		field.Value = nil
 	}
 
+	return nil
+}
+
+func applyDefault(field *pb.Field) error {
+	if field == nil {
+		return errors.New("field cannot be nil")
+	} else if field.GetParam() == nil {
+		return errors.New("field does not have parameters")
+	} else if field.GetParam().GetDefault() == nil {
+		return errors.New("fields has paramaters but default was nil")
+	}
+
+	switch d := field.GetParam().GetDefault().GetValue().(type) {
+	case *pb.Argument_Number:
+		field.Value = &pb.Field_Number{Number: d.Number}
+	case *pb.Argument_Str:
+		field.Value = &pb.Field_Str{Str: d.Str}
+	case *pb.Argument_Boolean:
+		field.Value = &pb.Field_Boolean{Boolean: d.Boolean}
+	}
 	return nil
 }

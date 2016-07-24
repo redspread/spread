@@ -67,7 +67,8 @@ message Parameter {
     string name = 1;
     string prompt = 2;
     string pattern = 3;
-    bool required = 4;
+    // Default is the value a parameter will take if no argument is given for it. Parameters without defaults require args.
+    Argument default = 4;
 }
 
 // Argument contains an argument to fulfill a parameter.
