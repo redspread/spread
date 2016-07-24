@@ -69,6 +69,30 @@ func (p *Project) Index() (*deploy.Deployment, error) {
 	return deployment, nil
 }
 
+func (p *Project) DocFromIndex(path string) (*pb.Document, error) {
+	index, err := p.repo.Index()
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve index: %v", err)
+	}
+
+	indexSize := int(index.EntryCount())
+	for i := 0; i < indexSize; i++ {
+		entry, err := index.EntryByIndex(uint(i))
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve index entry: %v", err)
+		}
+
+		if entry.Path == path {
+			doc, err := p.getDocument(entry.Id)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read object from Git repository: %v", err)
+			}
+			return doc, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find document with path '%s'", path)
+}
+
 func kindFromPath(path string) (string, error) {
 	parts := strings.Split(path, "/")
 	if len(parts) != 4 {

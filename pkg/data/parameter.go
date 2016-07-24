@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -55,6 +56,34 @@ func ApplyArguments(field *pb.Field, args ...*pb.Argument) error {
 	val := fmt.Sprintf(field.GetParam().Pattern, argVals...)
 	field.Value = &pb.Field_Str{Str: val}
 	return nil
+}
+
+// ParseArgument returns an argument parsed from JSON.
+func ParseArgument(in string) (*pb.Argument, error) {
+	var data interface{}
+	err := json.Unmarshal([]byte(in), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	arg := &pb.Argument{}
+	switch typedData := data.(type) {
+	case bool:
+		arg.Value = &pb.Argument_Boolean{
+			Boolean: typedData,
+		}
+	case float64:
+		arg.Value = &pb.Argument_Number{
+			Number: typedData,
+		}
+	case string:
+		arg.Value = &pb.Argument_Str{
+			Str: typedData,
+		}
+	default:
+		return nil, errors.New("unknown type")
+	}
+	return arg, nil
 }
 
 // simpleArgApply is used when no formatting template string is given.
