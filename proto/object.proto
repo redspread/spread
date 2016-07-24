@@ -76,7 +76,5 @@ message Argument {
         double number = 1;
         string str = 2;
         bool boolean = 3;
-        Object object = 4;
-        Array array = 5;
     }
 }

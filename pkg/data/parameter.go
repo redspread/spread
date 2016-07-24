@@ -22,7 +22,9 @@ func AddParamToDoc(doc *pb.Document, target *SRI, param *pb.Parameter) error {
 	return nil
 }
 
-// ApplyArguments takes the given arguments and uses them to satisfy a field parameter.
+// ApplyArguments takes the given arguments and uses them to satisfy a field parameter. If a single argument and no
+// formatting pattern are given the single argument is used as the field value. Otherwise the arguments will be used as
+// arguments to Printf with the formatting string as the pattern.
 func ApplyArguments(field *pb.Field, args ...*pb.Argument) error {
 	if field == nil {
 		return errors.New("field was nil")
@@ -32,8 +34,24 @@ func ApplyArguments(field *pb.Field, args ...*pb.Argument) error {
 		return errors.New("an argument must be specified")
 	} else if len(args) == 1 && len(field.GetParam().Pattern) == 0 {
 		return simpleArgApply(field, args[0])
+	} else if len(args) > 1 && len(field.GetParam().Pattern) == 0 {
+		return errors.New("may only use multiple arguments if a string template is provided")
 	}
-	// TODO: complete string formatting based apply
+
+	argVals := make([]interface{}, len(args))
+	for i, v := range args {
+		switch val := v.GetValue().(type) {
+		case *pb.Argument_Number:
+			argVals[i] = val.Number
+		case *pb.Argument_Str:
+			argVals[i] = val.Str
+		case *pb.Argument_Boolean:
+			argVals[i] = val.Boolean
+		}
+	}
+
+	val := fmt.Sprintf(field.GetParam().Pattern, argVals...)
+	field.Value = &pb.Field_Str{Str: val}
 	return nil
 }
 
@@ -46,10 +64,6 @@ func simpleArgApply(field *pb.Field, arg *pb.Argument) error {
 		field.Value = &pb.Field_Str{Str: val.Str}
 	case *pb.Argument_Boolean:
 		field.Value = &pb.Field_Boolean{Boolean: val.Boolean}
-	case *pb.Argument_Object:
-		field.Value = &pb.Field_Object{Object: val.Object}
-	case *pb.Argument_Array:
-		field.Value = &pb.Field_Array{Array: val.Array}
 	default:
 		field.Value = nil
 	}
