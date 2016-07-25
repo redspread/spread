@@ -14,6 +14,7 @@ import (
 // DeploymentFromDocMap produces a new Deployment from a map of Documents.
 func DeploymentFromDocMap(docs map[string]*pb.Document) (deploy *Deployment, err error) {
 	var obj KubeObject
+	deploy = new(Deployment)
 	for path, doc := range docs {
 		doc.GetInfo().Path = path
 		obj, err = KubeObjectFromDocument(path, doc)

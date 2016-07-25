@@ -10,6 +10,7 @@ import (
 
 func (p *Project) mapFromTree(tree *git.Tree) (docs map[string]*pb.Document, err error) {
 	var walkErr error
+	docs = make(map[string]*pb.Document, tree.EntryCount())
 	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
 		// add objects to deployment
 		if entry.Type == git.ObjectBlob {
