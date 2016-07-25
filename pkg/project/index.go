@@ -45,8 +45,8 @@ func (p *Project) Index() (docs map[string]*pb.Document, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve index: %v", err)
 	}
-
 	indexSize := int(index.EntryCount())
+	docs = make(map[string]*pb.Document, indexSize)
 	for i := 0; i < indexSize; i++ {
 		entry, err := index.EntryByIndex(uint(i))
 		if err != nil {

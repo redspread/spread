@@ -20,6 +20,7 @@ func (p *Project) mapFromTree(tree *git.Tree) (docs map[string]*pb.Document, err
 				return -1
 			}
 
+			path = path + entry.Name
 			docs[path] = doc
 			if walkErr != nil {
 				return -1

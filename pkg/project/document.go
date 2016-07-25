@@ -9,6 +9,19 @@ import (
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
+func (p *Project) GetDocument(revision, path string) (*pb.Document, error) {
+	docs, err := p.ResolveCommit(revision)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, has := docs[path]
+	if !has {
+		return nil, fmt.Errorf("the path '%s' does not exist in doc", path)
+	}
+	return doc, nil
+}
+
 func (p *Project) getDocument(oid *git.Oid) (*pb.Document, error) {
 	blob, err := p.repo.LookupBlob(oid)
 	if err != nil {
