@@ -5,7 +5,7 @@ import (
 
 	git "gopkg.in/libgit2/git2go.v23"
 
-	"rsprd.com/spread/pkg/deploy"
+	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
 func (p *Project) Commit(refname string, author, committer Person, message string) (commitOid string, err error) {
@@ -47,7 +47,7 @@ func (p *Project) writeIndex() (*git.Tree, error) {
 	return tree, nil
 }
 
-func (p *Project) Head() (*deploy.Deployment, error) {
+func (p *Project) Head() (map[string]*pb.Document, error) {
 	commit, err := p.headCommit()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve head: %v", err)
@@ -58,10 +58,10 @@ func (p *Project) Head() (*deploy.Deployment, error) {
 		return nil, fmt.Errorf("couldn't get tree for HEAD: %v", err)
 	}
 
-	return p.deploymentFromTree(tree)
+	return p.mapFromTree(tree)
 }
 
-func (p *Project) ResolveCommit(revision string) (*deploy.Deployment, error) {
+func (p *Project) ResolveCommit(revision string) (map[string]*pb.Document, error) {
 	gitObj, err := p.repo.RevparseSingle(revision)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't resolve revspec '%s': %v", revision, err)
@@ -71,17 +71,12 @@ func (p *Project) ResolveCommit(revision string) (*deploy.Deployment, error) {
 		return nil, fmt.Errorf("'%s' specifies an object other than a commit", revision)
 	}
 
-	commit, err := gitObj.Peel(git.ObjectCommit)
+	tree, err := gitObj.Peel(git.ObjectTree)
 	if err != nil {
 		return nil, err
 	}
 
-	tree, err := commit.(*git.Commit).Tree()
-	if err != nil {
-		return nil, err
-	}
-
-	return p.deploymentFromTree(tree)
+	return p.mapFromTree(tree.(*git.Tree))
 }
 
 func (p *Project) headCommit() (*git.Commit, error) {

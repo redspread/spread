@@ -46,15 +46,28 @@ func objectKind(obj KubeObject) (types.GroupVersionKind, error) {
 	return gkv, nil
 }
 
-func KubeObjectFromDocument(kind string, doc *pb.Document) (KubeObject, error) {
+func KubeObjectFromDocument(path string, doc *pb.Document) (KubeObject, error) {
+	kind, err := kindFromPath(path)
+	if err != nil {
+		return nil, err
+	}
+
 	base := BaseObject(kind)
 	if base == nil {
 		return nil, fmt.Errorf("unable to find Kind for '%s'", kind)
 	}
 
-	err := data.Unmarshal(doc, &base)
+	err = data.Unmarshal(doc, &base)
 	if err != nil {
 		return nil, err
 	}
 	return base, nil
+}
+
+func kindFromPath(path string) (string, error) {
+	parts := strings.Split(path, "/")
+	if len(parts) != 4 {
+		return "", fmt.Errorf("path wrong length (is %d, expected 5)", len(parts))
+	}
+	return parts[2], nil
 }

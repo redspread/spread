@@ -3,11 +3,9 @@ package project
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	git "gopkg.in/libgit2/git2go.v23"
 
-	"rsprd.com/spread/pkg/deploy"
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
@@ -42,13 +40,12 @@ func (p *Project) AddDocumentToIndex(doc *pb.Document) error {
 	return index.Write()
 }
 
-func (p *Project) Index() (*deploy.Deployment, error) {
+func (p *Project) Index() (docs map[string]*pb.Document, err error) {
 	index, err := p.repo.Index()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve index: %v", err)
 	}
 
-	deployment := new(deploy.Deployment)
 	indexSize := int(index.EntryCount())
 	for i := 0; i < indexSize; i++ {
 		entry, err := index.EntryByIndex(uint(i))
@@ -56,17 +53,13 @@ func (p *Project) Index() (*deploy.Deployment, error) {
 			return nil, fmt.Errorf("failed to retrieve index entry: %v", err)
 		}
 
-		kubeObj, err := p.getKubeObject(entry.Id, entry.Path)
+		doc, err := p.getDocument(entry.Id)
 		if err != nil {
 			return nil, err
 		}
-
-		err = deployment.Add(kubeObj)
-		if err != nil {
-			return nil, fmt.Errorf("could not add object to deployment: %v", err)
-		}
+		docs[entry.Path] = doc
 	}
-	return deployment, nil
+	return
 }
 
 func (p *Project) DocFromIndex(path string) (*pb.Document, error) {
@@ -91,14 +84,6 @@ func (p *Project) DocFromIndex(path string) (*pb.Document, error) {
 		}
 	}
 	return nil, fmt.Errorf("could not find document with path '%s'", path)
-}
-
-func kindFromPath(path string) (string, error) {
-	parts := strings.Split(path, "/")
-	if len(parts) != 4 {
-		return "", fmt.Errorf("path wrong length (is %d, expected 5)", len(parts))
-	}
-	return parts[2], nil
 }
 
 var (

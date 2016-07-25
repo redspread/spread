@@ -7,7 +7,27 @@ import (
 
 	"github.com/pmezard/go-difflib/difflib"
 	kube "k8s.io/kubernetes/pkg/api"
+
+	pb "rsprd.com/spread/pkg/spreadproto"
 )
+
+// DeploymentFromDocMap produces a new Deployment from a map of Documents.
+func DeploymentFromDocMap(docs map[string]*pb.Document) (deploy *Deployment, err error) {
+	var obj KubeObject
+	for path, doc := range docs {
+		doc.GetInfo().Path = path
+		obj, err = KubeObjectFromDocument(path, doc)
+		if err != nil {
+			return
+		}
+
+		err = deploy.Add(obj)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
 
 // A Deployment is a representation of a Kubernetes cluster's object registry.
 // It can be used to specify objects to be deployed and is how the current state of a deployment is returned.

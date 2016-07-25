@@ -27,10 +27,15 @@ func (s SpreadCli) Deploy() *cli.Command {
 			if err == nil {
 				if len(ref) == 0 {
 					s.printf("Deploying from index...")
-					dep, err = proj.Index()
+					docs, err := proj.Index()
+					if err != nil {
+						s.fatalf("Error getting index: %v", err)
+					}
+
+					dep, err = deploy.DeploymentFromDocMap(docs)
 				} else {
-					if commit, err := proj.ResolveCommit(ref); err == nil {
-						dep = commit
+					if docs, err := proj.ResolveCommit(ref); err == nil {
+						dep, err = deploy.DeploymentFromDocMap(docs)
 					} else {
 						dep, err = s.globalDeploy(ref)
 					}
@@ -134,7 +139,12 @@ func (s SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
 				return nil, fmt.Errorf("failed to fetch '%s': %v", ref, err)
 			}
 
-			return proj.Branch(branch)
+			docs, err := proj.Branch(branch)
+			if err != nil {
+				return nil, err
+			}
+
+			return deploy.DeploymentFromDocMap(docs)
 		}
 	}
 	return dep, err
