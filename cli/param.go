@@ -14,6 +14,10 @@ func (s SpreadCli) Param() *cli.Command {
 		Usage:     "Set paramaters for field values in the index",
 		ArgsUsage: "<SRL> <name> <prompt>",
 		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "l",
+				Usage: "list parameters",
+			},
 			cli.StringFlag{
 				Name:  "f",
 				Usage: "set Golang format string to use with arguments",
@@ -24,6 +28,20 @@ func (s SpreadCli) Param() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) {
+			if c.Bool("l") {
+				p := s.projectOrDie()
+				docs, err := p.Index()
+				if err != nil {
+					s.fatalf("Could not retrieve index: %v", err)
+				}
+
+				paramFields := data.ParameterFields(docs)
+				for name := range paramFields {
+					s.printf(" - %s", name)
+				}
+				return
+			}
+
 			if len(c.Args()) < 3 {
 				s.fatalf("an srl, name, and description must be provided")
 			}

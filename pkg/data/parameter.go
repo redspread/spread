@@ -58,6 +58,35 @@ func ApplyArguments(field *pb.Field, args ...*pb.Argument) error {
 	return nil
 }
 
+// ParameterFields returns the fields with parameters contained within a Document.
+func ParameterFields(docs map[string]*pb.Document) map[string]*pb.Field {
+	fields := map[string]*pb.Field{}
+	for _, doc := range docs {
+		AddParameterFields(doc.GetRoot(), fields)
+	}
+	return fields
+}
+
+// AddParameterFields adds fields with parameters from the given field (and its subfields) to the map given. The name of the parameter is the key.
+func AddParameterFields(field *pb.Field, params map[string]*pb.Field) {
+	param := field.GetParam()
+	// add to map if has parameter
+	if param != nil {
+		params[param.Name] = field
+	}
+
+	switch val := field.GetValue().(type) {
+	case *pb.Field_Object:
+		for _, objField := range val.Object.GetItems() {
+			AddParameterFields(objField, params)
+		}
+	case *pb.Field_Array:
+		for _, arrField := range val.Array.GetItems() {
+			AddParameterFields(arrField, params)
+		}
+	}
+}
+
 // ParseArgument returns an argument parsed from JSON.
 func ParseArgument(in string) (*pb.Argument, error) {
 	var data interface{}
