@@ -36,8 +36,15 @@ func (s SpreadCli) Param() *cli.Command {
 				}
 
 				paramFields := data.ParameterFields(docs)
-				for name := range paramFields {
-					s.printf(" - %s", name)
+				for _, field := range paramFields {
+					param := field.GetParam()
+					s.printf(" - Name: %s", param.Name)
+					s.printf("   Description: %s", param.Prompt)
+					s.printf("   Pattern: %s", param.Pattern)
+					if param.GetDefault() == nil {
+						s.printf("   Required: Yes")
+
+					}
 				}
 				return
 			}

@@ -4,9 +4,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
+
+// InteractiveArgs hosts an interactive session using a Reader and Writer which prompts for input which is used to
+// populate the provided field. Returns error if receives EOF before completion.
+func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field) error {
+	param := field.GetParam()
+	fmt.Fprintf(w, "Name: %s\n", param.Name)
+	fmt.Fprintf(w, "Prompt: %s\n", param.Prompt)
+	fmt.Fprintf(w, "Input [%s]:\n", displayDefault(param.GetDefault()))
+	// TODO: READ USER INPUT AND MODIFY FIELD ACCORDINGLY
+	return nil
+}
+
+func displayDefault(d *pb.Argument) string {
+	var out interface{}
+	switch val := d.GetValue().(type) {
+	case *pb.Argument_Number:
+		out = val.Number
+	case *pb.Argument_Str:
+		out = val.Str
+	case *pb.Argument_Boolean:
+		out = val.Boolean
+	}
+	return fmt.Sprintf("%v", out)
+}
 
 // AddParamToDoc adds the given parameter to the
 func AddParamToDoc(doc *pb.Document, target *SRI, param *pb.Parameter) error {
