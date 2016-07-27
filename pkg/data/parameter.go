@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,14 +11,29 @@ import (
 )
 
 // InteractiveArgs hosts an interactive session using a Reader and Writer which prompts for input which is used to
-// populate the provided field. Returns error if receives EOF before completion.
-func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field) error {
+// populate the provided field. If required is true then only fields without defaults will be prompted for.
+func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field, required bool) error {
 	param := field.GetParam()
-	fmt.Fprintf(w, "Name: %s\n", param.Name)
-	fmt.Fprintf(w, "Prompt: %s\n", param.Prompt)
-	fmt.Fprintf(w, "Input [%s]:\n", displayDefault(param.GetDefault()))
-	// TODO: READ USER INPUT AND MODIFY FIELD ACCORDINGLY
-	return nil
+
+	if required && param.GetDefault() != nil {
+		return nil
+	}
+
+	fmt.Fprintln(w, "Name: ", param.Name)
+	fmt.Fprintln(w, "Prompt: ", param.Prompt)
+	fmt.Fprintf(w, "Input [%s]: ", displayDefault(param.GetDefault()))
+	reader := bufio.NewReader(r)
+	text, err := reader.ReadString('\n')
+	if err != nil {
+		return err
+	}
+
+	args, err := ParseArguments(text)
+	if err != nil {
+		return err
+	}
+
+	return ApplyArguments(field, args...)
 }
 
 func displayDefault(d *pb.Argument) string {
@@ -112,14 +128,33 @@ func AddParameterFields(field *pb.Field, params map[string]*pb.Field) {
 	}
 }
 
-// ParseArgument returns an argument parsed from JSON.
-func ParseArgument(in string) (*pb.Argument, error) {
+// ParseArguments returns arguments parsed from JSON.
+func ParseArguments(in string) (args []*pb.Argument, err error) {
 	var data interface{}
-	err := json.Unmarshal([]byte(in), &data)
+	err = json.Unmarshal([]byte(in), &data)
 	if err != nil {
-		return nil, err
+		return
 	}
 
+	var dataArr []interface{}
+	if arr, isArray := data.([]interface{}); isArray {
+		dataArr = arr
+	} else {
+		dataArr = []interface{}{data}
+	}
+
+	args = make([]*pb.Argument, len(dataArr))
+	for k, v := range dataArr {
+		arg, err := argFromJSONType(v)
+		if err != nil {
+			return nil, err
+		}
+		args[k] = arg
+	}
+	return
+}
+
+func argFromJSONType(data interface{}) (*pb.Argument, error) {
 	arg := &pb.Argument{}
 	switch typedData := data.(type) {
 	case bool:
@@ -135,7 +170,7 @@ func ParseArgument(in string) (*pb.Argument, error) {
 			Str: typedData,
 		}
 	default:
-		return nil, errors.New("unknown type")
+		return nil, fmt.Errorf("unknown type: %+v", typedData)
 	}
 	return arg, nil
 }

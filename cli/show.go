@@ -6,6 +6,7 @@ import (
 	"github.com/codegangsta/cli"
 
 	"rsprd.com/spread/pkg/data"
+	pb "rsprd.com/spread/pkg/spreadproto"
 )
 
 // Show displays data stored in Spread Documents.
@@ -15,16 +16,29 @@ func (s SpreadCli) Show() *cli.Command {
 		Usage:     "Display information stored in a repository",
 		ArgsUsage: "<revision> <path>",
 		Action: func(c *cli.Context) {
-			if len(c.Args()) < 2 {
-				s.fatalf("a revison and a path must be specified")
-			}
+			var doc *pb.Document
 			p := s.projectOrDie()
-
-			revision := c.Args().First()
-			path := c.Args().Get(1)
-			doc, err := p.GetDocument(revision, path)
-			if err != nil {
-				s.fatalf("failed to get document: %v", err)
+			switch len(c.Args()) {
+			case 1: // from index
+				docs, err := p.Index()
+				if err != nil {
+					s.fatalf("Failed to get index: %v", err)
+				}
+				path := c.Args().First()
+				var ok bool
+				if doc, ok = docs[path]; !ok {
+					s.fatalf("Path '%s' not found in index.", path)
+				}
+			case 2: // from revision
+				revision := c.Args().First()
+				path := c.Args().Get(1)
+				var err error
+				doc, err = p.GetDocument(revision, path)
+				if err != nil {
+					s.fatalf("failed to get document: %v", err)
+				}
+			default:
+				s.fatalf("a path OR path and revision must be specified")
 			}
 
 			fields, err := data.MapFromDocument(doc)

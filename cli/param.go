@@ -69,21 +69,22 @@ func (s SpreadCli) Param() *cli.Command {
 				s.fatalf("Error retrieving from index: %v", err)
 			}
 
-			// parse default value
-			var def *pb.Argument
-			defaultInput := c.String("d")
-			if len(defaultInput) != 0 {
-				def, err = data.ParseArgument(defaultInput)
-				if err != nil {
-					s.fatalf("Could not parse default value: %v", err)
-				}
-			}
-
 			param := &pb.Parameter{
 				Name:    c.Args().Get(1),
 				Prompt:  c.Args().Get(2),
-				Default: def,
 				Pattern: c.String("f"),
+			}
+
+			// parse default value
+			defaultInput := c.String("d")
+			if len(defaultInput) != 0 {
+				args, err := data.ParseArguments(defaultInput)
+				if err != nil {
+					s.fatalf("Could not parse default value: %v", err)
+				} else if len(args) > 1 {
+					s.fatalf("Only one default value can be specified")
+				}
+				param.Default = args[0]
 			}
 
 			if err = data.AddParamToDoc(doc, target, param); err != nil {

@@ -23,7 +23,6 @@ message Field {
         Link link = 7;
     }
     Parameter param = 8;
-    repeated Argument args = 9;
 }
 
 // Object represents a map with strings for keys.
@@ -48,6 +47,7 @@ message Link {
     string packageName = 1;
     SRI target = 2;
     bool override = 3;
+    repeated Argument args = 4;
 }
 
 // Document is the root of Spread data stored in a Git blob. It has field stored at it's root, typically with an object as it's value.
