@@ -53,7 +53,6 @@ var kinds = map[string]KubeObject{
 var resources = []string{
 	"configmaps",
 	"endpoints",
-	"events",
 	"limitranges",
 	"namespaces",
 	"persistentvolumeclaims",
