@@ -78,7 +78,7 @@ func (s SpreadCli) Param() *cli.Command {
 			// parse default value
 			defaultInput := c.String("d")
 			if len(defaultInput) != 0 {
-				args, err := data.ParseArguments(defaultInput)
+				args, err := data.ParseArguments(defaultInput, false)
 				if err != nil {
 					s.fatalf("Could not parse default value: %v", err)
 				} else if len(args) > 1 {

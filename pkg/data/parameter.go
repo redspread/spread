@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	pb "rsprd.com/spread/pkg/spreadproto"
 )
@@ -23,7 +24,7 @@ func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field, required boo
 
 	fmt.Fprintln(w, "Name: ", param.Name)
 	fmt.Fprintln(w, "Prompt: ", param.Prompt)
-	fmt.Fprintf(w, "Input [%s]: ", displayDefault(defaultVal))
+	fmt.Fprint(w, "Input: ", displayDefault(defaultVal))
 	reader := bufio.NewReader(r)
 	text, err := reader.ReadString('\n')
 	if err != nil {
@@ -33,7 +34,8 @@ func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field, required boo
 	// use default if no input given
 	args := []*pb.Argument{defaultVal}
 	if len(text) > 1 {
-		args, err = ParseArguments(text)
+		_, str := field.GetValue().(*pb.Field_Str)
+		args, err = ParseArguments(text[:len(text)-1], str)
 		if err != nil {
 			return err
 		}
@@ -43,6 +45,9 @@ func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field, required boo
 }
 
 func displayDefault(d *pb.Argument) string {
+	if d.GetValue() == nil {
+		return ""
+	}
 	var out interface{}
 	switch val := d.GetValue().(type) {
 	case *pb.Argument_Number:
@@ -52,7 +57,7 @@ func displayDefault(d *pb.Argument) string {
 	case *pb.Argument_Boolean:
 		out = val.Boolean
 	}
-	return fmt.Sprintf("%v", out)
+	return fmt.Sprintf("(%v) ", out)
 }
 
 // AddParamToDoc adds the given parameter to the
@@ -134,11 +139,16 @@ func AddParameterFields(field *pb.Field, params map[string]*pb.Field) {
 	}
 }
 
-// ParseArguments returns arguments parsed from JSON.
-func ParseArguments(in string) (args []*pb.Argument, err error) {
+// ParseArguments returns arguments parsed from JSON. If coerceStr is true, will attempt to parse as string if parsing initially fails.
+func ParseArguments(in string, coerceStr bool) (args []*pb.Argument, err error) {
 	var data interface{}
 	err = json.Unmarshal([]byte(in), &data)
 	if err != nil {
+		// if coercion is requested, attempt to process input as string
+		if strings.HasPrefix(err.Error(), "invalid character") && coerceStr {
+			in = fmt.Sprintf(`"%s"`, in)
+			args, err = ParseArguments(in, false)
+		}
 		return
 	}
 
