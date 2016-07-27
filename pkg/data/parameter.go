@@ -15,22 +15,28 @@ import (
 func InteractiveArgs(r io.ReadCloser, w io.Writer, field *pb.Field, required bool) error {
 	param := field.GetParam()
 
-	if required && param.GetDefault() != nil {
+	defaultVal := param.GetDefault()
+	// don't prompt if only checking for required and has default
+	if required && defaultVal != nil {
 		return nil
 	}
 
 	fmt.Fprintln(w, "Name: ", param.Name)
 	fmt.Fprintln(w, "Prompt: ", param.Prompt)
-	fmt.Fprintf(w, "Input [%s]: ", displayDefault(param.GetDefault()))
+	fmt.Fprintf(w, "Input [%s]: ", displayDefault(defaultVal))
 	reader := bufio.NewReader(r)
 	text, err := reader.ReadString('\n')
 	if err != nil {
 		return err
 	}
 
-	args, err := ParseArguments(text)
-	if err != nil {
-		return err
+	// use default if no input given
+	args := []*pb.Argument{defaultVal}
+	if len(text) > 1 {
+		args, err = ParseArguments(text)
+		if err != nil {
+			return err
+		}
 	}
 
 	return ApplyArguments(field, args...)
