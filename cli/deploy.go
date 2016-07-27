@@ -4,16 +4,18 @@ import (
 	"errors"
 	"fmt"
 
+	"rsprd.com/spread/pkg/data"
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/entity"
 	"rsprd.com/spread/pkg/input/dir"
 	"rsprd.com/spread/pkg/packages"
+	pb "rsprd.com/spread/pkg/spreadproto"
 
 	"github.com/codegangsta/cli"
 )
 
 // Deploy allows the creation of deploy.Deployments remotely
-func (s SpreadCli) Deploy() *cli.Command {
+func (s *SpreadCli) Deploy() *cli.Command {
 	return &cli.Command{
 		Name:        "deploy",
 		Usage:       "spread deploy [-s] PATH | COMMIT [kubectl context]",
@@ -25,12 +27,23 @@ func (s SpreadCli) Deploy() *cli.Command {
 
 			proj, err := s.project()
 			if err == nil {
+				var docs map[string]*pb.Document
 				if len(ref) == 0 {
 					s.printf("Deploying from index...")
-					dep, err = proj.Index()
+					docs, err = proj.Index()
+					if err != nil {
+						s.fatalf("Error getting index: %v", err)
+					}
+
+					if err = s.promptForArgs(docs, false); err == nil {
+						dep, err = deploy.DeploymentFromDocMap(docs)
+					}
+
 				} else {
-					if commit, err := proj.ResolveCommit(ref); err == nil {
-						dep = commit
+					if docs, err = proj.ResolveCommit(ref); err == nil {
+						if err = s.promptForArgs(docs, false); err == nil {
+							dep, err = deploy.DeploymentFromDocMap(docs)
+						}
 					} else {
 						dep, err = s.globalDeploy(ref)
 					}
@@ -63,7 +76,7 @@ func (s SpreadCli) Deploy() *cli.Command {
 	}
 }
 
-func (s SpreadCli) fileDeploy(srcDir string) (*deploy.Deployment, error) {
+func (s *SpreadCli) fileDeploy(srcDir string) (*deploy.Deployment, error) {
 	input, err := dir.NewFileInput(srcDir)
 	if err != nil {
 		return nil, inputError(srcDir, err)
@@ -95,7 +108,7 @@ func (s SpreadCli) fileDeploy(srcDir string) (*deploy.Deployment, error) {
 	return dep, nil
 }
 
-func (s SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
+func (s *SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
 	// check if reference is local file
 	dep, err := s.fileDeploy(ref)
 	if err != nil {
@@ -134,10 +147,30 @@ func (s SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
 				return nil, fmt.Errorf("failed to fetch '%s': %v", ref, err)
 			}
 
-			return proj.Branch(branch)
+			docs, err := proj.Branch(branch)
+			if err != nil {
+				return nil, err
+			}
+
+			if err = s.promptForArgs(docs, false); err != nil {
+				return nil, err
+			}
+
+			return deploy.DeploymentFromDocMap(docs)
 		}
 	}
 	return dep, err
+}
+
+func (s *SpreadCli) promptForArgs(docs map[string]*pb.Document, required bool) error {
+	paramFields := data.ParameterFields(docs)
+	for _, field := range paramFields {
+		err := data.InteractiveArgs(s.in, s.out, field, required)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {

@@ -24,6 +24,78 @@ func ResolveRelativeField(field *pb.Field, fieldpath string) (resolvedField *pb.
 	return ResolveRelativeField(resolvedField, next)
 }
 
+// FieldValueEquals returns true if the value of the given fields is the same.
+func FieldValueEquals(this, other *pb.Field) bool {
+	// check for pointer + primitive  matches and nil values
+	switch {
+	case this == other:
+		return true
+	case this == nil || other == nil:
+		return false
+	case this.GetValue() == other.GetValue():
+		return true
+	case this.GetValue() == nil || other.GetValue() == nil:
+		return false
+	}
+
+	// check for matches with objects and arrays
+	switch val := this.GetValue().(type) {
+	case *pb.Field_Number:
+		otherVal, ok := other.GetValue().(*pb.Field_Number)
+		if !ok {
+			return false
+		}
+		return val.Number == otherVal.Number
+	case *pb.Field_Str:
+		otherVal, ok := other.GetValue().(*pb.Field_Str)
+		if !ok {
+			return false
+		}
+		return val.Str == otherVal.Str
+	case *pb.Field_Boolean:
+		otherVal, ok := other.GetValue().(*pb.Field_Boolean)
+		if !ok {
+			return false
+		}
+		return val.Boolean == otherVal.Boolean
+	case *pb.Field_Object:
+		otherVal, ok := other.GetValue().(*pb.Field_Object)
+		if !ok {
+			return false
+		}
+		items, otherItems := val.Object.GetItems(), otherVal.Object.GetItems()
+
+		if len(items) != len(otherItems) {
+			return false
+		}
+
+		for k, v := range items {
+			otherV, ok := otherItems[k]
+			if !ok {
+				return false
+			}
+
+			return FieldValueEquals(v, otherV)
+		}
+	case *pb.Field_Array:
+		otherVal, ok := other.GetValue().(*pb.Field_Array)
+		if !ok {
+			return false
+		}
+		items, otherItems := val.Array.GetItems(), otherVal.Array.GetItems()
+
+		if len(items) != len(otherItems) {
+			return false
+		}
+
+		for k, v := range items {
+			return FieldValueEquals(v, otherItems[k])
+		}
+	}
+
+	return false
+}
+
 func getFromArrayField(field *pb.Field, index int) (*pb.Field, error) {
 	fieldArr := field.GetArray()
 	if fieldArr == nil {

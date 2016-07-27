@@ -22,6 +22,7 @@ message Field {
         Array array = 6;
         Link link = 7;
     }
+    Parameter param = 8;
 }
 
 // Object represents a map with strings for keys.
@@ -46,6 +47,7 @@ message Link {
     string packageName = 1;
     SRI target = 2;
     bool override = 3;
+    repeated Argument args = 4;
 }
 
 // Document is the root of Spread data stored in a Git blob. It has field stored at it's root, typically with an object as it's value.
@@ -58,4 +60,22 @@ message Document {
 // DocumentInfo provides metadata about an document.
 message DocumentInfo {
     string path = 1;
+}
+
+// Parameter allows user input to be used in producing the output of the field.
+message Parameter {
+    string name = 1;
+    string prompt = 2;
+    string pattern = 3;
+    // Default is the value a parameter will take if no argument is given for it. Parameters without defaults require args.
+    Argument default = 4;
+}
+
+// Argument contains an argument to fulfill a parameter.
+message Argument {
+    oneof value {
+        double number = 1;
+        string str = 2;
+        bool boolean = 3;
+    }
 }

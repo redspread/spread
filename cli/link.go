@@ -4,7 +4,6 @@ import (
 	"github.com/codegangsta/cli"
 
 	"rsprd.com/spread/pkg/data"
-	"rsprd.com/spread/pkg/deploy"
 )
 
 // Link allows the links to be created on the Index
@@ -35,32 +34,22 @@ func (s SpreadCli) Link() *cli.Command {
 			}
 
 			proj := s.projectOrDie()
-			dep, err := proj.Index()
+			index, err := proj.Index()
 			if err != nil {
 				s.fatalf("Error retrieving index: %v", err)
 			}
 
-			kubeObj, err := dep.Get(attach.Path)
-			if err != nil {
-				s.fatalf("Could not get object: %v", err)
-			}
-
-			path, err := deploy.ObjectPath(kubeObj)
-			if err != nil {
-				s.fatalf("Failed to determine path to save object: %v", err)
-			}
-
-			obj, err := data.CreateDocument(kubeObj.GetObjectMeta().GetName(), path, kubeObj)
-			if err != nil {
-				s.fatalf("failed to encode object: %v", err)
+			doc, ok := index[attach.Path]
+			if !ok {
+				s.fatalf("Path '%s' not found", attach.Path)
 			}
 
 			link := data.NewLink("test", target, false)
-			if err = data.CreateLinkInDocument(obj, link, attach); err != nil {
+			if err = data.CreateLinkInDocument(doc, link, attach); err != nil {
 				s.fatalf("Could not create link: %v", err)
 			}
 
-			if err = proj.AddDocumentToIndex(obj); err != nil {
+			if err = proj.AddDocumentToIndex(doc); err != nil {
 				s.fatalf("Failed to add object to Git index: %v", err)
 			}
 		},

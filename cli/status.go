@@ -14,13 +14,24 @@ func (s SpreadCli) Status() *cli.Command {
 		Description: "Information about what's commited, changed, and staged.",
 		Action: func(c *cli.Context) {
 			proj := s.projectOrDie()
-			index, err := proj.Index()
+			indexDocs, err := proj.Index()
 			if err != nil {
 				s.fatalf("Could not load Index: %v", err)
 			}
 
-			head, err := proj.Head()
+			index, err := deploy.DeploymentFromDocMap(indexDocs)
 			if err != nil {
+				s.fatalf("Failed to create KubeObject from index doc: %v", err)
+			}
+
+			var head *deploy.Deployment
+			headDocs, err := proj.Head()
+			if err == nil {
+				head, err = deploy.DeploymentFromDocMap(headDocs)
+				if err != nil {
+					s.fatalf("Failed to create KubeObject from HEAD doc: %v", err)
+				}
+			} else {
 				head = new(deploy.Deployment)
 			}
 

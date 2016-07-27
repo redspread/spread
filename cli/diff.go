@@ -21,9 +21,14 @@ func (s SpreadCli) Diff() *cli.Command {
 		},
 		Action: func(c *cli.Context) {
 			proj := s.projectOrDie()
-			index, err := proj.Index()
+			docs, err := proj.Index()
 			if err != nil {
 				s.fatalf("Could not load Index: %v", err)
+			}
+
+			index, err := deploy.DeploymentFromDocMap(docs)
+			if err != nil {
+				s.fatalf("Failed to create Deployment from Documents: %v", err)
 			}
 
 			context := c.String("context")
