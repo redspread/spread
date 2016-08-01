@@ -63,11 +63,12 @@ To get started, initialize Spread and set up a local Spread repository:
 Here is our suggested workflow for versioning with Spread:
 
 1. Create or edit your Kubernetes objects
-2. Deploy your objects to a local or remote Kubernetes cluster (make sure you've [set up your directory](https://github.com/redspread/spread/tree/versioning#faq) correctly): `spread deploy .`
+2. Deploy your objects to a local or remote Kubernetes cluster. To use Spread's one-command deploy feature, make sure you've [set up your directory](https://github.com/redspread/spread/tree/versioning#faq) correctly, then `spread deploy .`
 3. Stage an object: `spread add <objectType>/<objectName>`
 4. Repeat until all objects have been staged
 5. Commit your objects with a message: `spread commit -m "commit message"`
-7. Go ahead and try out the other commands - anything not documented can be accessed using `spread git ...`
+6. Check the status with `spread status` and diff with `spread diff`
+7. Go ahead and try out the other commands - most Git commands, like `spread git log`, can be accessed using `spread git ...`
 
 Spread versioning is highly experimental for the next few weeks. If you find any bugs or have any feature requests for Spread versioning, please file an issue, and know that the format for Spread may change! 
 
