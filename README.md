@@ -12,9 +12,9 @@
 * Be the fastest, simplest way to deploy Docker to production
 * Enable collaborative deployment workflows that work well for one person or an entire team
 
-See how we deployed Mattermost (<a href="https://github.com/redspread/kube-mattermost">and you can too!</a>):
+See how we versioned the cluster running our (<a href="https://redspread.com">website</a>) (and you can too!):
 
-<p align="center"><img src="http://i.imgur.com/Vohnd3e.gif" alt="logo" width= "800"/></p>
+<p align="center"><img src="https://redspread.com/img/terminal.gif" alt="logo" width= "800"/></p>
 
 Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
 
@@ -67,9 +67,11 @@ Here is our suggested workflow for versioning with Spread:
 3. Stage an object: `spread add <objectType>/<objectName>`
 4. Repeat until all objects have been staged
 5. Commit your objects with a message: `spread commit -m "commit message"`
-7. Go ahead and try out the other commands - anything not documented can be accessed using `spread git ...`
+6. Set up your remote repository: `spread remote (add <name> <url> | remove <name> | set-url <name> <url>)`
+7. Push your objects to your remote repository: `spread push <remote> <refSpec>`
+8. Go ahead and try out the other commands - anything not documented can be accessed using `spread git ...`
 
-Spread versioning is highly experimental for the next few weeks. If you find any bugs or have any feature requests for Spread versioning, please file an issue, and know that the format for Spread may change! 
+If you find any bugs or have any feature requests for Spread versioning, please file an issue!
 
 For more details on Spread commands, [see our docs](https://redspread.readme.io/docs/spread-commands).
 
@@ -77,38 +79,9 @@ For more details on Spread commands, [see our docs](https://redspread.readme.io/
 
 Check out our <a href="https://redspread.readme.io/docs/getting-started">Getting Started Guide</a>.
 
-##Localkube
+##Localkube --> Minikube
 
-Spread makes it easy to set up and iterate with [localkube](https://github.com/redspread/localkube), a local Kubernetes cluster streamlined for rapid development. 
-
-**Requirements:**
-* [Docker](https://docs.docker.com/engine/installation/)
-* [docker-machine](https://docs.docker.com/machine/install-machine/)
-* [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-
-(Note: For Mac and Windows users, the fastest way to install everything above is [Docker Toolbox](https://www.docker.com/products/docker-toolbox).)
-
-**Get started:**  
-
-1. Create a machine called dev: `docker-machine create --driver virtualbox dev`
-2. Start your docker-machine: `docker-machine start dev`
-3. Connect to the docker daemon: `eval "$(docker-machine env dev)"`
-4. Spin up a local cluster using [localkube](http://github.com/redspread/localkube): `spread cluster start`
-5. To stop the cluster: `spread cluster stop`
-
-**Suggested workflow:**
-- `docker build` the image that you want to work with [1]
-- Create Kubernetes objects that use the image build above
-- Run `spread deploy .` to deploy to cluster [2]
-- Iterate on your application, updating image and objects running `spread deploy .` each time you want to deploy changes
-- To preview changes, grab the IP of your docker daemon with `docker-machine env <NAME>`and the returned `NodePort`, then put `IP:NodePort` in your browser
-- When finished, run `spread cluster stop` to stop localkube
-- To remove the container entirely, run `spread cluster stop -r`
-
-[1] `spread` will soon integrate building ([#59](https://github.com/redspread/spread/issues/59))    
-[2] Since `localkube` shares a Docker daemon with your host, there is no need to push images :)
-
-[See more](https://github.com/redspread/localkube) for our suggestions when developing code with `localkube`.
+Spread made it easy to set up and iterate with [Localkube](https://github.com/redspread/localkube), a local Kubernetes cluster streamlined for rapid development. We have donated Localkube code to [Minikube](https://github.com/kubernetes/minikube), the official Kubernetes local development solution. It's easy to set up a local cluster with Minikube: https://github.com/kubernetes/minikube.
 
 ##What's been done so far
  
@@ -118,17 +91,20 @@ Spread makes it easy to set up and iterate with [localkube](https://github.com/r
 	* Updates all Kubernetes objects on a Kubernetes cluster.
 	* Returns a public IP address, if type Load Balancer is specified. 
 * [localkube](https://github.com/redspread/localkube): easy-to-setup local Kubernetes cluster for rapid development
+* [Initial tutorial](https://redspread.readme.io/v0.1.6/docs/spread-templating-and-tutorials) for templating and parameterization
 
 ##What's being worked on now
 
+* Template authoring
+* Secret management with Spread versioning
 * Inner-app linking
-* Parameterization
 * [Redspread](redspread.com) (hosted Spread repository)
 
 See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a> here!
 
 ##Future Goals
 * Peer-to-peer syncing between local and remote Kubernetes clusters
+* Automatically spin up local and remote Kubernetes clusters with minimal user input
 
 ##FAQ
 
