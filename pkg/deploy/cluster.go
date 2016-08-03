@@ -288,12 +288,6 @@ func (c *KubeCluster) Deployment() (*Deployment, error) {
 					return nil, err
 				}
 			}
-		case *kube.EventList:
-			for _, item := range t.Items {
-				if err := deployment.Add(&item); err != nil {
-					return nil, err
-				}
-			}
 		case *kube.LimitRangeList:
 			for _, item := range t.Items {
 				if err := deployment.Add(&item); err != nil {

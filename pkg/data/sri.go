@@ -22,7 +22,7 @@ const (
 
 var (
 	OIDRegex   = regexp.MustCompile(`[^a-f0-9]+`)
-	PathRegex  = regexp.MustCompile(`[^a-zA-Z0-9./]+`)
+	PathRegex  = regexp.MustCompile(`[^a-zA-Z0-9./-]+`)
 	FieldRegex = regexp.MustCompile(`[^a-zA-Z0-9./()]+`)
 )
 
