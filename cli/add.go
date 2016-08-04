@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
+	kube "k8s.io/kubernetes/pkg/api"
 
 	"rsprd.com/spread/pkg/data"
 	"rsprd.com/spread/pkg/deploy"
@@ -29,6 +30,10 @@ func (s SpreadCli) Add() *cli.Command {
 			cli.BoolFlag{
 				Name:  "no-export",
 				Usage: "don't request Kube API server to export objects",
+			},
+			cli.BoolFlag{
+				Name:  "clean",
+				Usage: "Removes fields that are known to cause issues with reproducibility",
 			},
 		},
 		Action: func(c *cli.Context) {
@@ -60,6 +65,13 @@ func (s SpreadCli) Add() *cli.Command {
 				s.fatalf("Could not get object from cluster: %v", err)
 			}
 
+			if c.Bool("clean") {
+				err = cleanObj(kubeObj)
+				if err != nil {
+					s.fatalf("Could not get object from cluster: %v", err)
+				}
+			}
+
 			// TODO(DG): Clean this up
 			gvk := kubeObj.GetObjectKind().GroupVersionKind()
 			gvk.Version = "v1"
@@ -83,4 +95,12 @@ func (s SpreadCli) Add() *cli.Command {
 			}
 		},
 	}
+}
+
+func cleanObj(obj deploy.KubeObject) error {
+	switch typedObj := obj.(type) {
+	case *kube.Service:
+		typedObj.Spec.ClusterIP = ""
+	}
+	return nil
 }

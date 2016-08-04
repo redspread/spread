@@ -502,9 +502,18 @@ func printLoadBalancers(client *kubecli.Client, services []KubeObject, localkube
 				}
 
 				loadBalancers := clusterVers.Status.LoadBalancer.Ingress
-				if len(loadBalancers) == 1 {
+				for _, lb := range loadBalancers {
 					completed[s.Name] = true
-					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name, loadBalancers[0].IP)
+
+					host := lb.Hostname
+					if len(lb.IP) != 0 {
+						if len(host) == 0 {
+							host = lb.IP
+						} else {
+							host += fmt.Sprintf(" (%s)", lb.IP)
+						}
+					}
+					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name, host)
 				}
 			}
 		}
