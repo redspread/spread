@@ -22,13 +22,12 @@ func (s SpreadCli) Build() *cli.Command {
 
 			input, err := dir.NewFileInput(srcDir)
 			if err != nil {
-				s.fatalf(inputError(srcDir, err))
+				s.fatalf(inputError(srcDir, err).Error())
 			}
 
 			e, err := input.Build()
 			if err != nil {
-				println("build")
-				s.fatalf(inputError(srcDir, err))
+				s.fatalf(inputError(srcDir, err).Error())
 			}
 
 			dep, err := e.Deployment()
@@ -48,7 +47,7 @@ func (s SpreadCli) Build() *cli.Command {
 
 			} else if err != nil {
 				println("deploy")
-				s.fatalf(inputError(srcDir, err))
+				s.fatalf(inputError(srcDir, err).Error())
 			}
 
 			context := c.Args().Get(1)

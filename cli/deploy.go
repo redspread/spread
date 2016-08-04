@@ -4,55 +4,56 @@ import (
 	"errors"
 	"fmt"
 
+	"rsprd.com/spread/pkg/data"
 	"rsprd.com/spread/pkg/deploy"
 	"rsprd.com/spread/pkg/entity"
 	"rsprd.com/spread/pkg/input/dir"
+	"rsprd.com/spread/pkg/packages"
+	pb "rsprd.com/spread/pkg/spreadproto"
 
 	"github.com/codegangsta/cli"
 )
 
 // Deploy allows the creation of deploy.Deployments remotely
-func (s SpreadCli) Deploy() *cli.Command {
+func (s *SpreadCli) Deploy() *cli.Command {
 	return &cli.Command{
 		Name:        "deploy",
-		Usage:       "spread deploy [-s] PATH [kubectl context]",
+		Usage:       "spread deploy [-s] PATH | COMMIT [kubectl context]",
 		Description: "Deploys objects to a remote Kubernetes cluster.",
 		ArgsUsage:   "-s will deploy only if no other deployment found (otherwise fails)",
 		Action: func(c *cli.Context) {
-			srcDir := c.Args().First()
-			if len(srcDir) == 0 {
-				s.fatalf("A directory to deploy from must be specified")
-			}
+			ref := c.Args().First()
+			var dep *deploy.Deployment
 
-			input, err := dir.NewFileInput(srcDir)
-			if err != nil {
-				s.fatalf(inputError(srcDir, err))
-			}
+			proj, err := s.project()
+			if err == nil {
+				var docs map[string]*pb.Document
+				if len(ref) == 0 {
+					s.printf("Deploying from index...")
+					docs, err = proj.Index()
+					if err != nil {
+						s.fatalf("Error getting index: %v", err)
+					}
 
-			e, err := input.Build()
-			if err != nil {
-				println("build")
-				s.fatalf(inputError(srcDir, err))
-			}
+					if err = s.promptForArgs(docs, false); err == nil {
+						dep, err = deploy.DeploymentFromDocMap(docs)
+					}
 
-			dep, err := e.Deployment()
-
-			// TODO: This can be removed once application (#56) is implemented
-			if err == entity.ErrMissingContainer {
-				// check if has pod; if not deploy objects
-				pods, err := input.Entities(entity.EntityPod)
-				if err != nil && len(pods) != 0 {
-					s.fatalf("Failed to deploy: %v", err)
+				} else {
+					if docs, err = proj.ResolveCommit(ref); err == nil {
+						if err = s.promptForArgs(docs, false); err == nil {
+							dep, err = deploy.DeploymentFromDocMap(docs)
+						}
+					} else {
+						dep, err = s.globalDeploy(ref)
+					}
 				}
+			} else {
+				dep, err = s.globalDeploy(ref)
+			}
 
-				dep, err = objectOnlyDeploy(input)
-				if err != nil {
-					s.fatalf("Failed to deploy: %v", err)
-				}
-
-			} else if err != nil {
-				println("deploy")
-				s.fatalf(inputError(srcDir, err))
+			if err != nil {
+				s.fatalf("Failed to assemble deployment: %v", err)
 			}
 
 			context := c.Args().Get(1)
@@ -75,6 +76,103 @@ func (s SpreadCli) Deploy() *cli.Command {
 	}
 }
 
+func (s *SpreadCli) fileDeploy(srcDir string) (*deploy.Deployment, error) {
+	input, err := dir.NewFileInput(srcDir)
+	if err != nil {
+		return nil, inputError(srcDir, err)
+	}
+
+	e, err := input.Build()
+	if err != nil {
+		return nil, inputError(srcDir, err)
+	}
+
+	dep, err := e.Deployment()
+
+	// TODO: This can be removed once application (#56) is implemented
+	if err == entity.ErrMissingContainer {
+		// check if has pod; if not deploy objects
+		pods, err := input.Entities(entity.EntityPod)
+		if err != nil && len(pods) != 0 {
+			return nil, fmt.Errorf("Failed to deploy: %v", err)
+		}
+
+		dep, err = objectOnlyDeploy(input)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to deploy: %v", err)
+		}
+
+	} else if err != nil {
+		return nil, inputError(srcDir, err)
+	}
+	return dep, nil
+}
+
+func (s *SpreadCli) globalDeploy(ref string) (*deploy.Deployment, error) {
+	// check if reference is local file
+	dep, err := s.fileDeploy(ref)
+	if err != nil {
+		ref, err = packages.ExpandPackageName(ref)
+		if err == nil {
+			var info packages.PackageInfo
+			info, err = packages.DiscoverPackage(ref, true, false)
+			if err != nil {
+				s.fatalf("failed to retrieve package info: %v", err)
+			}
+
+			proj, err := s.globalProject()
+			if err != nil {
+				s.fatalf("error setting up global project: %v", err)
+			}
+
+			remote, err := proj.Remotes().Lookup(ref)
+			// if does not exist or has different URL, create new remote
+			if err != nil {
+				remote, err = proj.Remotes().Create(ref, info.RepoURL)
+				if err != nil {
+					return nil, fmt.Errorf("could not create remote: %v", err)
+				}
+			} else if remote.Url() != info.RepoURL {
+				s.printf("changing remote URL for %s, current: '%s' new: '%s'", ref, remote.Url(), info.RepoURL)
+				err = proj.Remotes().SetUrl(ref, info.RepoURL)
+				if err != nil {
+					return nil, fmt.Errorf("failed to change URL for %s: %v", ref, err)
+				}
+			}
+
+			s.printf("pulling repo from %s", info.RepoURL)
+			branch := fmt.Sprintf("%s/master", ref)
+			err = proj.Fetch(remote.Name(), "master")
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch '%s': %v", ref, err)
+			}
+
+			docs, err := proj.Branch(branch)
+			if err != nil {
+				return nil, err
+			}
+
+			if err = s.promptForArgs(docs, false); err != nil {
+				return nil, err
+			}
+
+			return deploy.DeploymentFromDocMap(docs)
+		}
+	}
+	return dep, err
+}
+
+func (s *SpreadCli) promptForArgs(docs map[string]*pb.Document, required bool) error {
+	paramFields := data.ParameterFields(docs)
+	for _, field := range paramFields {
+		err := data.InteractiveArgs(s.in, s.out, field, required)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {
 	objects, err := input.Objects()
 	if err != nil {
@@ -93,8 +191,8 @@ func objectOnlyDeploy(input *dir.FileInput) (*deploy.Deployment, error) {
 	return deployment, nil
 }
 
-func inputError(srcDir string, err error) string {
-	return fmt.Sprintf("Error using `%s`: %v", srcDir, err)
+func inputError(srcDir string, err error) error {
+	return fmt.Errorf("Error using `%s`: %v", srcDir, err)
 }
 
 func displayContext(name string) string {

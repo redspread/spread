@@ -7,7 +7,28 @@ import (
 
 	"github.com/pmezard/go-difflib/difflib"
 	kube "k8s.io/kubernetes/pkg/api"
+
+	pb "rsprd.com/spread/pkg/spreadproto"
 )
+
+// DeploymentFromDocMap produces a new Deployment from a map of Documents.
+func DeploymentFromDocMap(docs map[string]*pb.Document) (deploy *Deployment, err error) {
+	var obj KubeObject
+	deploy = new(Deployment)
+	for path, doc := range docs {
+		doc.GetInfo().Path = path
+		obj, err = KubeObjectFromDocument(path, doc)
+		if err != nil {
+			return
+		}
+
+		err = deploy.Add(obj)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
 
 // A Deployment is a representation of a Kubernetes cluster's object registry.
 // It can be used to specify objects to be deployed and is how the current state of a deployment is returned.
@@ -59,6 +80,15 @@ func (d *Deployment) AddDeployment(deployment Deployment) (err error) {
 		}
 	}
 	return nil
+}
+
+// Get returns the object with the given path from the Deployment. Error is returned if object does not exist.
+func (d *Deployment) Get(name string) (KubeObject, error) {
+	obj, ok := d.objects[name]
+	if !ok {
+		return nil, fmt.Errorf("no object '%s' exists", name)
+	}
+	return obj, nil
 }
 
 // Equal performs a deep equality check between Deployments. Internal ordering is ignored.
@@ -162,6 +192,45 @@ func (d *Deployment) Diff(other *Deployment) string {
 	}
 
 	return out
+}
+
+// PathDiff returns the list of the paths of objects.
+// Currently doesn't detect modifications
+func (d *Deployment) PathDiff(other *Deployment) (added, removed, modified []string) {
+	for path, obj := range d.objects {
+		if oObj, has := other.objects[path]; has {
+			if !kube.Semantic.DeepEqual(obj, oObj) {
+				//modified = append(modified, path)
+			}
+
+		} else {
+			added = append(added, path)
+		}
+	}
+
+	for path := range other.objects {
+		if _, has := d.objects[path]; !has {
+			removed = append(removed, path)
+		}
+	}
+	return
+}
+
+// Stat returns change information about a deployment.
+func Stat(index, head, cluster *Deployment) DiffStat {
+	stat := DiffStat{}
+	stat.IndexNew, stat.IndexDeleted, stat.IndexModified = index.PathDiff(head)
+	stat.ClusterNew, stat.ClusterDeleted, stat.ClusterModified = cluster.PathDiff(index)
+	return stat
+}
+
+type DiffStat struct {
+	IndexNew        []string
+	IndexModified   []string
+	IndexDeleted    []string
+	ClusterNew      []string
+	ClusterModified []string
+	ClusterDeleted  []string
 }
 
 // deepCopy creates a deep copy of the Kubernetes object given.

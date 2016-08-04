@@ -76,7 +76,7 @@ func (fs FileSource) Objects() (objects []deploy.KubeObject, err error) {
 	})
 
 	// don't throw error if simply didn't find anything
-	if err != nil && !checkErrNoResources(err) && !checkErrPathDoesNotExist(err) {
+	if err != nil && !checkErrNoResources(err) && !checkErrPathDoesNotExist(err) && !strings.HasSuffix(err.Error(), "not a directory") {
 		return nil, err
 	}
 	return objects, nil

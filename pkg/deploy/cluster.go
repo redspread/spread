@@ -23,7 +23,7 @@ const DefaultContext = ""
 
 // KubeCluster is able to deploy to Kubernetes clusters. This is a very simple implementation with no error recovery.
 type KubeCluster struct {
-	client    *kubecli.Client
+	Client    *kubecli.Client
 	context   string
 	localkube bool
 }
@@ -62,7 +62,7 @@ func NewKubeClusterFromContext(name string) (*KubeCluster, error) {
 	}
 
 	return &KubeCluster{
-		client:    client,
+		Client:    client,
 		context:   name,
 		localkube: name == "localkube",
 	}, nil
@@ -77,14 +77,14 @@ func (c *KubeCluster) Context() string {
 // Currently no error recovery is implemented; if there is an error the deployment process will immediately halt and return the error.
 // If update is not set, will error if objects exist. If deleteModifiedPods is set, pods of modified RCs will be deleted.
 func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) error {
-	if c.client == nil {
+	if c.Client == nil {
 		return errors.New("client not setup (was nil)")
 	}
 
 	// create namespaces before everything else
 	for _, nsObj := range dep.ObjectsOfVersionKind("", "Namespace") {
 		ns := nsObj.(*kube.Namespace)
-		_, err := c.client.Namespaces().Create(ns)
+		_, err := c.Client.Namespaces().Create(ns)
 		if err != nil && !alreadyExists(err) {
 			return err
 		}
@@ -110,7 +110,7 @@ func (c *KubeCluster) Deploy(dep *Deployment, update, deleteModifiedPods bool) e
 		}
 	}
 
-	printLoadBalancers(c.client, dep.ObjectsOfVersionKind("", "Service"), c.localkube)
+	printLoadBalancers(c.Client, dep.ObjectsOfVersionKind("", "Service"), c.localkube)
 
 	// deployed successfully
 	return nil
@@ -167,7 +167,7 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 		return nil, fmt.Errorf("could not create diff: %v", err)
 	}
 
-	req := c.client.RESTClient.Patch(kube.StrategicMergePatchType).
+	req := c.Client.RESTClient.Patch(kube.StrategicMergePatchType).
 		Name(meta.GetName()).
 		Body(patch)
 
@@ -178,12 +178,35 @@ func (c *KubeCluster) update(obj KubeObject, create bool, mapping *meta.RESTMapp
 		return nil, resourceError("update", meta.GetNamespace(), meta.GetName(), mapping, err)
 	}
 
-	return asKubeObject(runtimeObj)
+	return AsKubeObject(runtimeObj)
+}
+
+// Get retrieves an objects from a cluster using it's namespace name and API version.
+func (c *KubeCluster) Get(kind, namespace, name string, export bool) (KubeObject, error) {
+	kind = KubeShortForm(kind)
+
+	req := c.Client.Get().Resource(kind).Namespace(namespace).Name(name)
+
+	if export {
+		req.Param("export", "true")
+	}
+
+	runObj, err := req.Do().Get()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve resource '%s/%s (namespace=%s)' from Kube API server: %v", kind, name, namespace, err)
+	}
+
+	kubeObj, err := AsKubeObject(runObj)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to change into KubeObject: %v", err)
+	}
+
+	return kubeObj, nil
 }
 
 // get retrieves the object from the cluster.
 func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RESTMapping) (KubeObject, error) {
-	req := c.client.RESTClient.Get().Name(name)
+	req := c.Client.RESTClient.Get().Name(name)
 	setRequestObjectInfo(req, namespace, mapping)
 
 	if export {
@@ -195,13 +218,13 @@ func (c *KubeCluster) get(namespace, name string, export bool, mapping *meta.RES
 		return nil, resourceError("get", namespace, name, mapping, err)
 	}
 
-	return asKubeObject(runtimeObj)
+	return AsKubeObject(runtimeObj)
 }
 
 // create adds the object to the cluster.
 func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObject, error) {
 	meta := obj.GetObjectMeta()
-	req := c.client.RESTClient.Post().Body(obj)
+	req := c.Client.RESTClient.Post().Body(obj)
 
 	setRequestObjectInfo(req, meta.GetNamespace(), mapping)
 
@@ -210,7 +233,7 @@ func (c *KubeCluster) create(obj KubeObject, mapping *meta.RESTMapping) (KubeObj
 		return nil, resourceError("create", meta.GetName(), meta.GetNamespace(), mapping, err)
 	}
 
-	return asKubeObject(runtimeObj)
+	return AsKubeObject(runtimeObj)
 }
 
 func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
@@ -222,19 +245,115 @@ func (c *KubeCluster) deletePods(rc *kube.ReplicationController) error {
 	opts := kube.ListOptions{
 		LabelSelector: labels.Set(rc.Spec.Selector).AsSelector(),
 	}
-	podList, err := c.client.Pods(rc.Namespace).List(opts)
+	podList, err := c.Client.Pods(rc.Namespace).List(opts)
 	if err != nil {
 		return err
 	}
 
 	// delete pods
 	for _, pod := range podList.Items {
-		err := c.client.Pods(pod.Namespace).Delete(pod.Name, nil)
+		err := c.Client.Pods(pod.Namespace).Delete(pod.Name, nil)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (c *KubeCluster) Deployment() (*Deployment, error) {
+	deployment := new(Deployment)
+	for _, resource := range resources {
+		obj, err := c.Client.Get().Resource(resource).Do().Get()
+		if err != nil {
+			return nil, fmt.Errorf("could not list '%s': %v", resource, err)
+		}
+
+		// TODO: this is what desperation looks like
+		switch t := obj.(type) {
+		case *kube.ComponentStatusList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ConfigMapList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.EndpointsList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.LimitRangeList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.NamespaceList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.PersistentVolumeClaimList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.PersistentVolumeList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.PodList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ReplicationControllerList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ResourceQuotaList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.SecretList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ServiceAccountList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		case *kube.ServiceList:
+			for _, item := range t.Items {
+				if err := deployment.Add(&item); err != nil {
+					return nil, err
+				}
+			}
+		default:
+			return nil, fmt.Errorf("could not match '%T' to type", obj)
+		}
+
+	}
+	return deployment, nil
 }
 
 // setRequestObjectInfo adds necessary type information to requests.
@@ -306,7 +425,7 @@ func diff(original, modified runtime.Object) (patch []byte, err error) {
 }
 
 // asKubeObject attempts use the object as a KubeObject. It will return an error if not possible.
-func asKubeObject(runtimeObj runtime.Object) (KubeObject, error) {
+func AsKubeObject(runtimeObj runtime.Object) (KubeObject, error) {
 	kubeObj, ok := runtimeObj.(KubeObject)
 	if !ok {
 		return nil, errors.New("was unable to use runtime.Object as deploy.KubeObject")
@@ -383,9 +502,18 @@ func printLoadBalancers(client *kubecli.Client, services []KubeObject, localkube
 				}
 
 				loadBalancers := clusterVers.Status.LoadBalancer.Ingress
-				if len(loadBalancers) == 1 {
+				for _, lb := range loadBalancers {
 					completed[s.Name] = true
-					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name, loadBalancers[0].IP)
+
+					host := lb.Hostname
+					if len(lb.IP) != 0 {
+						if len(host) == 0 {
+							host = lb.IP
+						} else {
+							host += fmt.Sprintf(" (%s)", lb.IP)
+						}
+					}
+					fmt.Printf("Service '%s/%s' available at: \t%s\n", s.Namespace, s.Name, host)
 				}
 			}
 		}

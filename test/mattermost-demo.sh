@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+PROJECT=${GOPATH}/src/rsprd.com/spread
+
 NODE_IP="127.0.0.1"
 SLEEP_TIME=10
 LOCALKUBE_TAG="v1.2.1-v1"
@@ -23,9 +25,9 @@ function retry() {
     return 1
 }
 
-KUBECTL="./build/kubectl"
-MATTERMOST="./build/mattermost"
-export PATH="$(pwd)/build:$PATH"
+KUBECTL="${PROJECT}/build/kubectl"
+MATTERMOST="${PROJECT}/build/mattermost"
+export PATH="${PROJECT}/build:$PATH"
 
 if [ ! -f $KUBECTL ]; then
     echo "Installing kubectl..."
@@ -54,4 +56,4 @@ NODE_PORT=$(kubectl get services/mattermost-app --template='{{range .spec.ports}
 
 echo "Checking if started app successfully"
 echo "waiting up to 100 seconds"
-retry "curl --fail http://$NODE_IP:$NODE_PORT" "10"
+retry "curl --fail http://$NODE_IP:$NODE_PORT" "15"

@@ -3,6 +3,8 @@ sudo: required
 go:
   - 1.6
 
+env: LD_LIBRARY_PATH=/usr/local/lib
+
 go_import_path: rsprd.com/spread
 
 services:
@@ -11,6 +13,7 @@ services:
 install:
   # install build dependencies
   - make deps
+  - make install-libgit2
 
 before_script:
   - make validate
@@ -18,18 +21,19 @@ before_script:
 script:
   - make test
 
-after_success:
-  # If release then crosscompile
-  - if [ -n "$TRAVIS_TAG" ]; then SPREAD_VERSION=$TRAVIS_TAG make crossbuild; else echo "Skipping release build..."; fi
-
-deploy:
-  provider: releases
-  api_key:
-    secure: Jqzgb1hVOHhXAtzr1CaYtz9Ws8VGbyTP5qdWr9Dobg69hCTQDLg8Yuc/pJBIMtajxiQnrNmcI5ZpSdrPd1mxUKQBxr6ra3A8G/Utnfs8ilO0qDR4/pF+G+dVZlIUT/8iAfvpEiCkEckndrB/fVgR1p3o4R7kceHsjduTy+dX0j1v9jN1FA901o2C6tz3OYGn85q7p0wYXOd6l4WhtRK2EShvcPMG7Hs5Vz9Ihb7cznH1Lxpst2zohXz45O0vzfyFLXJp4RftAvg/1IOl9E4OTIanL9SQckRxfFRI57AAogKdJPYrbm8L7/HxRN96lW5e8EtNZXf77Orc/9NvR4YENRUINDhaCxz+IUTtU2TLt4nyCtHCEGyqFJ4ZnK5+sO4Ha7STiPVLNZSfu6rZPo3l77o0JTLo/IK8QtTrQ6H6JyjN3brle/FoOJTxtbjZ/DZKpR4QweO2zG4sQ8sKS8KuQ4LUx9Gm4ucuI8vsWIUsSMg8mKkCCQzf2z84Ih5FxZEwzXrAH+xVrrmUQlsgF3KflT/78LnJMFhOoxO+CPW2sStxndxh2L8duLOt+Jrf4URUnrjwGyWhebPcTI/gj0wuRUFY3VahkmWAD4r/3A/62s1/mc2vYwT9VLRxtKsA16Ur5ujM4nUVfJG/nYVE07+rqrngd9OCvmM8u5WmFpMqKWc=
-  skip_cleanup: true
-  file:
-    - ./build/spread_linux_amd64
-    - ./build/spread_darwin_amd64
-    - ./build/spread_windows_amd64.exe
-  on:
-    tags: true
+# Disable cross compilation until we get static libgit2 cross compilation working
+#after_success:
+#  # If release then crosscompile
+#  - if [ -n "$TRAVIS_TAG" ]; then SPREAD_VERSION=$TRAVIS_TAG make crossbuild; else echo "Skipping release build..."; fi
+#
+#deploy:
+#  provider: releases
+#  api_key:
+#    secure: Jqzgb1hVOHhXAtzr1CaYtz9Ws8VGbyTP5qdWr9Dobg69hCTQDLg8Yuc/pJBIMtajxiQnrNmcI5ZpSdrPd1mxUKQBxr6ra3A8G/Utnfs8ilO0qDR4/pF+G+dVZlIUT/8iAfvpEiCkEckndrB/fVgR1p3o4R7kceHsjduTy+dX0j1v9jN1FA901o2C6tz3OYGn85q7p0wYXOd6l4WhtRK2EShvcPMG7Hs5Vz9Ihb7cznH1Lxpst2zohXz45O0vzfyFLXJp4RftAvg/1IOl9E4OTIanL9SQckRxfFRI57AAogKdJPYrbm8L7/HxRN96lW5e8EtNZXf77Orc/9NvR4YENRUINDhaCxz+IUTtU2TLt4nyCtHCEGyqFJ4ZnK5+sO4Ha7STiPVLNZSfu6rZPo3l77o0JTLo/IK8QtTrQ6H6JyjN3brle/FoOJTxtbjZ/DZKpR4QweO2zG4sQ8sKS8KuQ4LUx9Gm4ucuI8vsWIUsSMg8mKkCCQzf2z84Ih5FxZEwzXrAH+xVrrmUQlsgF3KflT/78LnJMFhOoxO+CPW2sStxndxh2L8duLOt+Jrf4URUnrjwGyWhebPcTI/gj0wuRUFY3VahkmWAD4r/3A/62s1/mc2vYwT9VLRxtKsA16Ur5ujM4nUVfJG/nYVE07+rqrngd9OCvmM8u5WmFpMqKWc=
+#  skip_cleanup: true
+#  file:
+#    - ./build/spread_linux_amd64
+#    - ./build/spread_darwin_amd64
+#    - ./build/spread_windows_amd64.exe
+#  on:
+#    tags: true

@@ -10,7 +10,13 @@ import (
 )
 
 func main() {
-	spread := cli.NewSpreadCli(os.Stdin, os.Stdout, os.Stderr, Version)
+	wd, _ := os.Getwd()
+	spread := cli.NewSpreadCli(os.Stdin, os.Stdout, os.Stderr, Version, wd)
+
+	// git override
+	if len(os.Args) > 2 && os.Args[1] == "git" {
+		spread.ExecGitCmd(os.Args[2:]...)
+	}
 
 	app := app()
 	app.Commands = commands(spread)

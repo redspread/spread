@@ -1,0 +1,81 @@
+// Copyright 2016, Redspread Inc.
+// All rights reserved.
+
+syntax = "proto3";
+
+package spread;
+
+option go_package = "spreadproto";
+
+///////////////////
+//     Models     /
+///////////////////
+
+// Field represents a field of an object.
+message Field {
+    string key = 1;
+    oneof value {
+        double number = 2;
+        string str = 3;
+        bool boolean = 4;
+        Object object = 5;
+        Array array = 6;
+        Link link = 7;
+    }
+    Parameter param = 8;
+}
+
+// Object represents a map with strings for keys.
+message Object {
+    map<string, Field> items = 1;
+}
+
+// Array represents an array.
+message Array {
+    repeated Field items = 1;
+}
+
+// A SRI represents a parsed Spread Resource Identifier (SRI), a globally unique address for a document or field stored within a repository.
+message SRI {
+    string treeish = 1;
+    string path = 2;
+    string field = 3;
+}
+
+// Link represents a relationship to another field.
+message Link {
+    string packageName = 1;
+    SRI target = 2;
+    bool override = 3;
+    repeated Argument args = 4;
+}
+
+// Document is the root of Spread data stored in a Git blob. It has field stored at it's root, typically with an object as it's value.
+message Document {
+    string name = 1;
+    DocumentInfo info = 2;
+    Field root = 3;
+}
+
+// DocumentInfo provides metadata about an document.
+message DocumentInfo {
+    string path = 1;
+}
+
+// Parameter allows user input to be used in producing the output of the field.
+message Parameter {
+    string name = 1;
+    string prompt = 2;
+    string pattern = 3;
+    // Default is the value a parameter will take if no argument is given for it. Parameters without defaults require args.
+    Argument default = 4;
+}
+
+// Argument contains an argument to fulfill a parameter.
+message Argument {
+    oneof value {
+        double number = 1;
+        string str = 2;
+        bool boolean = 3;
+    }
+}
