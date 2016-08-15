@@ -50,7 +50,7 @@ If an error about libraries missing comes up, set up your library path like:
 Or, if you prefer using Homebrew (OS X only): 
 
 `$ brew tap redspread/spread`  
-`$ brew install spread-versioning`
+`$ brew install spread
 
 ##Git for Kubernetes
 
