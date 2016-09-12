@@ -63,3 +63,6 @@ Username for basic auth
 `KUBECFG_PASSWORD`
 
 Password for basic auth
+
+
+You can find information about bearer token in [this guide](http://kubernetes.io/docs/user-guide/accessing-the-cluster/) and other authentication information in [this reference](http://kubernetes.io/docs/admin/authentication/).
