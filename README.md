@@ -25,6 +25,8 @@ See our [philosophy](./philosophy.md) for more on our mission and values.
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Go](https://golang.org/doc/install) (v 1.6)
 
+Optionally, cmake is required if libgit2 is not already installed on your system.
+
 ##Installation
 
 Install with `go get` (-d is for download only):
@@ -45,7 +47,8 @@ Then:
 
 If an error about libraries missing comes up, set up your library path like:
 
-`export LD_LIBRARY_PATH=/usr/local/lib:$ LD_LIBRARY_PATH`
+`export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH`
+`export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH`
 
 Or, if you prefer using Homebrew (OS X only): 
 
