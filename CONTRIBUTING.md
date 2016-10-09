@@ -6,7 +6,7 @@ We'd love to see your contributions to Spread. There are many ways community mem
 	* Fork the repository on Github
 	* Create a topic branch
 	* Make commits with singular, logical units
-	* Push your changes to a topic brank in the fork of the repository
+	* Push your changes to a topic branch in the fork of the repository
 	* Submit a pull request to redspread/spread
 	* Your pull request must receive a LGTM from either @ethernetdan or @mfburnett
 
