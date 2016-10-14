@@ -45,7 +45,7 @@ Then:
 
 If an error about libraries missing comes up, set up your library path like:
 
-`export LD_LIBRARY_PATH=/usr/local/lib:$ LD_LIBRARY_PATH`
+`export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH`
 
 Or, if you prefer using Homebrew (OS X only): 
 
