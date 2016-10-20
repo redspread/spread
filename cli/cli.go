@@ -53,7 +53,7 @@ func (c SpreadCli) project() (*project.Project, error) {
 
 	root, found := findPath(c.workDir, project.SpreadDirectory, true)
 	if !found {
-            return nil, fmt.Errorf("Not in a Spread project. (see `spread init --help`)")
+               return nil, fmt.Errorf("Not in a Spread project. (see `spread init --help`)")
 	}
 
 	proj, err := project.OpenProject(root)
