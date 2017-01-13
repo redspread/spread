@@ -16,7 +16,7 @@ See how we versioned the cluster running our (<a href="https://redspread.com">we
 
 <p align="center"><img src="https://redspread.com/img/terminal.gif" alt="logo" width= "800"/></p>
 
-Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
+Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be build next and send us pull requests for any features you’d like to see added.
 
 See our [philosophy](./philosophy.md) for more on our mission and values. 
 
