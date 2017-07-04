@@ -1,4 +1,4 @@
-#Contributing to Spread
+# Contributing to Spread
 
 We'd love to see your contributions to Spread. There are many ways community members can contribute to the project:
 
