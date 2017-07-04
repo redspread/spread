@@ -4,7 +4,7 @@
 
 <p align="center"><a href="https://redspread.com">Website</a> | <a href="http://redspread.readme.io">Docs</a> | <a href="http://slackin.redspread.com/">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
 
-#Spread: Git for Kubernetes
+# Spread: Git for Kubernetes
 
 `spread` is a command line tool that makes it easy to version Kubernetes clusters, deploy to Kubernetes clusters in one command, and set up a local Kubernetes cluster (see: [localkube](https://github.com/redspread/localkube)). The project's goals are to:
 
@@ -20,12 +20,12 @@ Spread is under open, active development. New features will be added regularly o
 
 See our [philosophy](./philosophy.md) for more on our mission and values. 
 
-##Requirements
+## Requirements
 * Running Kubernetes cluster (<a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a> or <a href="https://github.com/redspread/localkube">local</a>)
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Go](https://golang.org/doc/install) (v 1.6)
 
-##Installation
+## Installation
 
 Install with `go get` (-d is for download only):
 
@@ -52,7 +52,7 @@ Or, if you prefer using Homebrew (OS X only):
 `$ brew tap redspread/spread`  
 `$ brew install spread-versioning`
 
-##Git for Kubernetes
+## Git for Kubernetes
 
 Spread versions your software environment (i.e. a Kubernetes cluster) like Git versions source code. Because Spread is built on top of libgit2, it takes advantage of Git's interface and functionality. This means after you deploy a Kubernetes object to a cluster, you can version the object by staging, commiting, and pushing it to a Spread repository. 
 
@@ -75,15 +75,15 @@ If you find any bugs or have any feature requests for Spread versioning, please 
 
 For more details on Spread commands, [see our docs](https://redspread.readme.io/docs/spread-commands).
 
-##Spread Deploy Quickstart
+## Spread Deploy Quickstart
 
 Check out our <a href="https://redspread.readme.io/docs/getting-started">Getting Started Guide</a>.
 
-##Localkube --> Minikube
+## Localkube --> Minikube
 
 Spread made it easy to set up and iterate with [Localkube](https://github.com/redspread/localkube), a local Kubernetes cluster streamlined for rapid development. We have donated Localkube code to [Minikube](https://github.com/kubernetes/minikube), the official Kubernetes local development solution. It's easy to set up a local cluster with Minikube: https://github.com/kubernetes/minikube.
 
-##What's been done so far
+## What's been done so far
  
 * Spread versioning
 * `spread deploy [-s] PATH [kubectl context]`: Deploys a Docker project to a Kubernetes cluster. It completes the following order of operations:
@@ -93,7 +93,7 @@ Spread made it easy to set up and iterate with [Localkube](https://github.com/re
 * [localkube](https://github.com/redspread/localkube): easy-to-setup local Kubernetes cluster for rapid development
 * [Initial tutorial](https://redspread.readme.io/v0.1.6/docs/spread-templating-and-tutorials) for templating and parameterization
 
-##What's being worked on now
+## What's being worked on now
 
 * Template authoring
 * Secret management with Spread versioning
@@ -102,11 +102,11 @@ Spread made it easy to set up and iterate with [Localkube](https://github.com/re
 
 See more of our <a href="https://github.com/redspread/spread/blob/master/roadmap.md">roadmap</a> here!
 
-##Future Goals
+## Future Goals
 * Peer-to-peer syncing between local and remote Kubernetes clusters
 * Automatically spin up local and remote Kubernetes clusters with minimal user input
 
-##FAQ
+## FAQ
 
 **How are clusters selected?** Remote clusters are selected from the current kubectl context. Later, we will add functionality to explicitly state kubectl arguments. 
 
@@ -132,18 +132,18 @@ rs
  
  **Why version objects instead of just files?** The object is the deterministic representation of state in Kubernetes. A useful analogy is "Kubernetes objects" are to "Docker images" like "Kubernetes object files" are to "Dockerfiles". By versioning the object itself, we can guarantee a 1:1 mapping with the Kubernetes cluster. This allows us to do things like diff two clusters and introduces future potential for linking between objects and repositories. 
 
-##Contributing
+## Contributing
 
 We'd love to see your contributions - please see the CONTRIBUTING file for guidelines on how to contribute.
 
-##Reporting bugs
+## Reporting bugs
 If you haven't already, it's worth going through <a href="http://fantasai.inkedblade.net/style/talks/filing-good-bugs/">Elika Etemad's guide</a> for good bug reporting. In one sentence, good bug reports should be both *reproducible* and *specific*.
 
-##Contact
+## Contact
 Team: <a href="mailto:hello@redspread.com">hello@redspread.com</a>   
 Slack: <a href="http://slackin.redspread.com">slackin.redspread.com</a>  
 Planning: <a href="https://github.com/redspread/spread/blob/master/roadmap.md">Roadmap</a>  
 Bugs: <a href="https://github.com/redspread/spread/issues">Issues</a>
 
-##License
+## License
 Spread is under the [Apache 2.0 license](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)). See the LICENSE file for details.
