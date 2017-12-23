@@ -1,8 +1,6 @@
-<p align="center"><img src="https://redspread.com/images/logo.svg" alt="logo" width= "400"/></p>
-
 <p align="center"><a href="https://travis-ci.org/redspread/spread"><img alt="Build Status" src="https://travis-ci.org/redspread/spread.svg?branch=master" /></a> <a href="https://github.com/redspread/spread"><img alt="Release" src="https://img.shields.io/github/release/redspread/spread.svg" /></a> <a href="https://github.com/redspread/spread/blob/master/LICENSE"><img alt="Hex.pm" src="https://img.shields.io/hexpm/l/plug.svg" /></a> <a href="http://godoc.org/rsprd.com/spread"><img alt="GoDoc Status" src="https://godoc.org/rsprd.com/spread?status.svg" /></a></p>
 
-<p align="center"><a href="https://redspread.com">Website</a> | <a href="http://redspread.readme.io">Docs</a> | <a href="http://slackin.redspread.com/">Slack</a> | <a href="mailto:founders@redspread.com">Email</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
+<a href="http://redspread.readme.io">Docs</a> | <a href="http://twitter.com/redspread">Twitter</a> | <a href="http://facebook.com/GetRedspread">Facebook</a></p>
 
 #Spread: Git for Kubernetes
 
@@ -12,16 +10,14 @@
 * Be the fastest, simplest way to deploy Docker to production
 * Enable collaborative deployment workflows that work well for one person or an entire team
 
-See how we versioned the cluster running our (<a href="https://redspread.com">website</a>) (and you can too!):
-
-<p align="center"><img src="https://redspread.com/img/terminal.gif" alt="logo" width= "800"/></p>
+See how we versioned the cluster running our website (and you can too!):
 
 Spread is under open, active development. New features will be added regularly over the next few months - explore our [roadmap](./roadmap.md) to see what will be built next and send us pull requests for any features you’d like to see added.
 
 See our [philosophy](./philosophy.md) for more on our mission and values. 
 
 ##Requirements
-* Running Kubernetes cluster (<a href="https://blog.redspread.com/2016/02/04/google-container-engine-quickstart/">remote</a> or <a href="https://github.com/redspread/localkube">local</a>)
+* Running Kubernetes cluster (<a href="https://github.com/redspread/localkube">local</a>)
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Go](https://golang.org/doc/install) (v 1.6)
 
@@ -140,8 +136,6 @@ We'd love to see your contributions - please see the CONTRIBUTING file for guide
 If you haven't already, it's worth going through <a href="http://fantasai.inkedblade.net/style/talks/filing-good-bugs/">Elika Etemad's guide</a> for good bug reporting. In one sentence, good bug reports should be both *reproducible* and *specific*.
 
 ##Contact
-Team: <a href="mailto:hello@redspread.com">hello@redspread.com</a>   
-Slack: <a href="http://slackin.redspread.com">slackin.redspread.com</a>  
 Planning: <a href="https://github.com/redspread/spread/blob/master/roadmap.md">Roadmap</a>  
 Bugs: <a href="https://github.com/redspread/spread/issues">Issues</a>
 
